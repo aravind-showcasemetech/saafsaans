@@ -26,8 +26,9 @@ Quality Assistant). Before any change, read `docs/SPEC.md` (what to build) and `
    on translated and AI-written text. Works at 320 px wide and at 200% zoom.
 7. **Translations.** All user-facing text lives in `src/client/i18n/en.json`, `hi.json` and
    `te.json`. No hard-coded text in UI code.
-8. **Health wording.** No medical advice and no medicines. Use CPCB's band statements and the fixed
-   "see a doctor if" text from `docs/SPEC.md` §7.
+8. **Health wording.** No medical advice and no medicines. Health text comes only from CPCB's band
+   statements, the Air Quality API's health recommendations (labelled as Google's), and the fixed
+   "see a doctor if" text from `docs/SPEC.md` §7. Gemini never writes health advice.
 9. **Stack (do not change without asking):** Node 22, TypeScript (strict), Hono on the server, Vite
    with vanilla TypeScript in the browser, Zod, `@google/genai`, Vitest, Biome, Playwright with
    `@axe-core/playwright`. No database, no login, no other framework. Ask before adding any
@@ -44,9 +45,10 @@ Quality Assistant). Before any change, read `docs/SPEC.md` (what to build) and `
 ```
 docs/            SPEC.md, FACTORS.md
 src/shared/      factors.ts, actions.ts, impact.ts, schemas.ts   (used by server and browser)
-src/server/      app.ts, air.ts, places.ts, routes.ts, plan.ts, gemini.ts, cache.ts, security.ts
+src/server/      app.ts, api.ts, air.ts, places.ts, commute.ts, plan.ts, gemini.ts, cache.ts, security.ts
 src/client/      main.ts, views/, i18n/en.json, i18n/hi.json, i18n/te.json
 test/            unit/, server/, e2e/
+.github/         workflows/ci.yml
 ```
 
 ## Commands

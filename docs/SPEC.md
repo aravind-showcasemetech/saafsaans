@@ -56,8 +56,10 @@ Every swap belongs to one lens and always shows a number.
   the change in their 24-hour average exposure (`FACTORS.md` §3).
 
 **Pollute less: what your household puts into the air.**
-- Emissions avoided = trip distance × (factor for the old mode − factor for the new mode) × trips.
-  CO₂ in kg, and exhaust PM in grams where a sourced factor exists (`FACTORS.md` §9, §10).
+- Vehicle-km taken off the road (a direct count), and CO₂ avoided = trip distance × (factor for the
+  old mode − factor for the new mode) × trips (`FACTORS.md` §9). No exhaust PM numbers: no sourced
+  Indian factors were found (§10). Context comes from §11: vehicles and road dust are Hyderabad's
+  biggest sources of particle pollution.
 - **Shown as:** per day, per week and per winter; on the community card, multiplied by homes taking
   part.
 
@@ -81,7 +83,9 @@ ignored.
      its CADR if known, cooking (gas, induction, lots of frying), incense, mosquito coils, smoking.
 4. **Today.**
    - **Air now:** the AQI number, band name and an icon (never colour alone), the main pollutant,
-     and the CPCB health statement for the most sensitive person at home.
+     the CPCB health statement for the band, and **for each family member, Google's health advice
+     for their group** (children, elderly, pregnancy, lung or heart condition, athletes, everyone
+     else), labelled as Google's.
    - **Next 24 to 48 hours:** an hourly strip with the cleanest and dirtiest windows labelled in
      words.
    - **Swap cards**, grouped Protect and Pollute less. Each card: what to do, who it helps, the
@@ -130,7 +134,7 @@ shows advice without a number, labelled as such.
 | `air-house-clean-window` | Protect | Air the house in the cleanest window | Forecast, indoor model |
 | `purifier-bedroom` | Protect | Run a purifier of the right size in the bedroom at night | Indoor model (CADR), sizing rule |
 | `diy-fan-filter` | Protect | Fan-and-filter box when there is no purifier | Advice only unless a sourced CADR figure exists |
-| `mask-outdoors` | Protect | Well-fitted N95 for the commute or outdoor work | Mask reduction figure (if sourced) |
+| `mask-outdoors` | Protect | Well-fitted N95 for the commute or outdoor work | Mask leakage range (`FACTORS.md` §7), shown as a range |
 | `no-mosquito-coil` | Protect | Use a net or plug-in repellent instead of a coil | Indoor source figure |
 | `incense-outside` | Protect | Light incense briefly, by an open window, or not at all | Indoor source figure |
 | `cook-with-exhaust` | Protect | Exhaust fan or window open while frying; lids on | Indoor source figure |
@@ -148,9 +152,9 @@ shows advice without a number, labelled as such.
 | Service | What it does here |
 |---|---|
 | **Gemini API** | Swap choice, explanations, refinement; structured JSON output, system instruction, safety settings; English, Hindi, Telugu |
-| **Air Quality API** | Current conditions with India's local AQI, hourly forecast, dominant pollutant; optional heatmap tiles for a map layer |
+| **Air Quality API** | Current conditions with India's local AQI (`ind_cpcb`), hourly forecast (up to 96 hours), dominant pollutant, health advice for each member's group; optional heatmap tiles for a map layer |
 | **Places API** (Autocomplete) | Location entry |
-| **Routes API** | Commute distance and time by mode, for the travel swaps |
+| **Routes API** | Commute distance and time by mode, for the travel swaps. Two-wheeler, walking and cycling routes are beta, so the app shows Google's required warning on them |
 | **Cloud Run** (Mumbai region) | Hosting, with the API keys held server-side |
 | **Firebase Analytics** (optional) | Aggregate events only (plan made, language), never profile data or location |
 
@@ -222,7 +226,7 @@ the Delhi household shows the Severe case.
 |---|---|
 | Problem alignment | The README opens with §4; every brief phrase has a feature and a screenshot |
 | Security | Keys only on the server; every input validated; rate and size limits; CSP, HSTS and other headers; prompt-injection boundary; `SECURITY.md`; no known dependency vulnerabilities; secret scanning in CI |
-| Efficiency | Air and plan caching; one Gemini call per plan; what-if toggles cost no AI call; small first load; demo mode makes no model call |
+| Efficiency | Air and plan caching; one Gemini call per plan; what-if toggles cost no AI call; small first load; demo households use Gemini when a key is available (cached 30 min) and the deterministic ranker when DEMO=1, over quota or keyless (no model call) |
 | Testing | Unit tests for every `impact` function against hand-worked examples; server tests with Gemini and Google APIs mocked; automated accessibility checks (axe); a smoke test against the live URL; a coverage floor enforced in CI |
 | Accessibility | §11 target met and checked by axe and Lighthouse |
 | Code quality | Strict TypeScript, lint and format clean, small single-purpose modules, no dead code, a clear README and architecture note |
@@ -240,6 +244,9 @@ the Delhi household shows the Severe case.
 
 ## 17. Open questions
 
+- Gemini quota: free limits may be about 20 requests a day for the larger Flash model (forum
+  reports, `FACTORS.md` §12). Use a Flash-Lite model for the live app, or turn on billing for the
+  Gemini key with a budget alert?
 - Who on the team checks the Hindi and Telugu text? Machine translation alone will read stiffly.
 - Map layer (Air Quality heatmap tiles): worth it, or keep the first version map-free?
 - Which actions ship without a sourced number (advice only), once `FACTORS.md` is complete?
