@@ -146,14 +146,14 @@ Conversions: 1 cfm = 1.699 m³/h; 1 m² = 10.764 ft².
 | Source | Figure | Status | Reference |
 |---|---|---|---|
 | Mosquito coil | "burning one mosquito coil would release the same amount of PM(2.5) mass as burning 75-137 cigarettes" (emitted mass, not health effect) | SOURCED | Liu et al. 2003, *Environ Health Perspect* 111(12):1454, doi:10.1289/ehp.6286, https://pmc.ncbi.nlm.nih.gov/articles/PMC1241646/ |
-| Incense | "in one test house, burning incense raised indoor PM2.5 to 197 µg/m³" (measured in an experimental house, not a typical peak) | SOURCED (abstract) | Ji et al. 2010, *Indoor Air*, doi:10.1111/j.1600-0668.2009.00634.x |
+| Incense | "reached 197 microg/m(3)" in an experimental house | SOURCED (abstract) | Ji et al. 2010, *Indoor Air*, doi:10.1111/j.1600-0668.2009.00634.x |
 | Incense (supporting) | Incense had "the highest 5-min PM2.5 increments (15.0 µg/m3) to indoor levels, among all single sources" | SOURCED (abstract) | Lung et al. 2021, https://pmc.ncbi.nlm.nih.gov/articles/PMC8247015/ |
 | Frying | Median 4.5 mg/m³ PM2.5 with no ventilation vs 0.5 mg/m³ with the stove hood on (2-hour sample, pan-frying) | SOURCED | Lee, Yu & Kim 2017, *IJERPH* 14:78, https://pmc.ncbi.nlm.nih.gov/articles/PMC5295329/ |
 | Cooking (supporting) | Cooking PM2.5 "peaked 1-7 min after cooking at levels of 200-1400 μg/m3" | SOURCED | Xiang et al. 2021, https://pmc.ncbi.nlm.nih.gov/articles/PMC8224830/ |
 | Wet mopping vs dry sweeping | Indirect only: lead-dust study (dry sweeping raised airborne lead 65–220%, wet sweeping at most 22%), and an observational link between mopping and lower indoor PM2.5 | NOT VERIFIED for PM2.5; advice only | Grinshpun et al. 2002, *JAWMA*, PMID 11871758; Kim et al. 2023, *Sci Rep*, https://pmc.ncbi.nlm.nih.gov/articles/PMC10361977/ |
 
 **How the app uses it:** `no-mosquito-coil`, `incense-outside` and `cook-with-exhaust` show the
-sourced figure as a fact ("one coil releases as much PM2.5 as 75 to 137 cigarettes"; "in one test house, burning incense raised indoor PM2.5 to 197 µg/m³"; "frying without a stove hood reached median 4.5 mg/m³ PM2.5 vs 0.5 mg/m³ with it on"), not as a
+sourced figure as a fact ("one coil releases as much PM2.5 as 75 to 137 cigarettes"; in one test house, burning incense raised indoor PM2.5 to 197 µg/m³; "frying without a stove hood reached median 4.5 mg/m³ PM2.5 vs 0.5 mg/m³ with it on"), not as a
 computed change in the family's dose. `wet-mop` is advice only.
 
 ## 7. Masks
