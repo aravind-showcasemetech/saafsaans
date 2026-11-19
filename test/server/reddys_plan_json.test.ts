@@ -6,11 +6,19 @@ import { demoHouseholds } from "../../src/server/demo/households.js";
 describe("Reddys Plan JSON snapshot test", () => {
   it("prints Reddys plan JSON", async () => {
     const reddys = demoHouseholds["the-reddys"];
+    const profileWithoutNicknames = {
+      ...reddys.profile,
+      members: reddys.profile.members.map((m, idx) => ({
+        ...m,
+        id: `m${idx + 1}`,
+        nickname: undefined,
+      })),
+    };
     const res = await app.request("/api/plan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        profile: reddys.profile,
+        profile: profileWithoutNicknames,
         lat: reddys.location.lat,
         lng: reddys.location.lng,
         lang: "en",

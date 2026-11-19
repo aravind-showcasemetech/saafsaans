@@ -29,13 +29,19 @@ export async function initHomePage(): Promise<void> {
   const areas = await fetchAreasAir();
   const kukatpally = areas.find((a) => a.name === "Kukatpally") ?? areas[0];
 
+  const isDemo = kukatpally?.isDemo ?? true;
+  const sampleDate = kukatpally?.capturedDate ?? "2026-11-19";
+  const timeDisplay = isDemo
+    ? `Sample data captured on ${sampleDate}`
+    : new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+
   const liveAir = kukatpally
     ? {
         aqi: kukatpally.aqi ?? 92,
         aqiBand: kukatpally.aqiBand ?? "Satisfactory",
         pm25: kukatpally.pm25 ?? 55,
         area: "Kukatpally, Hyderabad",
-        time: "Today, live",
+        time: timeDisplay,
       }
     : null;
 

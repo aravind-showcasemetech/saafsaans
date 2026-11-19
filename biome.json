@@ -7,7 +7,13 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": ["dist/**", "coverage/**", "node_modules/**"]
+    "ignore": [
+      "dist/**",
+      "coverage/**",
+      "node_modules/**",
+      "test-results/**",
+      "playwright-report/**"
+    ]
   },
   "formatter": {
     "enabled": true,

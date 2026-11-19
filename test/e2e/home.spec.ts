@@ -41,4 +41,19 @@ test.describe("Home Page Accessibility and Controls", () => {
     const accessibilityScanResults = await new AxeBuilder({ page }).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
   });
+
+  test("verifies no horizontal scroll at 320, 390 and 1440 px", async ({ page }) => {
+    for (const width of [320, 390, 1440]) {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto("/");
+      await page.waitForSelector("#hero-title");
+
+      const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+      const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
+      expect(
+        scrollWidth,
+        `Page has horizontal scroll at ${width}px: scrollWidth=${scrollWidth}, clientWidth=${clientWidth}`,
+      ).toBeLessThanOrEqual(clientWidth + 1);
+    }
+  });
 });

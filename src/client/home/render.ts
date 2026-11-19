@@ -35,7 +35,7 @@ export function renderHeader(): string {
             <button class="lang-btn" data-lang="hi">हिन्दी</button>
             <button class="lang-btn" data-lang="te">తెలుగు</button>
           </nav>
-          <a href="#setup" class="btn btn-primary">${t("header.planMyDay")}</a>
+          <a href="#/setup" class="btn btn-primary">${t("header.planMyDay")}</a>
         </div>
       </div>
     </header>
@@ -75,8 +75,8 @@ export function renderHero(
           <h1 id="hero-title" class="hero-title">${t("hero.title")}</h1>
           <p class="hero-lead">${t("hero.lead")}</p>
           <div class="hero-cta">
-            <a href="#demo" class="btn btn-primary">${t("hero.tryHyderabad")}</a>
-            <a href="#setup" class="btn btn-secondary">${t("hero.setUpHousehold")}</a>
+            <a href="#/demo" class="btn btn-primary">${t("hero.tryHyderabad")}</a>
+            <a href="#/setup" class="btn btn-secondary">${t("hero.setUpHousehold")}</a>
           </div>
         </div>
         <div class="hero-visual">
@@ -88,6 +88,12 @@ export function renderHero(
 }
 
 export function renderAirMarquee(areas: AreaAirItem[]): string {
+  const isDemo = areas.some((a) => a.isDemo);
+  const sampleDate = areas[0]?.capturedDate ?? "2026-11-19";
+  const demoBanner = isDemo
+    ? `<div style="font-size: var(--text-xs); color: var(--ink-2); margin-bottom: var(--space-8); text-align: center;">Sample data captured on ${sampleDate}</div>`
+    : "";
+
   const itemsHtml = areas
     .map(
       (a) => `
@@ -102,6 +108,7 @@ export function renderAirMarquee(areas: AreaAirItem[]): string {
 
   return `
     <div class="marquee-wrapper" aria-label="${t("marquee.airTitle")}">
+      ${demoBanner}
       <div class="marquee-viewport" tabindex="0" role="region" aria-label="${t("marquee.airScrollRegion")}">
         <div class="marquee-track">
           <div class="marquee-items">${itemsHtml}</div>
@@ -118,6 +125,11 @@ export function renderAirMarquee(areas: AreaAirItem[]): string {
 }
 
 export function renderMorningInsight(cleanest: string, dirtiest: string): string {
+  // Extract hours from cleanest (e.g. "14:00 to 17:00")
+  const cleanestParts = cleanest.split(" to ");
+  const cleanestStart = cleanestParts[0] || "14:00";
+  const cleanestEnd = cleanestParts[1] || "17:00";
+
   return `
     <section class="section reveal-on-scroll" aria-labelledby="insight-title">
       <div class="container">
@@ -128,7 +140,7 @@ export function renderMorningInsight(cleanest: string, dirtiest: string): string
         </div>
         <div class="insight-card">
           <p style="font-size: var(--text-md); margin-bottom: var(--space-16);">
-            ${t("insight.explanation")}
+            ${t("insight.explanation", { cleanestStart, cleanestEnd })}
           </p>
           <div class="insight-windows">
             <div>
@@ -212,13 +224,13 @@ export function renderTwoLenses(protectCut: number, polluteSaved: number): strin
             <h3 class="lens-title">${t("lenses.protectTitle")}</h3>
             <p style="color: var(--ink-2); font-size: var(--text-sm);">${t("lenses.protectDesc")}</p>
             <div class="lens-stat tabular-nums">${protectCut}%</div>
-            <p style="font-size: var(--text-xs); color: var(--ink-2);">${t("lenses.protectExample")}</p>
+            <p style="font-size: var(--text-xs); color: var(--ink-2);">${t("lenses.protectExample", { percent: protectCut })}</p>
           </div>
           <div class="lens-card">
             <h3 class="lens-title">${t("lenses.polluteTitle")}</h3>
             <p style="color: var(--ink-2); font-size: var(--text-sm);">${t("lenses.polluteDesc")}</p>
             <div class="lens-stat tabular-nums">${polluteSaved} kg</div>
-            <p style="font-size: var(--text-xs); color: var(--ink-2);">${t("lenses.polluteExample")}</p>
+            <p style="font-size: var(--text-xs); color: var(--ink-2);">${t("lenses.polluteExample", { amount: polluteSaved })}</p>
           </div>
         </div>
       </div>
@@ -361,8 +373,8 @@ export function renderFinalCta(): string {
         <h2 id="final-cta-title" class="section-title" style="font-size: var(--text-2xl);">${t("finalCta.title")}</h2>
         <p class="section-desc" style="margin-bottom: var(--space-32);">${t("finalCta.desc")}</p>
         <div class="hero-cta">
-          <a href="#demo" class="btn btn-primary">${t("hero.tryHyderabad")}</a>
-          <a href="#setup" class="btn btn-secondary">${t("hero.setUpHousehold")}</a>
+          <a href="#/demo" class="btn btn-primary">${t("hero.tryHyderabad")}</a>
+          <a href="#/setup" class="btn btn-secondary">${t("hero.setUpHousehold")}</a>
         </div>
       </div>
     </section>

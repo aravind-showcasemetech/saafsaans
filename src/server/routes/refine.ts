@@ -29,6 +29,27 @@ refineRoute.post("/refine", async (c) => {
     return c.json({ error: "Invalid refine input", requestId: reqId }, 400);
   }
 
+  // Reject nickname field to ensure nicknames never leave the browser
+  const rawRecord =
+    typeof rawBody === "object" && rawBody !== null ? (rawBody as Record<string, unknown>) : null;
+  const rawProfile =
+    typeof rawRecord?.profile === "object" && rawRecord.profile !== null
+      ? (rawRecord.profile as Record<string, unknown>)
+      : null;
+  if (Array.isArray(rawProfile?.members)) {
+    for (const m of rawProfile.members) {
+      if (
+        m &&
+        typeof m === "object" &&
+        "nickname" in m &&
+        (m as Record<string, unknown>).nickname !== undefined
+      ) {
+        console.error(`Request ${reqId} failed: status 400 Nickname field rejected`);
+        return c.json({ error: "Nickname field is not permitted", requestId: reqId }, 400);
+      }
+    }
+  }
+
   const { profile, text, lang } = parsed.data;
 
   let latencyMs = 0;

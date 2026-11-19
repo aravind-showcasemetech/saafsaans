@@ -13,7 +13,14 @@ describe("Phase 4: Gemini choosing and explaining swaps & Refinement", () => {
     planCache.clear();
   });
 
-  const reddysProfile = demoHouseholds["the-reddys"].profile;
+  const reddysProfile = {
+    ...demoHouseholds["the-reddys"].profile,
+    members: demoHouseholds["the-reddys"].profile.members.map((m, idx) => ({
+      ...m,
+      id: `m${idx + 1}`,
+      nickname: undefined,
+    })),
+  };
 
   it("1. handles a valid Gemini reply for /api/plan", async () => {
     const mockPlanCall = vi.spyOn(geminiModule, "callGeminiChoosePlan").mockResolvedValue({
@@ -313,5 +320,48 @@ describe("Phase 4: Gemini choosing and explaining swaps & Refinement", () => {
     // Since re-validation failed, original profile was retained without changes
     expect(json.profile.commute.startPlace).toBe("Kukatpally");
     expect(json.profile.commute.distanceKm).toBe(12);
+  });
+
+  it("11. rejects nickname field in POST /api/plan and POST /api/refine", async () => {
+    const invalidProfile = {
+      ...reddysProfile,
+      members: [
+        {
+          id: "m1",
+          nickname: "Father",
+          ageBand: "31-40",
+          sensitivity: "none",
+          routinePreset: "office_worker",
+          outdoorExerciseMinutes: 0,
+        },
+      ],
+    };
+
+    const resPlan = await app.request("/api/plan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        profile: invalidProfile,
+        lat: 17.48,
+        lng: 78.41,
+        lang: "en",
+      }),
+    });
+    expect(resPlan.status).toBe(400);
+    const planJson = await resPlan.json();
+    expect(planJson.error).toBe("Nickname field is not permitted");
+
+    const resRefine = await app.request("/api/refine", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        profile: invalidProfile,
+        text: "Add a purifier",
+        lang: "en",
+      }),
+    });
+    expect(resRefine.status).toBe(400);
+    const refineJson = await resRefine.json();
+    expect(refineJson.error).toBe("Nickname field is not permitted");
   });
 });

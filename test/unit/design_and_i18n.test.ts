@@ -81,4 +81,40 @@ describe("i18n key consistency", () => {
     expect(missingInHi, `Missing keys in hi.json: ${missingInHi.join(", ")}`).toEqual([]);
     expect(missingInTe, `Missing keys in te.json: ${missingInTe.join(", ")}`).toEqual([]);
   });
+
+  it("fails if any i18n string outside facts and sources contains a digit", () => {
+    const langs = ["en", "hi", "te"];
+    const violations: string[] = [];
+
+    function checkDigits(obj: Record<string, unknown>, lang: string, prefix = "") {
+      for (const [k, v] of Object.entries(obj)) {
+        const fullKey = prefix ? `${prefix}.${k}` : k;
+        if (
+          fullKey.startsWith("facts.") ||
+          fullKey.startsWith("sources.") ||
+          fullKey.endsWith(".sourceRef")
+        ) {
+          continue;
+        }
+        if (v && typeof v === "object" && !Array.isArray(v)) {
+          checkDigits(v as Record<string, unknown>, lang, fullKey);
+        } else if (typeof v === "string") {
+          if (/\p{Nd}/u.test(v)) {
+            violations.push(`${lang}:${fullKey} contains digit -> "${v}"`);
+          }
+        }
+      }
+    }
+
+    for (const lang of langs) {
+      const filePath = path.resolve(process.cwd(), `src/client/i18n/${lang}.json`);
+      const dict = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+      checkDigits(dict, lang);
+    }
+
+    expect(
+      violations,
+      `Found digits in i18n strings outside facts and sources:\n${violations.join("\n")}`,
+    ).toEqual([]);
+  });
 });

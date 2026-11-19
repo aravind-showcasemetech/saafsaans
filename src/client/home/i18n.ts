@@ -23,7 +23,7 @@ export function getLanguage(): SupportedLang {
   return currentLang;
 }
 
-export function t(keyPath: string): string {
+export function t(keyPath: string, params?: Record<string, string | number>): string {
   const dict = dictionaries[currentLang] ?? dictionaries.en;
   if (!dict) return keyPath;
 
@@ -43,10 +43,18 @@ export function t(keyPath: string): string {
             return keyPath;
           }
         }
-        return typeof enCur === "string" ? enCur : keyPath;
+        cur = typeof enCur === "string" ? enCur : keyPath;
+        break;
       }
       return keyPath;
     }
   }
-  return typeof cur === "string" ? cur : keyPath;
+
+  let text = typeof cur === "string" ? cur : keyPath;
+  if (params) {
+    for (const [paramKey, paramVal] of Object.entries(params)) {
+      text = text.replaceAll(`{${paramKey}}`, String(paramVal));
+    }
+  }
+  return text;
 }

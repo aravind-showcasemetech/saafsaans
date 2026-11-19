@@ -80,13 +80,15 @@ export const CommuteProfileSchema = z.object({
 
 export const WindowHabitSchema = z.enum(["mostly_open", "open_day_shut_night", "mostly_shut"]);
 
+export const CookingMethodSchema = z.enum(["gas", "induction", "lots_of_frying"]);
+
 export const HomeProfileSchema = z.object({
   bedroomAreaSqFt: z.number().min(20).max(2000).default(144), // default 12x12 = 144 sq ft
   ceilingHeightFt: z.number().min(6).max(25).default(10), // default 10 ft
   windowHabit: WindowHabitSchema.default("mostly_shut"),
   hasPurifier: z.boolean().default(false),
   purifierCadrCfm: z.number().min(0).max(2000).optional(),
-  cookingMethod: z.enum(["gas", "induction", "lots_of_frying"]).default("gas"),
+  cookingMethod: CookingMethodSchema.default("gas"),
   usesIncense: z.boolean().default(false),
   usesMosquitoCoils: z.boolean().default(false),
   smokerInHouse: z.boolean().default(false),
@@ -188,6 +190,7 @@ export type MemberProfile = z.infer<typeof MemberProfileSchema>;
 export type TravelMode = z.infer<typeof TravelModeSchema>;
 export type CommuteProfile = z.infer<typeof CommuteProfileSchema>;
 export type WindowHabit = z.infer<typeof WindowHabitSchema>;
+export type CookingMethod = z.infer<typeof CookingMethodSchema>;
 export type RoutineBlock = z.infer<typeof RoutineBlockSchema>;
 export type HomeProfile = z.infer<typeof HomeProfileSchema>;
 export type HouseholdProfile = z.infer<typeof HouseholdProfileSchema>;

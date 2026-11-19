@@ -8,6 +8,17 @@
   padding-right: var(--gutter);
 }
 
+@media (max-width: 480px) {
+  .container {
+    padding-left: var(--space-12);
+    padding-right: var(--space-12);
+  }
+
+  .grid-12 {
+    gap: var(--space-12);
+  }
+}
+
 .section {
   padding-top: var(--space-96);
   padding-bottom: var(--space-96);

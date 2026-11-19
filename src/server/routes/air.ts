@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { NormalisedAirData } from "../../shared/air-types.js";
 import { fetchAirData } from "../air.js";
 import { airCache } from "../cache.js";
+import { config } from "../config.js";
 
 export const airRoute = new Hono();
 
@@ -28,18 +29,26 @@ export const FIXED_AREAS = [
   { name: "Dwarka, Delhi", lat: 28.59, lng: 77.05 },
 ] as const;
 
+export const DEMO_AREAS = [
+  { name: "Kukatpally", lat: 17.48, lng: 78.41 },
+  { name: "Dwarka, Delhi", lat: 28.59, lng: 77.05 },
+] as const;
+
 // GET /api/air/areas
 airRoute.get("/air/areas", async (c) => {
   const reqId = c.get("requestId" as never) || "";
-  const cacheKey = "air_areas_list";
+  const isDemo = config.demoMode;
+  const cacheKey = isDemo ? "air_areas_list_demo" : "air_areas_list";
   const cached = airCache.get(cacheKey);
   if (cached) {
     return c.json(cached);
   }
 
+  const areasToFetch = isDemo ? DEMO_AREAS : FIXED_AREAS;
+
   try {
     const results = await Promise.all(
-      FIXED_AREAS.map(async (area) => {
+      areasToFetch.map(async (area) => {
         const areaCacheKey = `air_${area.lat}_${area.lng}`;
         let airData = airCache.get(areaCacheKey) as NormalisedAirData | undefined;
         if (!airData) {
@@ -55,6 +64,8 @@ airRoute.get("/air/areas", async (c) => {
           pm25: airData.pm25,
           dominantPollutant: airData.dominantPollutant,
           isApproximate: airData.isApproximate,
+          isDemo,
+          capturedDate: isDemo ? "2026-11-19" : undefined,
         };
       }),
     );

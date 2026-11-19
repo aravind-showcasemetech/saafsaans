@@ -13,6 +13,8 @@ export interface AreaAirItem {
   aqiBand: string;
   pm25: number;
   dominantPollutant: string;
+  isDemo?: boolean;
+  capturedDate?: string;
 }
 
 export interface HomeLiveAirData {
@@ -93,7 +95,7 @@ export async function fetchAreasAir(): Promise<AreaAirItem[]> {
     console.error("Failed to fetch areas air data", e);
   }
 
-  // Fallback demo areas
+  // Fallback demo areas (real captures only in demo mode)
   return [
     {
       name: "Kukatpally",
@@ -101,71 +103,10 @@ export async function fetchAreasAir(): Promise<AreaAirItem[]> {
       lng: 78.41,
       aqi: 92,
       aqiBand: "Satisfactory",
-      pm25: 55,
+      pm25: 71.63,
       dominantPollutant: "pm25",
-    },
-    {
-      name: "Gachibowli",
-      lat: 17.44,
-      lng: 78.35,
-      aqi: 88,
-      aqiBand: "Satisfactory",
-      pm25: 50,
-      dominantPollutant: "pm25",
-    },
-    {
-      name: "HITEC City",
-      lat: 17.45,
-      lng: 78.38,
-      aqi: 94,
-      aqiBand: "Satisfactory",
-      pm25: 56,
-      dominantPollutant: "pm25",
-    },
-    {
-      name: "Kondapur",
-      lat: 17.46,
-      lng: 78.35,
-      aqi: 90,
-      aqiBand: "Satisfactory",
-      pm25: 52,
-      dominantPollutant: "pm25",
-    },
-    {
-      name: "Banjara Hills",
-      lat: 17.41,
-      lng: 78.44,
-      aqi: 85,
-      aqiBand: "Satisfactory",
-      pm25: 48,
-      dominantPollutant: "pm25",
-    },
-    {
-      name: "Sanathnagar",
-      lat: 17.46,
-      lng: 78.44,
-      aqi: 110,
-      aqiBand: "Moderately polluted",
-      pm25: 65,
-      dominantPollutant: "pm25",
-    },
-    {
-      name: "Secunderabad",
-      lat: 17.44,
-      lng: 78.5,
-      aqi: 95,
-      aqiBand: "Satisfactory",
-      pm25: 58,
-      dominantPollutant: "pm25",
-    },
-    {
-      name: "Charminar",
-      lat: 17.36,
-      lng: 78.47,
-      aqi: 105,
-      aqiBand: "Moderately polluted",
-      pm25: 62,
-      dominantPollutant: "pm25",
+      isDemo: true,
+      capturedDate: "2026-11-19",
     },
     {
       name: "Dwarka, Delhi",
@@ -173,8 +114,10 @@ export async function fetchAreasAir(): Promise<AreaAirItem[]> {
       lng: 77.05,
       aqi: 220,
       aqiBand: "Poor",
-      pm25: 74,
+      pm25: 74.05,
       dominantPollutant: "pm25",
+      isDemo: true,
+      capturedDate: "2026-11-19",
     },
   ];
 }

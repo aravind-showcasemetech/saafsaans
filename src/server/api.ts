@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { airRoute } from "./routes/air.js";
 import { commuteRoute } from "./routes/commute.js";
+import { demoRoute } from "./routes/demo.js";
 import { placesRoute } from "./routes/places.js";
 import { planRoute } from "./routes/plan.js";
 import { refineRoute } from "./routes/refine.js";
@@ -39,6 +40,7 @@ api.get("/healthz", (c) => {
 
 // Mount modular sub-routes
 api.route("/", airRoute);
+api.route("/", demoRoute);
 api.route("/", placesRoute);
 api.route("/", commuteRoute);
 api.route("/", planRoute);

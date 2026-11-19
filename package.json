@@ -9,7 +9,8 @@
   "scripts": {
     "dev": "concurrently -k -p \"[{name}]\" -n \"server,client\" -c \"cyan.bold,magenta.bold\" \"tsx watch --env-file=.env src/server/server.ts\" \"vite\"",
     "build": "vite build && tsc -p tsconfig.server.json",
-    "start": "node dist/server/server.js",
+    "start": "node dist/server/server/server.js",
+    "smoke": "node scripts/smoke-test.js",
     "capture:air": "tsx --env-file=.env src/server/capture-air.ts",
     "test": "vitest run",
     "check": "biome check . && tsc --noEmit && vitest run --coverage"
