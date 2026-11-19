@@ -135,7 +135,7 @@ export async function fetchAirData(
   fetchFn: typeof fetch = fetch,
   forceReal = false,
 ): Promise<NormalisedAirData> {
-  if (!forceReal && (config.demoMode || !apiKey)) {
+  if (!forceReal && (!config.mapsLive || !apiKey)) {
     // If near Dwarka / Delhi (lat > 25)
     if (lat > 25) {
       return dwarkaDemoAir;

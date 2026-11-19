@@ -53,3 +53,6 @@ export const airCache = new TtlCache<unknown>(30 * 60);
 
 // 24 hours for commute results
 export const commuteCache = new TtlCache<unknown>(24 * 60 * 60);
+
+// 30 minutes for generated plans
+export const planCache = new TtlCache<unknown>(30 * 60);

@@ -385,14 +385,18 @@ describe("Phase 3: Server clients, normaliser, cache and endpoints", () => {
 
     it("turns on demo mode when keys are missing or DEMO=1", () => {
       const cfgMissing = loadConfig({});
-      expect(cfgMissing.demoMode).toBe(true);
+      expect(cfgMissing.mapsLive).toBe(false);
+      expect(cfgMissing.geminiLive).toBe(false);
 
       const cfgDemo = loadConfig({
         MAPS_API_KEY: "secret-maps-key",
         GEMINI_API_KEY: "secret-gemini-key",
+        GEMINI_MODEL: "gemini-model-test",
         DEMO: "1",
       });
       expect(cfgDemo.demoMode).toBe(true);
+      expect(cfgDemo.mapsLive).toBe(false);
+      expect(cfgDemo.geminiLive).toBe(false);
     });
   });
 });

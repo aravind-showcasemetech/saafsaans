@@ -1,0 +1,29 @@
+{
+  "app": {
+    "title": "SaafSaans",
+    "tagline": "Family smog planner"
+  },
+  "swaps": {
+    "shift-outdoor-exercise": "Move outdoor exercise to the cleanest window when particulate levels are lowest.",
+    "exercise-indoors": "Move strenuous workouts indoors to reduce inhaled particle dose during dirty hours.",
+    "shut-windows-peak": "Keep windows closed during morning and evening pollution spikes to slow infiltration.",
+    "air-house-clean-window": "Ventilate your home during the afternoon when outdoor air is cleanest.",
+    "purifier-bedroom": "Run an air purifier in the bedroom overnight to protect sleeping family members.",
+    "diy-fan-filter": "Use a fan with a high-efficiency filter as an affordable clean air setup.",
+    "mask-outdoors": "Wear a well-fitted mask during travel or outdoor activity to filter particulate matter.",
+    "no-mosquito-coil": "Switch to mosquito nets or plug-in repellents to remove a heavy indoor smoke source.",
+    "incense-outside": "Light incense near open windows or outdoors to avoid high indoor particle levels.",
+    "cook-with-exhaust": "Use an exhaust fan and lids while cooking or frying to clear indoor fumes.",
+    "wet-mop": "Wet-mop floors instead of dry sweeping to trap settled dust without stirring it up.",
+    "metro-not-car": "Take the metro instead of driving to reduce personal exposure and street emissions.",
+    "bus-not-car": "Take the city bus instead of driving to reduce personal road emissions.",
+    "carpool": "Share rides with colleagues to divide vehicle fuel use and emissions.",
+    "walk-short-trips": "Walk or cycle short local trips during cleaner hours instead of driving.",
+    "wfh-day": "Work from home one day each week to skip commute emissions and road exposure.",
+    "no-idling": "Turn off vehicle engines at long traffic signals to cut avoidable exhaust.",
+    "no-burning": "Avoid burning dry leaves or garden waste, and report open fires to authorities."
+  },
+  "summary": {
+    "default": "Personalised air quality actions for your household routines and local forecast."
+  }
+}

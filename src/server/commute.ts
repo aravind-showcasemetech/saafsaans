@@ -120,7 +120,7 @@ export async function fetchCommuteRoutes(
     lng: Math.round(destination.lng * 100) / 100,
   };
 
-  if (!forceReal && (config.demoMode || !apiKey)) {
+  if (!forceReal && (!config.mapsLive || !apiKey)) {
     // Demo fallback values: Kukatpally (17.48, 78.41) to HITEC City (17.44, 78.38) ~ 12km
     return {
       DRIVE: {

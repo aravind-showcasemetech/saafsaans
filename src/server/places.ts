@@ -64,7 +64,7 @@ export async function fetchPlaceSuggestions(
   fetchFn: typeof fetch = fetch,
   forceReal = false,
 ): Promise<PlaceSuggestion[]> {
-  if (!forceReal && (config.demoMode || !apiKey)) {
+  if (!forceReal && (!config.mapsLive || !apiKey)) {
     const qLower = query.toLowerCase();
     const filtered = demoSuggestions.filter((s) => s.text.toLowerCase().includes(qLower));
     return filtered.length > 0 ? filtered : demoSuggestions.slice(0, 3);
@@ -128,9 +128,15 @@ export async function fetchPlaceDetails(
   fetchFn: typeof fetch = fetch,
   forceReal = false,
 ): Promise<PlaceCoordinates> {
-  if (!forceReal && (config.demoMode || !apiKey)) {
+  if (!forceReal && (!config.mapsLive || !apiKey)) {
     const found = demoCoordinates[placeId];
-    if (found) return found;
+    if (found) {
+      return {
+        ...found,
+        latitude: Math.round(found.latitude * 100) / 100,
+        longitude: Math.round(found.longitude * 100) / 100,
+      };
+    }
     return {
       placeId,
       latitude: 17.48,
@@ -143,7 +149,7 @@ export async function fetchPlaceDetails(
   const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
   try {
-    let url = `${PLACES_BASE_URL}/places/${placeId}`;
+    let url = `${PLACES_BASE_URL}/places/${encodeURIComponent(placeId)}`;
     if (sessionToken) {
       url += `?sessionToken=${encodeURIComponent(sessionToken)}`;
     }
@@ -177,8 +183,8 @@ export async function fetchPlaceDetails(
 
     return {
       placeId,
-      latitude: data.location.latitude,
-      longitude: data.location.longitude,
+      latitude: Math.round(data.location.latitude * 100) / 100,
+      longitude: Math.round(data.location.longitude * 100) / 100,
       displayName: data.displayName?.text,
     };
   } finally {

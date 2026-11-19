@@ -5,7 +5,8 @@ const EnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   MAPS_API_KEY: z.string().optional(),
   GEMINI_API_KEY: z.string().optional(),
-  GEMINI_MODEL: z.string().default("gemini-2.5-flash"),
+  GEMINI_MODEL: z.string().optional(),
+  GEMINI_MAX_PER_MINUTE: z.coerce.number().default(10),
   DEMO: z
     .enum(["0", "1"])
     .optional()
@@ -17,8 +18,11 @@ export type Config = {
   nodeEnv: "development" | "test" | "production";
   mapsApiKey?: string;
   geminiApiKey?: string;
-  geminiModel: string;
+  geminiModel?: string;
+  geminiMaxPerMinute: number;
   demoMode: boolean;
+  mapsLive: boolean;
+  geminiLive: boolean;
 };
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -28,20 +32,28 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   }
 
   const data = parsed.data;
-  const isDemo =
-    Boolean(data.DEMO) ||
-    !data.MAPS_API_KEY ||
-    data.MAPS_API_KEY.trim() === "" ||
-    !data.GEMINI_API_KEY ||
-    data.GEMINI_API_KEY.trim() === "";
+  const isDemo = Boolean(data.DEMO);
+
+  const mapsApiKey = data.MAPS_API_KEY?.trim() || undefined;
+  const geminiApiKey = data.GEMINI_API_KEY?.trim() || undefined;
+  const geminiModel = data.GEMINI_MODEL?.trim() || undefined;
+
+  // Split demo mode:
+  // Maps data is live when MAPS_API_KEY is set, Gemini is live when both key and model are set,
+  // and DEMO=1 turns both off.
+  const mapsLive = !isDemo && Boolean(mapsApiKey);
+  const geminiLive = !isDemo && Boolean(geminiApiKey && geminiModel);
 
   return {
     port: data.PORT,
     nodeEnv: data.NODE_ENV,
-    mapsApiKey: data.MAPS_API_KEY,
-    geminiApiKey: data.GEMINI_API_KEY,
-    geminiModel: data.GEMINI_MODEL,
+    mapsApiKey,
+    geminiApiKey,
+    geminiModel,
+    geminiMaxPerMinute: data.GEMINI_MAX_PER_MINUTE,
     demoMode: isDemo,
+    mapsLive,
+    geminiLive,
   };
 }
 
