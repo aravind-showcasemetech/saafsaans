@@ -188,6 +188,7 @@ export type MemberProfile = z.infer<typeof MemberProfileSchema>;
 export type TravelMode = z.infer<typeof TravelModeSchema>;
 export type CommuteProfile = z.infer<typeof CommuteProfileSchema>;
 export type WindowHabit = z.infer<typeof WindowHabitSchema>;
+export type RoutineBlock = z.infer<typeof RoutineBlockSchema>;
 export type HomeProfile = z.infer<typeof HomeProfileSchema>;
 export type HouseholdProfile = z.infer<typeof HouseholdProfileSchema>;
 export type HourlyAirRecord = z.infer<typeof HourlyAirRecordSchema>;

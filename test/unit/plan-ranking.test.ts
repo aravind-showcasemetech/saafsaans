@@ -6,6 +6,7 @@ import {
   filterApplicableActions,
   rankApplicableActions,
 } from "../../src/server/plan.js";
+import { cleanestAndDirtiestWindows } from "../../src/shared/impact.js";
 
 describe("Plan Action Filtering and Ranking", () => {
   it("deterministic ranker gives the Reddys shift-outdoor-exercise, purifier-bedroom, no-mosquito-coil and metro-not-car", () => {
@@ -19,7 +20,7 @@ describe("Plan Action Filtering and Ranking", () => {
     expect(applicableIds).toContain("metro-not-car");
 
     const computed = applicable.map((a) => computeActionNumbers(a, reddys, kukatpallyDemoAir));
-    const ranked = rankApplicableActions(computed);
+    const ranked = rankApplicableActions(computed, reddys);
     const top6Ids = ranked.slice(0, 6).map((a) => a.id);
 
     expect(top6Ids).toContain("shift-outdoor-exercise");

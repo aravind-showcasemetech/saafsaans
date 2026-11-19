@@ -23,6 +23,17 @@
     "no-idling": "Turn off vehicle engines at long traffic signals to cut avoidable exhaust.",
     "no-burning": "Avoid burning dry leaves or garden waste, and report open fires to authorities."
   },
+  "facts": {
+    "mosquitoCoil": "Burning one mosquito coil releases as much PM2.5 as burning 75 to 137 cigarettes.",
+    "incense": "In one test house, burning incense raised indoor PM2.5 to 197 µg/m³.",
+    "frying": "Frying without a stove hood reached a median 4.5 mg/m³ of PM2.5, against 0.5 mg/m³ with the hood on."
+  },
+  "advice": {
+    "wetMop": "Wet-mop floors instead of dry sweeping to remove dust without resuspending particles.",
+    "diyFanFilter": "A box fan taped to a HEPA or MERV-13 filter can lower indoor PM2.5 as a low-cost filter setup.",
+    "noIdling": "Turn off vehicle engines at long traffic signals to cut avoidable exhaust.",
+    "noBurning": "Avoid burning dry leaves or garden waste, and report open fires to authorities."
+  },
   "summary": {
     "default": "Personalised air quality actions for your household routines and local forecast."
   }
