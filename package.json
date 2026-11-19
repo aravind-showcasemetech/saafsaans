@@ -7,9 +7,10 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently -k -p \"[{name}]\" -n \"server,client\" -c \"cyan.bold,magenta.bold\" \"tsx watch --env-file=.env src/server/server.ts\" \"vite\"",
     "build": "vite build && tsc -p tsconfig.server.json",
     "start": "node dist/server/server.js",
+    "capture:air": "tsx --env-file=.env src/server/capture-air.ts",
     "test": "vitest run",
     "check": "biome check . && tsc --noEmit && vitest run --coverage"
   },
@@ -22,6 +23,8 @@
     "@biomejs/biome": "^1.9.4",
     "@types/node": "^22.13.9",
     "@vitest/coverage-v8": "^3.0.7",
+    "concurrently": "^10.0.7",
+    "tsx": "^4.23.15",
     "typescript": "^5.8.2",
     "vite": "^6.2.0",
     "vitest": "^3.0.7"

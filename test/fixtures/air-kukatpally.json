@@ -1,0 +1,307 @@
+{
+  "currentAqi": 94,
+  "aqiBand": "Satisfactory",
+  "dominantPollutant": "pm25",
+  "pm25": 55.99,
+  "pm10": 82.13,
+  "healthRecommendations": {
+    "generalPopulation": "Reduce the intensity of your outdoor activities. It is recommended to limit the time you are near busy roads, construction sites, open fires and other sources of smoke. Staying indoors with an activated air filtration system would be best for your long term health.",
+    "elderly": "Avoid intense activities outdoors. Stay away from busy roads, construction sites, open fires and other sources of smoke. Staying indoors with an activated air filtration system would be best for your long term health.",
+    "lungDiseasePopulation": "Avoid intense activities outdoors. Keep relevant medication(s) available and consult a doctor with any questions. Stay away from busy roads, open fires and other sources of smoke. Staying indoors with an activated air filtration system would be best for your long term health.",
+    "heartDiseasePopulation": "Avoid intense activities outdoors. Keep relevant medication(s) available and consult a doctor with any questions. Stay away from busy roads, construction sites, open fires and other sources of smoke. Staying indoors with an activated air filtration system would be best for your long term health.",
+    "athletes": "Avoid intense activities outdoors. Stay away from busy roads, construction sites, open fires and other sources of smoke. Staying indoors with an activated air filtration system would be best for your long term health.",
+    "pregnantWomen": "To keep you and your baby healthy, avoid intense activities outdoors. Stay away from busy roads, construction sites, open fires and other sources of smoke. Staying indoors with an activated air filtration system would be best for your long term health.",
+    "children": "Avoid intense activities outdoors. Stay away from busy roads, construction sites, open fires and other sources of smoke. Staying indoors with an activated air filtration system would be best for your long term health."
+  },
+  "hourlyForecast": [
+    {
+      "time": "2026-11-19T16:00:00Z",
+      "pm25": 54.73,
+      "aqi": 92,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-19T17:00:00Z",
+      "pm25": 54.07,
+      "aqi": 90,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-19T18:00:00Z",
+      "pm25": 52.7,
+      "aqi": 89,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-19T19:00:00Z",
+      "pm25": 51.29,
+      "aqi": 88,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-19T20:00:00Z",
+      "pm25": 50.58,
+      "aqi": 86,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-19T21:00:00Z",
+      "pm25": 50.09,
+      "aqi": 85,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-19T22:00:00Z",
+      "pm25": 49.9,
+      "aqi": 85,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-19T23:00:00Z",
+      "pm25": 48.78,
+      "aqi": 84,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T00:00:00Z",
+      "pm25": 49.23,
+      "aqi": 84,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T01:00:00Z",
+      "pm25": 51.7,
+      "aqi": 84,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T02:00:00Z",
+      "pm25": 53.21,
+      "aqi": 83,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T03:00:00Z",
+      "pm25": 51.23,
+      "aqi": 83,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T04:00:00Z",
+      "pm25": 52.19,
+      "aqi": 87,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T05:00:00Z",
+      "pm25": 53.4,
+      "aqi": 93,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T06:00:00Z",
+      "pm25": 51.51,
+      "aqi": 103,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T07:00:00Z",
+      "pm25": 48.03,
+      "aqi": 115,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T08:00:00Z",
+      "pm25": 45.41,
+      "aqi": 127,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T09:00:00Z",
+      "pm25": 43.54,
+      "aqi": 139,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T10:00:00Z",
+      "pm25": 42.95,
+      "aqi": 149,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T11:00:00Z",
+      "pm25": 43,
+      "aqi": 156,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T12:00:00Z",
+      "pm25": 45.54,
+      "aqi": 158,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T13:00:00Z",
+      "pm25": 51.15,
+      "aqi": 153,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T14:00:00Z",
+      "pm25": 56.19,
+      "aqi": 142,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T15:00:00Z",
+      "pm25": 61.01,
+      "aqi": 128,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T16:00:00Z",
+      "pm25": 66.21,
+      "aqi": 113,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T17:00:00Z",
+      "pm25": 72.29,
+      "aqi": 98,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T18:00:00Z",
+      "pm25": 76.05,
+      "aqi": 87,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T19:00:00Z",
+      "pm25": 78.17,
+      "aqi": 89,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T20:00:00Z",
+      "pm25": 80.11,
+      "aqi": 91,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T21:00:00Z",
+      "pm25": 81.62,
+      "aqi": 93,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T22:00:00Z",
+      "pm25": 83.7,
+      "aqi": 95,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-20T23:00:00Z",
+      "pm25": 85.79,
+      "aqi": 98,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-21T00:00:00Z",
+      "pm25": 88.55,
+      "aqi": 100,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-21T01:00:00Z",
+      "pm25": 94.19,
+      "aqi": 106,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-21T02:00:00Z",
+      "pm25": 99.54,
+      "aqi": 113,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-21T03:00:00Z",
+      "pm25": 61.46,
+      "aqi": 114,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-21T04:00:00Z",
+      "pm25": 48.84,
+      "aqi": 114,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-21T05:00:00Z",
+      "pm25": 43.28,
+      "aqi": 112,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-21T06:00:00Z",
+      "pm25": 38.13,
+      "aqi": 110,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-21T07:00:00Z",
+      "pm25": 35.25,
+      "aqi": 109,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-21T08:00:00Z",
+      "pm25": 33.25,
+      "aqi": 120,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-21T09:00:00Z",
+      "pm25": 32.09,
+      "aqi": 139,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-21T10:00:00Z",
+      "pm25": 31.48,
+      "aqi": 152,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-21T11:00:00Z",
+      "pm25": 31.73,
+      "aqi": 159,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-21T12:00:00Z",
+      "pm25": 35.53,
+      "aqi": 160,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-21T13:00:00Z",
+      "pm25": 43.88,
+      "aqi": 153,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-21T14:00:00Z",
+      "pm25": 50.03,
+      "aqi": 138,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-21T15:00:00Z",
+      "pm25": 56.57,
+      "aqi": 119,
+      "isApproximate": false
+    }
+  ],
+  "isApproximate": false
+}

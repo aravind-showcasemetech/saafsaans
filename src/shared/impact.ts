@@ -20,7 +20,7 @@ import {
   TRANSPORT_CO2_FACTORS,
   type TravelMode,
   WINTER_WEEKS,
-} from "./factors";
+} from "./factors.js";
 
 export type AqiBandName =
   | "Good"
@@ -45,7 +45,8 @@ export function aqiBandFromPm25(pm25: number): AqiBandResult {
   const safePm25 = Math.max(0, pm25);
 
   const matched =
-    CPCB_AQI_BANDS.find((b) => safePm25 <= b.pm25Max) ?? CPCB_AQI_BANDS[CPCB_AQI_BANDS.length - 1];
+    CPCB_AQI_BANDS.find((b: (typeof CPCB_AQI_BANDS)[number]) => safePm25 <= b.pm25Max) ??
+    CPCB_AQI_BANDS[CPCB_AQI_BANDS.length - 1];
 
   return {
     band: matched.band,
