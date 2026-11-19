@@ -21,11 +21,15 @@ Quality Assistant). Before any change, read `docs/SPEC.md` (what to build) and `
 5. **Tests.** Every function in `src/shared/impact.ts` has unit tests with hand-worked expected
    values. Tests mock Gemini and every Google API; no test calls a real API. `npm run check` must
    pass before you say a task is done.
-6. **Accessibility: WCAG 2.2 AA at least.** Air quality is always shown as number, band name and
-   icon, never colour alone. Every control works by keyboard with a visible focus ring. Set `lang`
-   on translated and AI-written text. Works at 320 px wide and at 200% zoom.
+6. **Accessibility: WCAG 2.2 AA at least.** Air quality is always shown as the number and the band
+   name in words; colour is only an extra signal. Every control works by keyboard with a visible
+   focus ring. Set `lang` on translated and AI-written text. Works at 320 px wide and at 200%
+   zoom. Anything that moves for more than five seconds has a pause control.
 7. **Translations.** All user-facing text lives in `src/client/i18n/en.json`, `hi.json` and
    `te.json`. No hard-coded text in UI code.
+7a. **Design.** Every screen follows `docs/DESIGN.md`: no icons, no em dashes or en dashes in any
+   text a user can read (Gemini output included), minimal motion, nothing from its "never use"
+   list. No icon, animation or scroll library.
 8. **Health wording.** No medical advice and no medicines. Health text comes only from CPCB's band
    statements, the Air Quality API's health recommendations (labelled as Google's), and the fixed
    "see a doctor if" text from `docs/SPEC.md` §7. Gemini never writes health advice.
@@ -43,7 +47,7 @@ Quality Assistant). Before any change, read `docs/SPEC.md` (what to build) and `
 ## Folder layout
 
 ```
-docs/            SPEC.md, FACTORS.md
+docs/            SPEC.md, FACTORS.md, DESIGN.md
 src/shared/      factors.ts, actions.ts, impact.ts, schemas.ts   (used by server and browser)
 src/server/      app.ts, api.ts, air.ts, places.ts, commute.ts, plan.ts, gemini.ts, cache.ts, security.ts
 src/client/      main.ts, views/, i18n/en.json, i18n/hi.json, i18n/te.json

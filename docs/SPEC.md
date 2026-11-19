@@ -70,8 +70,10 @@ ignored.
 
 ## 6. User flow
 
-1. **Start.** One sentence on what the app does. Two buttons: "Try a Hyderabad family" (demo, no
-   setup) and "Set up my household". Language switch: English, हिन्दी, తెలుగు.
+1. **Start.** The home page described in `docs/DESIGN.md` §7: hero with live Hyderabad air,
+   two marquees, sticky "How it works", the two lenses, sources. Its two actions: "Try a
+   Hyderabad family" (demo, no setup) and "Set up my household". Language switch: English,
+   हिन्दी, తెలుగు. All look and motion rules are in `docs/DESIGN.md`.
 2. **Location.** Place search (Google Places Autocomplete) or "use my location". Coordinates are
    rounded to about 1 km before they leave the browser.
 3. **Household** (one short form, presets for common routines):
@@ -82,7 +84,7 @@ ignored.
    - Home: bedroom size, window habit (mostly open, open in the day, mostly shut), purifier and
      its CADR if known, cooking (gas, induction, lots of frying), incense, mosquito coils, smoking.
 4. **Today.**
-   - **Air now:** the AQI number, band name and an icon (never colour alone), the main pollutant,
+   - **Air now:** the AQI number and band name in words (colour only as an extra signal), the main pollutant,
      the CPCB health statement for the band, and **for each family member, Google's health advice
      for their group** (children, elderly, pregnancy, lung or heart condition, athletes, everyone
      else), labelled as Google's.
@@ -183,9 +185,9 @@ shows advice without a number, labelled as such.
   the browser. Logs carry request ids, never profile text.
 - Health wording comes from CPCB's own band statements and our fixed "see a doctor if" message.
   The app says plainly that it is not medical advice.
-- Accessibility target: WCAG 2.2 AA at least. Air quality is always shown as number, band name and
-  icon, never colour alone; full keyboard use; totals that update are announced to screen readers;
-  reduced-motion respected; works at 320 px wide and 200% zoom.
+- Accessibility target: WCAG 2.2 AA at least. Air quality is always shown as the number and band
+  name in words, never colour alone; full keyboard use; totals that update are announced to screen
+  readers; reduced-motion respected; marquees can be paused; works at 320 px wide and 200% zoom.
 
 ## 12. Non-goals
 
