@@ -1,0 +1,55 @@
+/* tokens.css: SaafSaans design tokens matching docs/DESIGN.md section 5 */
+:root {
+  /* Colour tokens */
+  --paper: #fafaf7;
+  --surface: #ffffff;
+  --ink: #111418;
+  --ink-2: #4a5058;
+  --rule: #e3e3de;
+  --accent: #0e5e4e;
+  --accent-hover: #0a483c;
+
+  /* Band colours (CPCB order, muted) */
+  --band-good: #3b7d3a;
+  --band-satisfactory: #7fa83a;
+  --band-moderate: #c9a227;
+  --band-poor: #d9822b;
+  --band-very-poor: #c0392b;
+  --band-severe: #7b1e1e;
+
+  /* Typography scale */
+  --font-base: "Noto Sans", "Noto Sans Devanagari", "Noto Sans Telugu", sans-serif;
+  --text-xs: 14px;
+  --text-sm: 16px;
+  --text-md: 18px;
+  --text-lg: 22px;
+  --text-xl: 28px;
+  --text-2xl: 40px;
+  --text-hero: clamp(40px, 6vw, 72px);
+
+  /* Spacing */
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-48: 48px;
+  --space-64: 64px;
+  --space-96: 96px;
+  --space-128: 128px;
+
+  /* Grid & layout */
+  --max-width: 1200px;
+  --gutter: 24px;
+  --radius: 6px;
+
+  /* Header shadow after scroll */
+  --header-shadow: 0 2px 8px rgba(17, 20, 24, 0.05);
+}
+
+@media (max-width: 640px) {
+  :root {
+    --gutter: 16px;
+  }
+}

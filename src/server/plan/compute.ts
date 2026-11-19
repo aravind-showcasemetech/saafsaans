@@ -88,7 +88,11 @@ export function computeActionNumbers(
       }
     }
   } else if (action.lens === "polluteLess") {
-    if (impact.co2SavedKgPerDay !== undefined) {
+    if (action.id === "wfh-day" && impact.co2SavedKgPerWeek !== undefined) {
+      base.savingNumber = impact.co2SavedKgPerWeek;
+      base.savingUnit = "kg CO2 saved per week";
+      base.co2SavedKgPerWeek = impact.co2SavedKgPerWeek;
+    } else if (impact.co2SavedKgPerDay !== undefined) {
       base.savingNumber = impact.co2SavedKgPerDay;
       base.savingUnit = "kg CO2 saved per day";
       base.co2SavedKgPerWeek = impact.co2SavedKgPerWeek;

@@ -5,20 +5,36 @@
 import {
   type ActivityLevel,
   type AgeBand,
+  CIGARETTE_EQUIVALENT_PM25,
   MASK_PROTECTION,
   METRO_SAVING_FRACTION,
   TRANSPORT_CO2_FACTORS,
   type TravelMode,
+  WINDOWS_OPEN_DAY_END_HOUR,
+  WINDOWS_OPEN_DAY_START_HOUR,
 } from "./factors.js";
 import {
   type CleanestAndDirtiestWindowsResult,
+  cigarettesEquivalent,
+  cigarettesForDay,
   cleanestAndDirtiestWindows,
   dailyAverageExposure,
   dailyDose,
   indoorPm25,
   inhalationRate,
 } from "./impact.js";
+import { buildMemberBaselineRoutine, overlayExerciseOnBlocks } from "./presets.js";
 import type { HouseholdProfile, MemberProfile, RoutineBlock, WindowHabit } from "./schemas.js";
+
+export { buildMemberBaselineRoutine, overlayExerciseOnBlocks };
+
+/**
+ * Computes percentage dose cut, avoiding division by zero and returning a non-negative number.
+ */
+export function calculateDoseCutPercentage(baseDoseUg: number, withSwapsDoseUg: number): number {
+  if (baseDoseUg <= 0) return 0;
+  return Math.max(0, ((baseDoseUg - withSwapsDoseUg) / baseDoseUg) * 100);
+}
 
 export type HourlyForecastLookup = (hour: number) => number;
 
@@ -148,229 +164,8 @@ export function createHourlyForecastLookup(
 }
 
 /**
- * Generates the baseline 24-hour routine blocks (hours 0..23) for a member based on routine preset
- * and any explicit outdoorExerciseTime/Minutes.
- */
-export function buildMemberBaselineRoutine(member: MemberProfile): RoutineBlock[] {
-  // If custom routine is provided and covers hours, use it or adapt it
-  if (member.customRoutine && member.customRoutine.length > 0) {
-    return member.customRoutine;
-  }
-
-  // Activity mapping per FACTORS.md section 2:
-  // sleep -> sleep
-  // at home -> sedentary
-  // office -> sedentary
-  // school -> light
-  // in traffic -> sedentary
-  // walking/cycling -> light for commute, moderate for walk
-  // running, sport -> high
-  // outdoor work -> light, or moderate for physical labour
-
-  const blocks: RoutineBlock[] = [];
-
-  // Default preset schedules (24 hours):
-  switch (member.routinePreset) {
-    case "school_child":
-      // 21:00 - 07:00 sleep
-      // 07:00 - 08:00 home (sedentary)
-      // 08:00 - 09:00 traffic (sedentary)
-      // 09:00 - 15:00 school (light)
-      // 15:00 - 16:00 traffic (sedentary)
-      // 16:00 - 21:00 home (sedentary)
-      blocks.push(
-        { startHour: 0, endHour: 7, place: "home", activity: "sleep", label: "Sleep" },
-        {
-          startHour: 7,
-          endHour: 8,
-          place: "home",
-          activity: "sedentary",
-          label: "Morning at home",
-        },
-        {
-          startHour: 8,
-          endHour: 9,
-          place: "traffic",
-          activity: "sedentary",
-          label: "School commute",
-        },
-        { startHour: 9, endHour: 15, place: "office_school", activity: "light", label: "School" },
-        {
-          startHour: 15,
-          endHour: 16,
-          place: "traffic",
-          activity: "sedentary",
-          label: "Return commute",
-        },
-        {
-          startHour: 16,
-          endHour: 21,
-          place: "home",
-          activity: "sedentary",
-          label: "Evening at home",
-        },
-        { startHour: 21, endHour: 24, place: "home", activity: "sleep", label: "Sleep" },
-      );
-      break;
-
-    case "office_worker":
-      // 22:00 - 06:30 sleep
-      // 06:30 - 08:30 home (sedentary)
-      // 08:30 - 09:30 traffic (sedentary)
-      // 09:30 - 18:00 office (sedentary)
-      // 18:00 - 19:00 traffic (sedentary)
-      // 19:00 - 22:00 home (sedentary)
-      blocks.push(
-        { startHour: 0, endHour: 7, place: "home", activity: "sleep", label: "Sleep" },
-        {
-          startHour: 7,
-          endHour: 9,
-          place: "home",
-          activity: "sedentary",
-          label: "Morning at home",
-        },
-        {
-          startHour: 9,
-          endHour: 10,
-          place: "traffic",
-          activity: "sedentary",
-          label: "Office commute",
-        },
-        {
-          startHour: 10,
-          endHour: 18,
-          place: "office_school",
-          activity: "sedentary",
-          label: "Office",
-        },
-        {
-          startHour: 18,
-          endHour: 19,
-          place: "traffic",
-          activity: "sedentary",
-          label: "Return commute",
-        },
-        {
-          startHour: 19,
-          endHour: 23,
-          place: "home",
-          activity: "sedentary",
-          label: "Evening at home",
-        },
-        { startHour: 23, endHour: 24, place: "home", activity: "sleep", label: "Sleep" },
-      );
-      break;
-
-    case "work_from_home":
-      // 23:00 - 07:00 sleep
-      // 07:00 - 23:00 home (sedentary)
-      blocks.push(
-        { startHour: 0, endHour: 7, place: "home", activity: "sleep", label: "Sleep" },
-        { startHour: 7, endHour: 23, place: "home", activity: "sedentary", label: "Home / Work" },
-        { startHour: 23, endHour: 24, place: "home", activity: "sleep", label: "Sleep" },
-      );
-      break;
-
-    case "outdoor_worker":
-      // 22:00 - 06:00 sleep
-      // 06:00 - 08:00 home
-      // 08:00 - 18:00 outdoors (light or moderate physical labour per FACTORS.md section 2)
-      // 18:00 - 22:00 home
-      blocks.push(
-        { startHour: 0, endHour: 6, place: "home", activity: "sleep", label: "Sleep" },
-        {
-          startHour: 6,
-          endHour: 8,
-          place: "home",
-          activity: "sedentary",
-          label: "Morning at home",
-        },
-        { startHour: 8, endHour: 18, place: "outdoors", activity: "light", label: "Outdoor work" },
-        {
-          startHour: 18,
-          endHour: 22,
-          place: "home",
-          activity: "sedentary",
-          label: "Evening at home",
-        },
-        { startHour: 22, endHour: 24, place: "home", activity: "sleep", label: "Sleep" },
-      );
-      break;
-
-    case "retired":
-      // 22:00 - 06:00 sleep
-      // 06:00 - 22:00 home (sedentary)
-      blocks.push(
-        { startHour: 0, endHour: 6, place: "home", activity: "sleep", label: "Sleep" },
-        { startHour: 6, endHour: 22, place: "home", activity: "sedentary", label: "Home" },
-        { startHour: 22, endHour: 24, place: "home", activity: "sleep", label: "Sleep" },
-      );
-      break;
-  }
-
-  // If outdoor exercise minutes are specified, inject outdoor exercise block at its actual time
-  const exerciseMinutes = member.outdoorExerciseMinutes ?? 0;
-  if (exerciseMinutes > 0 && member.outdoorExerciseTime) {
-    const [hhStr] = member.outdoorExerciseTime.split(":");
-    const exerciseHour = Number.parseInt(hhStr, 10);
-    if (!Number.isNaN(exerciseHour) && exerciseHour >= 0 && exerciseHour < 24) {
-      // Walk = moderate, run/sport = high per FACTORS.md section 2
-      // For retired/walk, moderate; for sport/exercise, moderate or high
-      // FACTORS.md section 2: "walking or cycling -> light for a commute, moderate for a walk; running, sport or a brisk workout -> high"
-      // If nickname or preset indicates walk or retired, moderate; default to moderate for walk
-      const isHighIntensity =
-        member.routinePreset === "school_child" ||
-        (member.nickname?.toLowerCase().includes("run") ?? false);
-      const activity: ActivityLevel = isHighIntensity ? "high" : "moderate";
-
-      return overlayExerciseOnBlocks(blocks, exerciseHour, activity, "Outdoor exercise");
-    }
-  }
-
-  return blocks;
-}
-
-function overlayExerciseOnBlocks(
-  blocks: RoutineBlock[],
-  hour: number,
-  activity: ActivityLevel,
-  label: string,
-  place: "home" | "office_school" | "traffic" | "outdoors" = "outdoors",
-): RoutineBlock[] {
-  // Convert 24 hourly blocks, overlay the 1 hour, and merge adjacent identical blocks
-  const hourly = new Array(24).fill(null).map((_, h) => {
-    const match = blocks.find((b) => h >= b.startHour && h < b.endHour);
-    if (match) {
-      return { place: match.place, activity: match.activity, label: match.label };
-    }
-    return { place: "home" as const, activity: "sedentary" as const, label: "Home" };
-  });
-
-  hourly[hour] = { place, activity, label };
-
-  // Re-compress into RoutineBlocks
-  const result: RoutineBlock[] = [];
-  let curStart = 0;
-  for (let h = 1; h <= 24; h++) {
-    const prev = hourly[h - 1];
-    const curr = h < 24 ? hourly[h] : null;
-    if (!curr || curr.place !== prev.place || curr.activity !== prev.activity) {
-      result.push({
-        startHour: curStart,
-        endHour: h,
-        place: prev.place,
-        activity: prev.activity,
-        label: prev.label,
-      });
-      curStart = h;
-    }
-  }
-  return result;
-}
-
-/**
  * Computes indoor PM2.5 for a specific hour based on window habit and purifier state.
- * Daytime hours (open_day_shut_night): 06:00 to 21:00 local time.
+ * Daytime hours (open_day_shut_night): WINDOWS_OPEN_DAY_START_HOUR to WINDOWS_OPEN_DAY_END_HOUR local time.
  */
 export function getIndoorPm25ForHour(
   hour: number,
@@ -395,8 +190,7 @@ export function getIndoorPm25ForHour(
   } else if (windowHabit === "mostly_shut") {
     windowsOpen = false;
   } else if (windowHabit === "open_day_shut_night") {
-    // 06:00 to 21:00 daytime open, night shut
-    windowsOpen = hour >= 6 && hour < 21;
+    windowsOpen = hour >= WINDOWS_OPEN_DAY_START_HOUR && hour < WINDOWS_OPEN_DAY_END_HOUR;
   }
 
   const cadrCfm = options.purifierOnInBedroom ? options.cadrCfm : undefined;
@@ -595,8 +389,12 @@ export function computeMemberDaySchedule(
   }));
   const avgResult = dailyAverageExposure(avgExposureInputs);
 
-  // Cigarettes for day = 24-hour average exposure / 22 (FACTORS.md section 3)
-  const cigarettesForDay = avgResult.averageConcentrationUgM3 / 22;
+  // Cigarettes for day = 24-hour average exposure / CIGARETTE_EQUIVALENT_PM25 (FACTORS.md section 3)
+  const cigarettesResult = cigarettesForDay(avgExposureInputs);
+  const cigarettes =
+    cigarettesResult.cigarettes !== null
+      ? cigarettesResult.cigarettes
+      : avgResult.averageConcentrationUgM3 / CIGARETTE_EQUIVALENT_PM25;
 
   return {
     memberId: member.id,
@@ -606,7 +404,7 @@ export function computeMemberDaySchedule(
     blocks,
     totalDoseUg: doseResult.doseUg,
     avgPm25: avgResult.averageConcentrationUgM3,
-    cigarettesForDay,
+    cigarettesForDay: cigarettes,
     isEstimate: scheduleIsEstimate || doseResult.isEstimate || avgResult.isEstimate,
     factorSections: Array.from(factorSectionsSet),
   };
@@ -659,10 +457,7 @@ export function computeHouseholdDayComparison(options: HouseholdDayModelOptions)
     baseSchedules.push(base);
     withSwapsSchedules.push(withSwaps);
 
-    const doseCutPercentage =
-      base.totalDoseUg > 0
-        ? Math.max(0, ((base.totalDoseUg - withSwaps.totalDoseUg) / base.totalDoseUg) * 100)
-        : 0;
+    const doseCutPercentage = calculateDoseCutPercentage(base.totalDoseUg, withSwaps.totalDoseUg);
 
     const cigarettesAvoided = Math.max(0, base.cigarettesForDay - withSwaps.cigarettesForDay);
 
@@ -761,10 +556,7 @@ export function computeDayModelSwapImpact(
             memberRef,
           );
 
-          const doseCut =
-            base.totalDoseUg > 0
-              ? ((base.totalDoseUg - withSwap.totalDoseUg) / base.totalDoseUg) * 100
-              : 0;
+          const doseCut = calculateDoseCutPercentage(base.totalDoseUg, withSwap.totalDoseUg);
           const cigsAvoided = Math.max(0, base.cigarettesForDay - withSwap.cigarettesForDay);
           const doseSaved = Math.max(0, base.totalDoseUg - withSwap.totalDoseUg);
 
@@ -842,10 +634,7 @@ export function computeDayModelSwapImpact(
             memberRef,
           );
 
-          const doseCut =
-            base.totalDoseUg > 0
-              ? ((base.totalDoseUg - withSwap.totalDoseUg) / base.totalDoseUg) * 100
-              : 0;
+          const doseCut = calculateDoseCutPercentage(base.totalDoseUg, withSwap.totalDoseUg);
           const cigsAvoided = Math.max(0, base.cigarettesForDay - withSwap.cigarettesForDay);
           const doseSaved = Math.max(0, base.totalDoseUg - withSwap.totalDoseUg);
 
@@ -923,10 +712,7 @@ export function computeDayModelSwapImpact(
           memberRef,
         );
 
-        const doseCut =
-          base.totalDoseUg > 0
-            ? ((base.totalDoseUg - withSwap.totalDoseUg) / base.totalDoseUg) * 100
-            : 0;
+        const doseCut = calculateDoseCutPercentage(base.totalDoseUg, withSwap.totalDoseUg);
         const cigsAvoided = Math.max(0, base.cigarettesForDay - withSwap.cigarettesForDay);
         const doseSaved = Math.max(0, base.totalDoseUg - withSwap.totalDoseUg);
 
@@ -999,10 +785,7 @@ export function computeDayModelSwapImpact(
           memberRef,
         );
 
-        const doseCut =
-          base.totalDoseUg > 0
-            ? ((base.totalDoseUg - withSwap.totalDoseUg) / base.totalDoseUg) * 100
-            : 0;
+        const doseCut = calculateDoseCutPercentage(base.totalDoseUg, withSwap.totalDoseUg);
         const cigsAvoided = Math.max(0, base.cigarettesForDay - withSwap.cigarettesForDay);
         const doseSaved = Math.max(0, base.totalDoseUg - withSwap.totalDoseUg);
 
@@ -1071,10 +854,7 @@ export function computeDayModelSwapImpact(
           memberRef,
         );
 
-        const doseCut =
-          base.totalDoseUg > 0
-            ? ((base.totalDoseUg - withSwap.totalDoseUg) / base.totalDoseUg) * 100
-            : 0;
+        const doseCut = calculateDoseCutPercentage(base.totalDoseUg, withSwap.totalDoseUg);
         const cigsAvoided = Math.max(0, base.cigarettesForDay - withSwap.cigarettesForDay);
         const doseSaved = Math.max(0, base.totalDoseUg - withSwap.totalDoseUg);
 
@@ -1160,10 +940,7 @@ export function computeDayModelSwapImpact(
             memberRef,
           );
 
-          const doseCut =
-            base.totalDoseUg > 0
-              ? ((base.totalDoseUg - withSwap.totalDoseUg) / base.totalDoseUg) * 100
-              : 0;
+          const doseCut = calculateDoseCutPercentage(base.totalDoseUg, withSwap.totalDoseUg);
           const cigsAvoided = Math.max(0, base.cigarettesForDay - withSwap.cigarettesForDay);
           const doseSaved = Math.max(0, base.totalDoseUg - withSwap.totalDoseUg);
 

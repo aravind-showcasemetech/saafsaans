@@ -41,8 +41,37 @@ app.get("*", async (c, next) => {
       });
     }
 
+    // Also allow serving static assets from src/client during dev or for translations
+    const clientSrc = path.resolve(process.cwd(), "src/client");
+    if (c.req.path.startsWith("/src/client")) {
+      const srcRelPath = c.req.path.replace(/^\/src\/client/, "");
+      const srcFilePath = path.join(clientSrc, srcRelPath);
+      if (fs.existsSync(srcFilePath) && fs.statSync(srcFilePath).isFile()) {
+        const ext = path.extname(srcFilePath);
+        const mimeTypes: Record<string, string> = {
+          ".html": "text/html; charset=UTF-8",
+          ".js": "text/javascript; charset=UTF-8",
+          ".ts": "text/javascript; charset=UTF-8",
+          ".css": "text/css; charset=UTF-8",
+          ".json": "application/json",
+          ".svg": "image/svg+xml",
+          ".png": "image/png",
+          ".ico": "image/x-icon",
+        };
+        const contentType = mimeTypes[ext] || "application/octet-stream";
+        return new Response(fs.readFileSync(srcFilePath), {
+          headers: { "Content-Type": contentType },
+        });
+      }
+    }
+
     // Fallback to index.html for SPA client
     const indexPath = path.join(clientDist, "index.html");
+    if (fs.existsSync(indexPath)) {
+      return new Response(fs.readFileSync(indexPath), {
+        headers: { "Content-Type": "text/html; charset=UTF-8" },
+      });
+    }
     if (fs.existsSync(indexPath)) {
       return new Response(fs.readFileSync(indexPath), {
         headers: { "Content-Type": "text/html; charset=UTF-8" },

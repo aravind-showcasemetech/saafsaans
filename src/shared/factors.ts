@@ -220,6 +220,13 @@ export const AIR_EXCHANGE_SHUT_A = 1.5; // per hour
 export const AIR_EXCHANGE_OPEN_A = 5.0; // per hour
 
 /**
+ * Section 4: Daytime hours for "windows open in the day" (06:00 to 21:00 local time).
+ * Status: CHOSEN
+ */
+export const WINDOWS_OPEN_DAY_START_HOUR = 6;
+export const WINDOWS_OPEN_DAY_END_HOUR = 21;
+
+/**
  * Section 5: Purifier sizing
  * Source: AHAM / US EPA
  * Status: SOURCED

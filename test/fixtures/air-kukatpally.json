@@ -1,9 +1,9 @@
 {
-  "currentAqi": 94,
+  "currentAqi": 92,
   "aqiBand": "Satisfactory",
   "dominantPollutant": "pm25",
-  "pm25": 55.99,
-  "pm10": 82.13,
+  "pm25": 71.63,
+  "pm10": 87.62,
   "healthRecommendations": {
     "generalPopulation": "Reduce the intensity of your outdoor activities. It is recommended to limit the time you are near busy roads, construction sites, open fires and other sources of smoke. Staying indoors with an activated air filtration system would be best for your long term health.",
     "elderly": "Avoid intense activities outdoors. Stay away from busy roads, construction sites, open fires and other sources of smoke. Staying indoors with an activated air filtration system would be best for your long term health.",
@@ -15,99 +15,87 @@
   },
   "hourlyForecast": [
     {
-      "time": "2026-11-19T16:00:00Z",
-      "pm25": 54.73,
+      "time": "2026-11-19T18:00:00Z",
+      "pm25": 66.07,
       "aqi": 92,
       "isApproximate": false
     },
     {
-      "time": "2026-11-19T17:00:00Z",
-      "pm25": 54.07,
-      "aqi": 90,
-      "isApproximate": false
-    },
-    {
-      "time": "2026-11-19T18:00:00Z",
-      "pm25": 52.7,
-      "aqi": 89,
-      "isApproximate": false
-    },
-    {
       "time": "2026-11-19T19:00:00Z",
-      "pm25": 51.29,
-      "aqi": 88,
+      "pm25": 64.07,
+      "aqi": 91,
       "isApproximate": false
     },
     {
       "time": "2026-11-19T20:00:00Z",
-      "pm25": 50.58,
-      "aqi": 86,
+      "pm25": 60.2,
+      "aqi": 91,
       "isApproximate": false
     },
     {
       "time": "2026-11-19T21:00:00Z",
-      "pm25": 50.09,
-      "aqi": 85,
+      "pm25": 56.28,
+      "aqi": 90,
       "isApproximate": false
     },
     {
       "time": "2026-11-19T22:00:00Z",
-      "pm25": 49.9,
-      "aqi": 85,
+      "pm25": 54.41,
+      "aqi": 90,
       "isApproximate": false
     },
     {
       "time": "2026-11-19T23:00:00Z",
-      "pm25": 48.78,
-      "aqi": 84,
+      "pm25": 53.35,
+      "aqi": 90,
       "isApproximate": false
     },
     {
       "time": "2026-11-20T00:00:00Z",
-      "pm25": 49.23,
-      "aqi": 84,
+      "pm25": 52.97,
+      "aqi": 90,
       "isApproximate": false
     },
     {
       "time": "2026-11-20T01:00:00Z",
       "pm25": 51.7,
-      "aqi": 84,
+      "aqi": 89,
       "isApproximate": false
     },
     {
       "time": "2026-11-20T02:00:00Z",
       "pm25": 53.21,
-      "aqi": 83,
+      "aqi": 89,
       "isApproximate": false
     },
     {
       "time": "2026-11-20T03:00:00Z",
       "pm25": 51.23,
-      "aqi": 83,
+      "aqi": 89,
       "isApproximate": false
     },
     {
       "time": "2026-11-20T04:00:00Z",
       "pm25": 52.19,
-      "aqi": 87,
+      "aqi": 88,
       "isApproximate": false
     },
     {
       "time": "2026-11-20T05:00:00Z",
       "pm25": 53.4,
-      "aqi": 93,
+      "aqi": 89,
       "isApproximate": false
     },
     {
       "time": "2026-11-20T06:00:00Z",
       "pm25": 51.51,
-      "aqi": 103,
+      "aqi": 99,
       "isApproximate": false
     },
     {
       "time": "2026-11-20T07:00:00Z",
       "pm25": 48.03,
-      "aqi": 115,
+      "aqi": 113,
       "isApproximate": false
     },
     {
@@ -173,31 +161,31 @@
     {
       "time": "2026-11-20T18:00:00Z",
       "pm25": 76.05,
-      "aqi": 87,
+      "aqi": 90,
       "isApproximate": false
     },
     {
       "time": "2026-11-20T19:00:00Z",
       "pm25": 78.17,
-      "aqi": 89,
+      "aqi": 91,
       "isApproximate": false
     },
     {
       "time": "2026-11-20T20:00:00Z",
       "pm25": 80.11,
-      "aqi": 91,
+      "aqi": 92,
       "isApproximate": false
     },
     {
       "time": "2026-11-20T21:00:00Z",
       "pm25": 81.62,
-      "aqi": 93,
+      "aqi": 94,
       "isApproximate": false
     },
     {
       "time": "2026-11-20T22:00:00Z",
       "pm25": 83.7,
-      "aqi": 95,
+      "aqi": 96,
       "isApproximate": false
     },
     {
@@ -300,6 +288,18 @@
       "time": "2026-11-21T15:00:00Z",
       "pm25": 56.57,
       "aqi": 119,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-21T16:00:00Z",
+      "pm25": 63.16,
+      "aqi": 100,
+      "isApproximate": false
+    },
+    {
+      "time": "2026-11-21T17:00:00Z",
+      "pm25": 68.56,
+      "aqi": 99,
       "isApproximate": false
     }
   ],

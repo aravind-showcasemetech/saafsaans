@@ -3,6 +3,100 @@
     "title": "SaafSaans",
     "tagline": "Family smog planner"
   },
+  "header": {
+    "language": "भाषा चुनें",
+    "planMyDay": "दिन की योजना बनाएं"
+  },
+  "hero": {
+    "title": "Your family's smog plan for today",
+    "lead": "Exact swaps for the air your family breathes and the air your household puts out. Live numbers from tested formulas, not AI guesses.",
+    "tryHyderabad": "Try a Hyderabad family",
+    "setUpHousehold": "Set up my household",
+    "loadingAir": "Loading live Hyderabad air...",
+    "updatedAt": "Updated"
+  },
+  "marquee": {
+    "airTitle": "Live air quality across areas",
+    "airScrollRegion": "Live air quality ticker across city areas",
+    "sourcesTitle": "Scientific and government sources",
+    "sourcesScrollRegion": "Scientific and institutional data sources ticker"
+  },
+  "insight": {
+    "label": "Morning insight",
+    "title": "Morning is often the worst time for a walk in winter",
+    "desc": "Winter temperature inversions trap surface particles overnight. Sunlight breaks the inversion by afternoon, making late afternoon significantly cleaner.",
+    "explanation": "Cold air stays close to the ground overnight, holding smoke and dust near street level. As the sun warms the earth, the mixing layer rises, giving Hyderabad its cleanest air between 14:00 and 17:00.",
+    "cleanestTitle": "Cleanest window today",
+    "cleanestNote": "Best time for walks, outdoor workouts and opening windows",
+    "dirtiestTitle": "Dirtiest window today",
+    "dirtiestNote": "Keep windows closed and shift vigorous outdoor exercise",
+    "sourceRef": "Singh, Singh and Biswal (2020), Science of The Total Environment; Latha and Badarinath (2005)"
+  },
+  "howItWorks": {
+    "label": "How it works",
+    "title": "Three simple steps to clean air",
+    "desc": "No generic tips. Real routines mapped against live local forecasts.",
+    "exampleLabel": "Real household example",
+    "step1Title": "Tell us who is at home",
+    "step1Body": "Age, health conditions like asthma, routine presets, and bedroom room sizes. Presets let you tap rather than type.",
+    "step2Title": "See the cleanest hours",
+    "step2Body": "Hourly forecast on India's CPCB scale shows exactly when outdoor air is safest for exercise, errands, or airing your rooms.",
+    "step3Title": "Choose swaps and see the numbers",
+    "step3Body": "Gemini chooses and explains the swaps. Every number comes from tested code. Toggling any swap updates your family totals live."
+  },
+  "lenses": {
+    "label": "The impact model",
+    "title": "Two lenses: protect and pollute less",
+    "desc": "Every single action shows you what it changes in clear numbers.",
+    "protectTitle": "Protect: what your family breathes",
+    "protectDesc": "Calculates inhaled particle dose for each family member based on activity, room volume and air exchange.",
+    "protectExample": "Example: Bedroom purifier overnight cuts Reddy family bedtime particle dose by 27%",
+    "polluteTitle": "Pollute less: what your household puts out",
+    "polluteDesc": "Measures vehicle kilometers taken off the road and kilograms of CO2 avoided from transport swaps.",
+    "polluteExample": "Example: Taking the metro saves the Reddy household 16 kg of CO2 every week"
+  },
+  "formulas": {
+    "label": "Full transparency",
+    "title": "How we work out the numbers",
+    "desc": "Open formulas and sourced factors. No black-box computations.",
+    "massBalanceTitle": "Indoor air mass balance",
+    "massBalanceDesc": "Single-room steady-state model using outdoor PM2.5, ventilation rate, surface deposition, and air cleaner CADR.",
+    "doseTitle": "Inhaled particle dose",
+    "doseDesc": "Sum of concentration times age-specific inhalation rate times duration across 24 hourly blocks.",
+    "purifierTitle": "Purifier CADR sizing",
+    "purifierDesc": "AHAM and US EPA rule: minimum CADR equals two-thirds of room area, scaled for room ceiling height.",
+    "cigsTitle": "Cigarette equivalence",
+    "cigsDesc": "Berkeley Earth equivalence: 22 micrograms per cubic meter over 24 hours equals one cigarette of particle exposure.",
+    "aiPlainLine": "Gemini chooses and explains the swaps. Every number comes from tested code."
+  },
+  "community": {
+    "label": "Collective action",
+    "title": "Community impact adds up quickly",
+    "desc": "Small routine changes across a society multiply into tons of avoided street pollution.",
+    "societyName": "Green Meadows society (Kondapur)",
+    "societyStory": "When 120 households coordinate carpools, switch short errands to walking during clean hours, and avoid leaf burning, the local reduction is measurable.",
+    "societyResult": "Avoided road emissions per week across participating families",
+    "homesWord": "homes"
+  },
+  "sources": {
+    "label": "References",
+    "title": "Sourced from verified science and official standards"
+  },
+  "finalCta": {
+    "title": "Breathe cleaner air today",
+    "desc": "Start with a pre-configured Hyderabad household or set up your own in two minutes."
+  },
+  "footer": {
+    "notMedicalAdviceTitle": "Not medical advice",
+    "notMedicalAdviceText": "SaafSaans is an urban environmental planning tool. See a doctor if you experience breathlessness, chest pain, or wheezing that does not settle.",
+    "googleAttribution": "Map and place search powered by Google Maps Platform. Air quality data from Google Air Quality API.",
+    "githubRepo": "GitHub Repository"
+  },
+  "common": {
+    "pause": "Pause",
+    "play": "Play",
+    "source": "Source"
+  },
   "swaps": {
     "shift-outdoor-exercise": "Move outdoor exercise to the cleanest window when particulate levels are lowest.",
     "exercise-indoors": "Move strenuous workouts indoors to reduce inhaled particle dose during dirty hours.",
