@@ -44,22 +44,12 @@ export interface AqiBandResult {
 export function aqiBandFromPm25(pm25: number): AqiBandResult {
   const safePm25 = Math.max(0, pm25);
 
-  for (const b of CPCB_AQI_BANDS) {
-    if (safePm25 <= b.pm25Max) {
-      return {
-        band: b.band,
-        healthStatement: b.healthStatement,
-        isEstimate: false,
-        factorSections: ["1"],
-      };
-    }
-  }
+  const matched =
+    CPCB_AQI_BANDS.find((b) => safePm25 <= b.pm25Max) ?? CPCB_AQI_BANDS[CPCB_AQI_BANDS.length - 1];
 
-  // Fallback for extreme values (above 500 AQI / 250+ PM2.5)
-  const severe = CPCB_AQI_BANDS[CPCB_AQI_BANDS.length - 1];
   return {
-    band: severe.band,
-    healthStatement: severe.healthStatement,
+    band: matched.band,
+    healthStatement: matched.healthStatement,
     isEstimate: false,
     factorSections: ["1"],
   };
@@ -245,6 +235,17 @@ export interface CigarettesEquivalentResult {
   factorSections: string[];
 }
 
+export interface CigarettesForDayFailure {
+  cigarettes: null;
+  reason: string;
+  isEstimate: boolean;
+  factorSections: string[];
+}
+
+export type CigarettesForDayResult =
+  | (CigarettesEquivalentResult & { reason?: undefined })
+  | CigarettesForDayFailure;
+
 /**
  * Berkeley Earth cigarette equivalence:
  * 1 cigarette per day = 22 ug/m3 PM2.5 24-hour average exposure.
@@ -256,6 +257,32 @@ export function cigarettesEquivalent(averageExposureUgM3: number): CigarettesEqu
     isEstimate: false,
     factorSections: ["3"],
   };
+}
+
+/**
+ * Berkeley Earth cigarette equivalence for a full day:
+ * Returns null with a reason unless the exposure blocks add up to exactly 24 hours.
+ */
+export function cigarettesForDay(
+  blocks: readonly DailyAverageExposureBlock[],
+): CigarettesForDayResult {
+  let totalHours = 0;
+  for (const b of blocks) {
+    totalHours += Math.max(0, b.durationHours);
+  }
+
+  // Floating point check: exactly 24 hours (within small epsilon)
+  if (Math.abs(totalHours - 24) > 1e-6) {
+    return {
+      cigarettes: null,
+      reason: `Exposure blocks must sum to exactly 24 hours; received ${totalHours} hours.`,
+      isEstimate: false,
+      factorSections: ["3"],
+    };
+  }
+
+  const avg = dailyAverageExposure(blocks).averageConcentrationUgM3;
+  return cigarettesEquivalent(avg);
 }
 
 export interface MinPurifierCadrResult {
@@ -297,12 +324,29 @@ export interface CommuteCo2SavedOptions {
   workingDaysPerWeek?: number;
 }
 
+export interface CommuteEstimateFlags {
+  isEstimateDay: boolean;
+  isEstimateWeek: boolean;
+  isEstimateWinter: boolean;
+}
+
 export interface CommuteCo2SavedResult {
   kgCo2SavedPerDay: number;
   kgCo2SavedPerWeek: number;
   kgCo2SavedPerWinter: number;
   isEstimate: boolean;
   factorSections: string[];
+  isEstimateDay: boolean;
+  isEstimateWeek: boolean;
+  isEstimateWinter: boolean;
+  factorSectionsDay: string[];
+  factorSectionsWeek: string[];
+  factorSectionsWinter: string[];
+  factorSectionsByPeriod: {
+    day: string[];
+    week: string[];
+    winter: string[];
+  };
 }
 
 /**
@@ -322,8 +366,14 @@ export function commuteCo2Saved(options: CommuteCo2SavedOptions): CommuteCo2Save
 
   const oldCo2PerPersonKm = oldFactor / peopleSharing;
   let savedPerPersonKm = 0;
-  let isEstimate = false;
-  const factorSections = ["9"];
+
+  // Metro savings is an estimate based on Hyderabad Metro's approximate 97% claim (section 9).
+  // Other modes (bus, walk_cycle, carpool) use sourced factors from section 9.
+  const isMetro = options.newMode === "metro";
+  const isEstimateDay = isMetro;
+  const isEstimateWeek = isMetro;
+  // Per-winter figure is always an estimate because 17 weeks is CHOSEN (section 9).
+  const isEstimateWinter = true;
 
   if (options.newMode === "walk_cycle") {
     savedPerPersonKm = oldCo2PerPersonKm;
@@ -343,15 +393,26 @@ export function commuteCo2Saved(options: CommuteCo2SavedOptions): CommuteCo2Save
   const savedPerWeek = savedPerDay * daysPerWeek;
   const savedPerWinter = savedPerWeek * WINTER_WEEKS; // WINTER_WEEKS is CHOSEN
 
-  // Winter duration is CHOSEN (section 9)
-  isEstimate = true;
+  // Overall result isEstimate is true if any figure is an estimate
+  const isEstimate = true;
 
   return {
     kgCo2SavedPerDay: savedPerDay,
     kgCo2SavedPerWeek: savedPerWeek,
     kgCo2SavedPerWinter: savedPerWinter,
     isEstimate,
-    factorSections,
+    factorSections: ["9"],
+    isEstimateDay,
+    isEstimateWeek,
+    isEstimateWinter,
+    factorSectionsDay: ["9"],
+    factorSectionsWeek: ["9"],
+    factorSectionsWinter: ["9"],
+    factorSectionsByPeriod: {
+      day: ["9"],
+      week: ["9"],
+      winter: ["9"],
+    },
   };
 }
 
@@ -454,14 +515,23 @@ export function maskSavingRange(
 }
 
 export interface HourlyForecastItem {
-  hour: number;
+  time: string; // ISO 8601 string
   pm25: number;
 }
 
 export interface WindowResult {
-  startHour: number;
-  endHour: number;
+  startTime: string; // ISO 8601 string
+  endTime: string; // ISO 8601 string
+  startHour: number; // Asia/Kolkata local hour (0-23)
+  endHour: number; // Asia/Kolkata local hour (0-23)
   averagePm25: number;
+}
+
+export interface CleanestAndDirtiestWindowsOptions {
+  windowSizeHours?: number;
+  allowedStartHour?: number; // default 6 (06:00)
+  allowedEndHour?: number; // default 21 (21:00)
+  date?: string; // "YYYY-MM-DD" in Asia/Kolkata time
 }
 
 export interface CleanestAndDirtiestWindowsResult {
@@ -472,14 +542,24 @@ export interface CleanestAndDirtiestWindowsResult {
 }
 
 /**
- * Finds the cleanest and dirtiest multi-hour window (default windowSizeHours = 3)
- * from an hourly forecast.
- * Edge cases: empty forecast, forecast shorter than windowSize.
+ * Finds the cleanest and dirtiest multi-hour window from an hourly forecast.
+ * - Works in Asia/Kolkata time (UTC+05:30).
+ * - Only uses runs of consecutive hours (no gaps > 1 hour).
+ * - Respects allowed local hours (default 06:00 to 21:00) and optional date filter.
+ * - Returns window start and end as ISO times.
  */
 export function cleanestAndDirtiestWindows(
   hourlyForecast: readonly HourlyForecastItem[],
-  windowSizeHours = 3,
+  options?: CleanestAndDirtiestWindowsOptions | number,
 ): CleanestAndDirtiestWindowsResult {
+  const opts: CleanestAndDirtiestWindowsOptions =
+    typeof options === "number" ? { windowSizeHours: options } : (options ?? {});
+
+  const windowSize = Math.max(1, opts.windowSizeHours ?? 3);
+  const allowedStartHour = opts.allowedStartHour ?? 6;
+  const allowedEndHour = opts.allowedEndHour ?? 21;
+  const filterDate = opts.date;
+
   if (!hourlyForecast || hourlyForecast.length === 0) {
     return {
       cleanest: null,
@@ -489,40 +569,153 @@ export function cleanestAndDirtiestWindows(
     };
   }
 
-  const effectiveWindowSize = Math.max(1, Math.min(windowSizeHours, hourlyForecast.length));
+  // Parse and sort items chronologically
+  const parsed = hourlyForecast
+    .map((item) => ({
+      time: item.time,
+      epochMs: new Date(item.time).getTime(),
+      pm25: Math.max(0, item.pm25),
+    }))
+    .filter((item) => !Number.isNaN(item.epochMs))
+    .sort((a, b) => a.epochMs - b.epochMs);
 
-  let minAvg = Number.POSITIVE_INFINITY;
-  let maxAvg = Number.NEGATIVE_INFINITY;
-  let cleanestWin: WindowResult | null = null;
-  let dirtiestWin: WindowResult | null = null;
+  if (parsed.length === 0) {
+    return {
+      cleanest: null,
+      dirtiest: null,
+      isEstimate: false,
+      factorSections: ["8"],
+    };
+  }
 
-  for (let i = 0; i <= hourlyForecast.length - effectiveWindowSize; i++) {
-    const slice = hourlyForecast.slice(i, i + effectiveWindowSize);
-    const sum = slice.reduce((acc, curr) => acc + curr.pm25, 0);
-    const avg = sum / effectiveWindowSize;
-
-    if (avg < minAvg) {
-      minAvg = avg;
-      cleanestWin = {
-        startHour: slice[0].hour,
-        endHour: (slice[slice.length - 1].hour + 1) % 24,
-        averagePm25: avg,
-      };
+  // Deduplicate identical timestamps if any
+  const uniqueItems: typeof parsed = [];
+  for (const item of parsed) {
+    if (uniqueItems.length === 0 || uniqueItems[uniqueItems.length - 1].epochMs !== item.epochMs) {
+      uniqueItems.push(item);
     }
+  }
 
-    if (avg > maxAvg) {
-      maxAvg = avg;
-      dirtiestWin = {
-        startHour: slice[0].hour,
-        endHour: (slice[slice.length - 1].hour + 1) % 24,
+  const KOLKATA_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+  const ONE_HOUR_MS = 60 * 60 * 1000;
+
+  // Split into consecutive runs where gap between adjacent items is exactly 1 hour
+  const consecutiveRuns: (typeof parsed)[] = [];
+  let currentRun: typeof parsed = [];
+
+  for (let i = 0; i < uniqueItems.length; i++) {
+    const item = uniqueItems[i];
+    if (currentRun.length === 0) {
+      currentRun.push(item);
+    } else {
+      const prev = currentRun[currentRun.length - 1];
+      if (item.epochMs - prev.epochMs === ONE_HOUR_MS) {
+        currentRun.push(item);
+      } else {
+        consecutiveRuns.push(currentRun);
+        currentRun = [item];
+      }
+    }
+  }
+  if (currentRun.length > 0) {
+    consecutiveRuns.push(currentRun);
+  }
+
+  // Helper to extract Asia/Kolkata date string (YYYY-MM-DD) and hour (0-23)
+  function getKolkataTimeInfo(epochMs: number) {
+    const kolkataDate = new Date(epochMs + KOLKATA_OFFSET_MS);
+    const dateStr = kolkataDate.toISOString().slice(0, 10);
+    const hour = kolkataDate.getUTCHours();
+    return { dateStr, hour };
+  }
+
+  interface CandidateWindow {
+    startTime: string;
+    endTime: string;
+    startHour: number;
+    endHour: number;
+    averagePm25: number;
+  }
+
+  const candidates: CandidateWindow[] = [];
+
+  for (const run of consecutiveRuns) {
+    if (run.length < windowSize) continue;
+
+    for (let i = 0; i <= run.length - windowSize; i++) {
+      const slice = run.slice(i, i + windowSize);
+      const startInfo = getKolkataTimeInfo(slice[0].epochMs);
+      const endEpochMs = slice[slice.length - 1].epochMs + ONE_HOUR_MS;
+      const endInfo = getKolkataTimeInfo(endEpochMs);
+
+      // Check date filter if provided (matched against window start date in Asia/Kolkata)
+      if (filterDate && startInfo.dateStr !== filterDate) {
+        continue;
+      }
+
+      // Check allowed hours. All hours in the window must fall within allowedStartHour..allowedEndHour.
+      // An hour block starting at local `h` spans [h, h+1). Thus each block hour must satisfy:
+      // h >= allowedStartHour && h + 1 <= allowedEndHour.
+      let hoursAllowed = true;
+      for (const item of slice) {
+        const itemHour = getKolkataTimeInfo(item.epochMs).hour;
+        if (itemHour < allowedStartHour || itemHour + 1 > allowedEndHour) {
+          hoursAllowed = false;
+          break;
+        }
+      }
+
+      if (!hoursAllowed) continue;
+
+      const sum = slice.reduce((acc, curr) => acc + curr.pm25, 0);
+      const avg = sum / windowSize;
+
+      candidates.push({
+        startTime: new Date(slice[0].epochMs).toISOString(),
+        endTime: new Date(endEpochMs).toISOString(),
+        startHour: startInfo.hour,
+        endHour: endInfo.hour,
         averagePm25: avg,
-      };
+      });
+    }
+  }
+
+  if (candidates.length === 0) {
+    return {
+      cleanest: null,
+      dirtiest: null,
+      isEstimate: false,
+      factorSections: ["8"],
+    };
+  }
+
+  let cleanest = candidates[0];
+  let dirtiest = candidates[0];
+
+  for (const cand of candidates) {
+    if (cand.averagePm25 < cleanest.averagePm25) {
+      cleanest = cand;
+    }
+    if (cand.averagePm25 > dirtiest.averagePm25) {
+      dirtiest = cand;
     }
   }
 
   return {
-    cleanest: cleanestWin,
-    dirtiest: dirtiestWin,
+    cleanest: {
+      startTime: cleanest.startTime,
+      endTime: cleanest.endTime,
+      startHour: cleanest.startHour,
+      endHour: cleanest.endHour,
+      averagePm25: cleanest.averagePm25,
+    },
+    dirtiest: {
+      startTime: dirtiest.startTime,
+      endTime: dirtiest.endTime,
+      startHour: dirtiest.startHour,
+      endHour: dirtiest.endHour,
+      averagePm25: dirtiest.averagePm25,
+    },
     isEstimate: false,
     factorSections: ["8"],
   };

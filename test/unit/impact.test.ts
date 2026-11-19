@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   aqiBandFromPm25,
   cigarettesEquivalent,
+  cigarettesForDay,
   cleanestAndDirtiestWindows,
   communityTotal,
   commuteCo2Saved,
@@ -252,27 +253,132 @@ describe("src/shared/impact", () => {
       ).toBe(0);
     });
 
+    it("cigarettesForDay: 24 hours, fewer hours, more hours", () => {
+      // 24 hours: 8h at 80 ug/m3, 16h at 20 ug/m3 -> avg = (640 + 320) / 24 = 40 ug/m3 -> 40 / 22 = 1.81818 cigs
+      const validBlocks = [
+        { concentrationUgM3: 80, durationHours: 8 },
+        { concentrationUgM3: 20, durationHours: 16 },
+      ];
+      const validRes = cigarettesForDay(validBlocks);
+      expect(validRes.cigarettes).not.toBeNull();
+      expect(validRes.cigarettes).toBeCloseTo(40 / 22, 4);
+      expect(validRes.factorSections).toContain("3");
+      expect(validRes.reason).toBeUndefined();
+
+      // Exactly 66 ug/m3 for 24 hours = 3.0 cigarettes
+      const res66 = cigarettesForDay([{ concentrationUgM3: 66, durationHours: 24 }]);
+      expect(res66.cigarettes).toBeCloseTo(3.0, 4);
+
+      // Fewer than 24 hours (e.g. 18 hours) -> returns null with reason
+      const fewerBlocks = [
+        { concentrationUgM3: 80, durationHours: 8 },
+        { concentrationUgM3: 20, durationHours: 10 },
+      ];
+      const fewerRes = cigarettesForDay(fewerBlocks);
+      expect(fewerRes.cigarettes).toBeNull();
+      expect(fewerRes.reason).toMatch(/24 hours/);
+
+      // More than 24 hours (e.g. 26 hours) -> returns null with reason
+      const moreBlocks = [
+        { concentrationUgM3: 50, durationHours: 12 },
+        { concentrationUgM3: 50, durationHours: 14 },
+      ];
+      const moreRes = cigarettesForDay(moreBlocks);
+      expect(moreRes.cigarettes).toBeNull();
+      expect(moreRes.reason).toMatch(/24 hours/);
+    });
+
     it("cleanestAndDirtiestWindows edge cases: empty forecast, single-item forecast, 24-hour forecast", () => {
       const emptyRes = cleanestAndDirtiestWindows([]);
       expect(emptyRes.cleanest).toBeNull();
       expect(emptyRes.dirtiest).toBeNull();
 
-      const singleRes = cleanestAndDirtiestWindows([{ hour: 10, pm25: 50 }], 3);
+      const base = new Date("2026-11-20T00:00:00+05:30").getTime();
+      const singleRes = cleanestAndDirtiestWindows(
+        [{ time: new Date(base + 10 * 3600 * 1000).toISOString(), pm25: 50 }],
+        1,
+      );
       expect(singleRes.cleanest).not.toBeNull();
       expect(singleRes.cleanest?.averagePm25).toBe(50);
       expect(singleRes.cleanest?.startHour).toBe(10);
+      expect(singleRes.cleanest?.endHour).toBe(11);
       expect(singleRes.dirtiest?.averagePm25).toBe(50);
 
-      // Realistic 24-hour profile
+      // Realistic 24-hour profile in Asia/Kolkata
       const forecast = Array.from({ length: 24 }, (_, i) => ({
-        hour: i,
+        time: new Date(base + i * 3600 * 1000).toISOString(),
         pm25: i >= 14 && i <= 16 ? 30 : i >= 7 && i <= 9 ? 120 : 60,
       }));
       const winRes = cleanestAndDirtiestWindows(forecast, 3);
       expect(winRes.cleanest?.startHour).toBe(14);
+      expect(winRes.cleanest?.endHour).toBe(17);
       expect(winRes.cleanest?.averagePm25).toBe(30);
       expect(winRes.dirtiest?.startHour).toBe(7);
+      expect(winRes.dirtiest?.endHour).toBe(10);
       expect(winRes.dirtiest?.averagePm25).toBe(120);
+    });
+
+    it("cleanestAndDirtiestWindows: 48-hour forecast, gap in data, and night hour skipped", () => {
+      const base = new Date("2026-11-20T00:00:00+05:30").getTime();
+
+      // 1. 48-hour forecast: verify windows across 2 days and date filter
+      const forecast48 = Array.from({ length: 48 }, (_, i) => {
+        const hourOfDay = i % 24;
+        // Day 1 cleanest at 15:00 (pm25 = 40), Day 2 cleanest at 14:00 (pm25 = 20)
+        let pm25 = 80;
+        if (i < 24 && hourOfDay >= 15 && hourOfDay <= 17) pm25 = 40;
+        if (i >= 24 && hourOfDay >= 14 && hourOfDay <= 16) pm25 = 20;
+        return {
+          time: new Date(base + i * 3600 * 1000).toISOString(),
+          pm25,
+        };
+      });
+
+      // Overall across 48h, day 2 window is cleanest
+      const res48 = cleanestAndDirtiestWindows(forecast48, 3);
+      expect(res48.cleanest?.averagePm25).toBe(20);
+      expect(res48.cleanest?.startHour).toBe(14);
+      expect(res48.cleanest?.startTime).toBe(
+        new Date(base + (24 + 14) * 3600 * 1000).toISOString(),
+      );
+      expect(res48.cleanest?.endTime).toBe(new Date(base + (24 + 17) * 3600 * 1000).toISOString());
+
+      // Filter by Day 1 date specifically
+      const resDay1 = cleanestAndDirtiestWindows(forecast48, {
+        windowSizeHours: 3,
+        date: "2026-11-20",
+      });
+      expect(resDay1.cleanest?.averagePm25).toBe(40);
+      expect(resDay1.cleanest?.startHour).toBe(15);
+      expect(resDay1.cleanest?.startTime).toBe(new Date(base + 15 * 3600 * 1000).toISOString());
+
+      // 2. Gap in the data: only use runs of consecutive hours (no gaps)
+      // Suppose hours 10, 11, 13, 14, 15 exist (hour 12 is missing).
+      // Window of size 3 cannot bridge [10, 11] across the gap to [13, 14, 15].
+      const forecastWithGap = [
+        { time: new Date(base + 10 * 3600 * 1000).toISOString(), pm25: 10 },
+        { time: new Date(base + 11 * 3600 * 1000).toISOString(), pm25: 10 },
+        // gap at hour 12
+        { time: new Date(base + 13 * 3600 * 1000).toISOString(), pm25: 50 },
+        { time: new Date(base + 14 * 3600 * 1000).toISOString(), pm25: 50 },
+        { time: new Date(base + 15 * 3600 * 1000).toISOString(), pm25: 50 },
+      ];
+      const resGap = cleanestAndDirtiestWindows(forecastWithGap, 3);
+      // Only [13, 14, 15] is a valid 3-hour consecutive run
+      expect(resGap.cleanest?.startHour).toBe(13);
+      expect(resGap.cleanest?.endHour).toBe(16);
+      expect(resGap.cleanest?.averagePm25).toBe(50);
+
+      // 3. Night hour that is cleanest but must be skipped by default (allowed hours 06:00 to 21:00)
+      // At 2 am (02:00 - 05:00), air is cleanest (pm25 = 5), but day hours (06:00 - 21:00) are 45.
+      const forecastWithCleanNight = Array.from({ length: 24 }, (_, i) => ({
+        time: new Date(base + i * 3600 * 1000).toISOString(),
+        pm25: i >= 2 && i <= 4 ? 5 : i >= 14 && i <= 16 ? 45 : 90,
+      }));
+      const resNight = cleanestAndDirtiestWindows(forecastWithCleanNight, 3);
+      // Cleanest night window (pm25 = 5) must be skipped because it's before 06:00
+      expect(resNight.cleanest?.startHour).toBe(14);
+      expect(resNight.cleanest?.averagePm25).toBe(45);
     });
 
     it("commuteCo2Saved edge cases: zero distance, walk_cycle newMode, other vehicles", () => {
@@ -282,8 +388,13 @@ describe("src/shared/impact", () => {
         distanceKm: 0,
       });
       expect(zeroDist.kgCo2SavedPerDay).toBe(0);
+      expect(zeroDist.isEstimateDay).toBe(true); // metro is estimate
+      expect(zeroDist.isEstimateWeek).toBe(true);
+      expect(zeroDist.isEstimateWinter).toBe(true);
+      expect(zeroDist.factorSectionsDay).toContain("9");
+      expect(zeroDist.factorSectionsWinter).toContain("9");
 
-      // walk_cycle replacement saves 100% of old emission
+      // walk_cycle replacement saves 100% of old emission (not an estimate for day or week)
       const walkRes = commuteCo2Saved({
         oldMode: "scooter",
         newMode: "walk_cycle",
@@ -291,6 +402,19 @@ describe("src/shared/impact", () => {
         tripsPerDay: 1,
       });
       expect(walkRes.kgCo2SavedPerDay).toBeCloseTo(0.368, 4);
+      expect(walkRes.isEstimateDay).toBe(false);
+      expect(walkRes.isEstimateWeek).toBe(false);
+      expect(walkRes.isEstimateWinter).toBe(true); // 17 weeks is CHOSEN
+
+      // bus replacement is not an estimate for day or week
+      const busRes = commuteCo2Saved({
+        oldMode: "petrol_car",
+        newMode: "bus",
+        distanceKm: 20,
+      });
+      expect(busRes.isEstimateDay).toBe(false);
+      expect(busRes.isEstimateWeek).toBe(false);
+      expect(busRes.isEstimateWinter).toBe(true);
 
       // diesel sedan
       const dieselRes = commuteCo2Saved({
@@ -300,6 +424,7 @@ describe("src/shared/impact", () => {
         tripsPerDay: 1,
       });
       expect(dieselRes.kgCo2SavedPerDay).toBeCloseTo(0.141 * 10 * 0.97, 4);
+      expect(dieselRes.isEstimateDay).toBe(true); // metro
 
       // auto rickshaw
       const autoRes = commuteCo2Saved({
@@ -309,6 +434,7 @@ describe("src/shared/impact", () => {
         tripsPerDay: 1,
       });
       expect(autoRes.kgCo2SavedPerDay).toBeCloseTo((0.10768 - 0.015161) * 10, 4);
+      expect(autoRes.isEstimateDay).toBe(false);
     });
 
     it("minPurifierCadr with 0 area or height", () => {
