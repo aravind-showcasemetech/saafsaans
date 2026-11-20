@@ -11,7 +11,8 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   webServer: {
-    command: "npx tsx src/server/server.ts",
+    // The built app (run npm run build first), as it runs in production.
+    command: "node dist/server/server/server.js",
     url: "http://127.0.0.1:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 30 * 1000,

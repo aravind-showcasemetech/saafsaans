@@ -1,8 +1,13 @@
 // home.ts: Main home page controller assembling the modules.
 // Plain TypeScript, follows docs/DESIGN.md sections 1 to 8.
+// The insight windows and the Reddys' examples come from the Kukatpally forecast and src/shared.
 
+import type { NormalisedAirData } from "../../shared/air-types.js";
+import { cleanestAndDirtiestWindows } from "../../shared/impact.js";
+import { fetchAirData } from "../app/api.js";
+import { capturedLabel, timeOfDay } from "../app/format.js";
 import { type AreaAirItem, computeReddysExamples, fetchAreasAir } from "./data.js";
-import { type SupportedLang, getLanguage, setLanguage, t } from "./i18n.js";
+import { type SupportedLang, getLanguage, setLanguage } from "./i18n.js";
 import { setupHeaderScroll, setupMarquees, setupScrollReveal, setupStickyPanel } from "./motion.js";
 import {
   renderAirMarquee,
@@ -18,79 +23,43 @@ import {
   renderTwoLenses,
 } from "./render.js";
 
+const KUKATPALLY = { lat: 17.48, lng: 78.41 };
+
 export async function initHomePage(): Promise<void> {
   const appRoot = document.getElementById("app");
   if (!appRoot) return;
 
-  // Initialize language
-  await setLanguage("en");
-
-  // Fetch areas air
-  const areas = await fetchAreasAir();
-  const kukatpally = areas.find((a) => a.name === "Kukatpally") ?? areas[0];
-
-  const isDemo = kukatpally?.isDemo ?? true;
-  const sampleDate = kukatpally?.capturedDate ?? "2026-11-19";
-  const timeDisplay = isDemo
-    ? `Sample data captured on ${sampleDate}`
-    : new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-
-  const liveAir = kukatpally
-    ? {
-        aqi: kukatpally.aqi ?? 92,
-        aqiBand: kukatpally.aqiBand ?? "Satisfactory",
-        pm25: kukatpally.pm25 ?? 55,
-        area: "Kukatpally, Hyderabad",
-        time: timeDisplay,
-      }
-    : null;
-
-  // Hourly forecast synthetic or from kukatpally for Reddys calculation
-  const syntheticForecast = [
-    { time: "2026-11-20T01:00:00Z", pm25: 65 },
-    { time: "2026-11-20T07:00:00Z", pm25: 85 },
-    { time: "2026-11-20T10:00:00Z", pm25: 45 },
-    { time: "2026-11-20T15:00:00Z", pm25: 35 },
-  ];
-  const reddyComputed = computeReddysExamples(syntheticForecast, liveAir?.pm25 ?? 55);
+  const [areas, forecastAir] = await Promise.all([
+    fetchAreasAir(),
+    fetchAirData(KUKATPALLY.lat, KUKATPALLY.lng).catch((): NormalisedAirData | null => null),
+  ]);
+  const kukatpally: AreaAirItem | undefined = areas.find((a) => a.name === "Kukatpally");
+  const hourly = forecastAir?.hourlyForecast ?? [];
+  const windows = cleanestAndDirtiestWindows(hourly);
+  const reddys = computeReddysExamples(hourly, forecastAir?.pm25 ?? kukatpally?.pm25 ?? 0);
+  const loadedAt = new Date();
 
   function renderFullPage(): void {
     if (!appRoot) return;
-    const headerHtml = renderHeader();
-    const heroHtml = renderHero(liveAir);
-    const marquee1Html = renderAirMarquee(areas);
-    const insightHtml = renderMorningInsight("14:00 to 17:00", "07:00 to 10:00");
-    const howItWorksHtml = renderHowItWorks();
-    const lensesHtml = renderTwoLenses(
-      reddyComputed.protectDoseCut,
-      reddyComputed.polluteLessWeeklyCo2,
-    );
-    const formulasHtml = renderFormulas();
-    const communityHtml = renderCommunity(
-      reddyComputed.communityHomes,
-      reddyComputed.communityTotalWeeklyKg,
-    );
-    const sourcesHtml = renderSourcesMarqueeAndList();
-    const ctaHtml = renderFinalCta();
-    const footerHtml = renderFooter();
-
+    // One clear label: sample data shows when it was captured, live data shows when it loaded.
+    const airLabel = kukatpally?.isDemo
+      ? (capturedLabel(kukatpally.capturedAt) ?? "")
+      : timeOfDay(loadedAt);
     appRoot.innerHTML = `
-      ${headerHtml}
-      <main id="main-content" role="main">
-        ${heroHtml}
-        ${marquee1Html}
-        ${insightHtml}
-        ${howItWorksHtml}
-        ${lensesHtml}
-        ${formulasHtml}
-        ${communityHtml}
-        ${sourcesHtml}
-        ${ctaHtml}
+      ${renderHeader()}
+      <main id="main-content">
+        ${renderHero(kukatpally ?? null, airLabel)}
+        ${renderAirMarquee(areas)}
+        ${renderMorningInsight(windows.cleanest, windows.dirtiest)}
+        ${renderHowItWorks()}
+        ${renderTwoLenses(reddys.protectDoseCut, reddys.polluteLessWeeklyCo2)}
+        ${renderFormulas()}
+        ${renderCommunity(reddys.communityHomes, reddys.communityTotalWeeklyKg)}
+        ${renderSourcesMarqueeAndList()}
+        ${renderFinalCta()}
       </main>
-      ${footerHtml}
-    `;
+      ${renderFooter()}`;
 
-    // Attach language switcher events
     const current = getLanguage();
     for (const btn of document.querySelectorAll<HTMLButtonElement>(".lang-btn")) {
       const lang = btn.getAttribute("data-lang") as SupportedLang;
@@ -104,11 +73,10 @@ export async function initHomePage(): Promise<void> {
       });
     }
 
-    // Setup motion & interactions
     setupHeaderScroll();
     setupScrollReveal();
     setupMarquees();
-    setupStickyPanel();
+    setupStickyPanel({ windows, reddys });
   }
 
   renderFullPage();

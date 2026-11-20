@@ -105,3 +105,12 @@ export function loadToggledSwaps(): string[] | null {
     return null;
   }
 }
+
+/** Forgets the toggles, so a newly opened household starts with every swap on. */
+export function clearToggledSwaps(): void {
+  try {
+    localStorage.removeItem(TOGGLES_KEY);
+  } catch (err) {
+    console.error("Failed to clear toggles in localStorage", err);
+  }
+}

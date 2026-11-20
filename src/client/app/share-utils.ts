@@ -1,54 +1,51 @@
 // share-utils.ts: Pure WhatsApp text and iCalendar builders with unit tests.
-// No em or en dashes, Asia/Kolkata timezone.
+// Callers pass translated text; these functions only assemble it. No em or en dashes.
+
+const DASHES = new RegExp(`[${String.fromCharCode(0x2014, 0x2013)}]`, "g");
 
 export interface CleanAirWindow {
   startHour: number; // 0..23
   endHour: number; // 1..24
-  averagePm25?: number;
 }
 
-/**
- * Builds clean, dash-free WhatsApp message text.
- */
-export function buildWhatsAppShareText(params: {
-  areaName: string;
-  cleanestStart: string; // e.g. "14:00"
-  cleanestEnd: string; // e.g. "17:00"
-  swapsCount: number;
-  co2SavedKgPerWeek: number;
-  originUrl?: string;
-}): string {
-  const { areaName, cleanestStart, cleanestEnd, swapsCount, co2SavedKgPerWeek, originUrl } = params;
-  const url =
-    originUrl ||
-    (typeof window !== "undefined" && window.location?.origin ? window.location.origin : "");
-  const lines = [
-    `SaafSaans air plan for ${areaName}:`,
-    `Cleanest air window today is between ${cleanestStart} and ${cleanestEnd}.`,
-    `Our household chose ${swapsCount} actions, avoiding ${co2SavedKgPerWeek} kg of CO2 weekly.`,
-    url ? `Get your family plan at ${url}` : "Get your family plan with SaafSaans",
-  ];
-  return lines.join("\n\n");
+/** Joins translated lines into one WhatsApp message, with a blank line between them. */
+export function buildWhatsAppShareText(lines: readonly string[]): string {
+  return lines
+    .map((line) => line.replace(DASHES, ",").trim())
+    .filter((line) => line.length > 0)
+    .join("\n\n");
 }
 
-/**
- * Generates an RFC 5545 iCalendar string (.ics) for clean air windows in Asia/Kolkata timezone.
- */
+/** Escapes text for an iCalendar TEXT value (RFC 5545 section 3.3.11). */
+export function escapeIcsText(text: string): string {
+  return text
+    .replace(DASHES, ",")
+    .replace(/\\/g, "\\\\")
+    .replace(/;/g, "\\;")
+    .replace(/,/g, "\\,")
+    .replace(/\r?\n/g, "\\n");
+}
+
+function icsLocalTime(dateIso: string, hour: number): string {
+  // Hour 24 is midnight at the start of the next day.
+  const day = new Date(`${dateIso}T00:00:00Z`);
+  day.setUTCDate(day.getUTCDate() + Math.floor(hour / 24));
+  const date = day.toISOString().slice(0, 10).replace(/-/g, "");
+  return `${date}T${String(hour % 24).padStart(2, "0")}0000`;
+}
+
+/** Generates an RFC 5545 iCalendar string (.ics) for one clean air window in Asia/Kolkata time. */
 export function buildCalendarIcs(params: {
   dateIso: string; // YYYY-MM-DD
   cleanestWindow: CleanAirWindow;
-  areaName: string;
+  summary: string;
+  description: string;
+  now?: Date;
 }): string {
-  const { dateIso, cleanestWindow, areaName } = params;
-  const cleanDate = dateIso.replace(/-/g, "");
-
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const dtStart = `${cleanDate}T${pad(cleanestWindow.startHour)}0000`;
-  const dtEnd = `${cleanDate}T${pad(cleanestWindow.endHour)}0000`;
-
-  const now = `${new Date().toISOString().replace(/[-:]/g, "").split(".")[0]}Z`;
-  const randomSuffix = Math.random().toString(36).substring(2, 10);
-  const uid = `saafsaans-clean-air-${cleanDate}-${cleanestWindow.startHour}-${randomSuffix}`;
+  const { dateIso, cleanestWindow, summary, description } = params;
+  const stamp = `${(params.now ?? new Date()).toISOString().replace(/[-:]/g, "").split(".")[0]}Z`;
+  const start = icsLocalTime(dateIso, cleanestWindow.startHour);
+  const uid = `saafsaans-clean-air-${start}-${Math.random().toString(36).substring(2, 10)}`;
 
   return [
     "BEGIN:VCALENDAR",
@@ -67,11 +64,11 @@ export function buildCalendarIcs(params: {
     "END:VTIMEZONE",
     "BEGIN:VEVENT",
     `UID:${uid}`,
-    `DTSTAMP:${now}`,
-    `DTSTART;TZID=Asia/Kolkata:${dtStart}`,
-    `DTEND;TZID=Asia/Kolkata:${dtEnd}`,
-    `SUMMARY:Clean Air Window in ${areaName}`,
-    "DESCRIPTION:Safest time for outdoor walks, errands or airing rooms according to live air forecast.",
+    `DTSTAMP:${stamp}`,
+    `DTSTART;TZID=Asia/Kolkata:${start}`,
+    `DTEND;TZID=Asia/Kolkata:${icsLocalTime(dateIso, cleanestWindow.endHour)}`,
+    `SUMMARY:${escapeIcsText(summary)}`,
+    `DESCRIPTION:${escapeIcsText(description)}`,
     "STATUS:CONFIRMED",
     "END:VEVENT",
     "END:VCALENDAR",

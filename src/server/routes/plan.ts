@@ -238,8 +238,8 @@ planRoute.post("/plan", async (c) => {
     cpcbHealthStatement,
     googleHealthAdvice: airData.healthRecommendations ?? {},
     memberDoses: dayComparison.memberComparisons,
-    isDemo: config.demoMode || !config.mapsLive,
-    capturedDate: config.demoMode || !config.mapsLive ? "2026-11-19" : undefined,
+    isDemo: !config.mapsLive,
+    capturedAt: config.mapsLive ? undefined : airData.capturedAt,
   };
 
   const validated = PlanResponseSchema.parse(responseBody);

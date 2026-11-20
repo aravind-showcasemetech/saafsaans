@@ -47,6 +47,10 @@ test.describe("SaafSaans App Screens E2E Tests (DEMO=1)", () => {
   });
 
   test("share card loads with WhatsApp preview and calendar download", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForSelector(".hero-title");
+    await page.locator("a[href='#/demo']").first().click();
+    await page.waitForSelector(".today-layout");
     await page.goto("/#/share");
     await page.waitForSelector("#whatsapp-share-btn");
 
@@ -233,6 +237,6 @@ test.describe("SaafSaans App Screens E2E Tests (DEMO=1)", () => {
     await page.waitForSelector("#whatsapp-share-btn");
     const waShareEl = page.locator(".share-wa-preview");
     const waText = await waShareEl.innerText();
-    expect(waText).toContain(`${todayCo2} kg of CO2`);
+    expect(waText).toContain(`${todayCo2} kg of CO₂`);
   });
 });

@@ -55,7 +55,7 @@ export const PlanResponseSchema = z.object({
   headline: z.string().optional(),
   communityTotal: z.number().optional(),
   isDemo: z.boolean().optional(),
-  capturedDate: z.string().optional(),
+  capturedAt: z.string().optional(),
 });
 
 export type PlanSwapItem = z.infer<typeof PlanSwapItemSchema>;

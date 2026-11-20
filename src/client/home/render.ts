@@ -2,27 +2,19 @@
 // Every visible string comes from t() or verified live data.
 // No icons, no em/en dashes, no gradients.
 
+import { escapeHtml } from "../../shared/escape.js";
+import {
+  bandClass,
+  bandLabel,
+  capturedLabel,
+  formatIndianNumber,
+  placeLabel,
+  windowText,
+} from "../app/format.js";
 import type { AreaAirItem } from "./data.js";
 import { t } from "./i18n.js";
 
-function getBandClass(band: string): string {
-  switch (band.toLowerCase()) {
-    case "good":
-      return "band-good";
-    case "satisfactory":
-      return "band-satisfactory";
-    case "moderately polluted":
-      return "band-moderate";
-    case "poor":
-      return "band-poor";
-    case "very poor":
-      return "band-very-poor";
-    case "severe":
-      return "band-severe";
-    default:
-      return "band-moderate";
-  }
-}
+type HourWindow = { startHour: number; endHour: number } | null;
 
 export function renderHeader(): string {
   return `
@@ -31,9 +23,9 @@ export function renderHeader(): string {
         <a href="/" class="brand-wordmark">${t("app.title")}</a>
         <div class="header-actions">
           <nav class="lang-switch" aria-label="${t("header.language")}">
-            <button class="lang-btn" data-lang="en">English</button>
-            <button class="lang-btn" data-lang="hi">हिन्दी</button>
-            <button class="lang-btn" data-lang="te">తెలుగు</button>
+            <button class="lang-btn" data-lang="en" lang="en" type="button">English</button>
+            <button class="lang-btn" data-lang="hi" lang="hi" type="button">हिन्दी</button>
+            <button class="lang-btn" data-lang="te" lang="te" type="button">తెలుగు</button>
           </nav>
           <a href="#/setup" class="btn btn-primary">${t("header.planMyDay")}</a>
         </div>
@@ -42,27 +34,26 @@ export function renderHeader(): string {
   `;
 }
 
-export function renderHero(
-  liveAir: { aqi: number; aqiBand: string; pm25: number; area: string; time: string } | null,
-): string {
-  const visualContent = liveAir
-    ? `
+export function renderHero(area: AreaAirItem | null, airLabel: string): string {
+  const visualContent =
+    area && area.aqi !== undefined
+      ? `
       <div class="air-card">
-        <div class="section-label">${liveAir.area}</div>
+        <div class="section-label">${escapeHtml(placeLabel("Kukatpally, Hyderabad"))}</div>
         <div class="air-card-top">
-          <span class="air-aqi-number tabular-nums">${liveAir.aqi}</span>
+          <span class="air-aqi-number tabular-nums">${formatIndianNumber(area.aqi)}</span>
           <span class="air-band-tag">
-            <span class="band-indicator-bar ${getBandClass(liveAir.aqiBand)}"></span>
-            ${liveAir.aqiBand}
+            <span class="band-indicator-bar ${bandClass(area.aqiBand)}"></span>
+            ${escapeHtml(bandLabel(area.aqiBand))}
           </span>
         </div>
         <div class="air-card-details">
-          <div>PM2.5: <span class="tabular-nums">${liveAir.pm25} µg/m³</span></div>
-          <div>${t("hero.updatedAt")} ${liveAir.time}</div>
+          <div>PM2.5: <span class="tabular-nums">${formatIndianNumber(area.pm25, 1)} µg/m³</span></div>
+          <div>${escapeHtml(area.isDemo ? airLabel : t("hero.updatedAt", { time: airLabel }))}</div>
         </div>
       </div>
     `
-    : `
+      : `
       <div class="air-card">
         <div class="hero-loading-text">${t("hero.loadingAir")}</div>
       </div>
@@ -88,19 +79,19 @@ export function renderHero(
 }
 
 export function renderAirMarquee(areas: AreaAirItem[]): string {
-  const isDemo = areas.some((a) => a.isDemo);
-  const sampleDate = areas[0]?.capturedDate ?? "2026-11-19";
-  const demoBanner = isDemo
-    ? `<div class="marquee-sample-note">Sample data captured on ${sampleDate}</div>`
+  const sample = areas.find((a) => a.isDemo);
+  const sampleText = sample ? capturedLabel(sample.capturedAt) : null;
+  const demoBanner = sampleText
+    ? `<div class="marquee-sample-note">${escapeHtml(sampleText)}</div>`
     : "";
 
   const itemsHtml = areas
     .map(
       (a) => `
       <div class="marquee-item">
-        <span class="marquee-item-title">${a.name}</span>
-        <span class="tabular-nums">${a.aqi ?? "--"}</span>
-        <span class="marquee-item-band">(${a.aqiBand})</span>
+        <span class="marquee-item-title">${escapeHtml(placeLabel(a.name))}</span>
+        <span class="tabular-nums">${a.aqi === undefined ? "" : formatIndianNumber(a.aqi)}</span>
+        <span class="marquee-item-band">(${escapeHtml(bandLabel(a.aqiBand))})</span>
       </div>
     `,
     )
@@ -124,11 +115,20 @@ export function renderAirMarquee(areas: AreaAirItem[]): string {
   `;
 }
 
-export function renderMorningInsight(cleanest: string, dirtiest: string): string {
-  // Extract hours from cleanest (e.g. "14:00 to 17:00")
-  const cleanestParts = cleanest.split(" to ");
-  const cleanestStart = cleanestParts[0] || "14:00";
-  const cleanestEnd = cleanestParts[1] || "17:00";
+export function renderMorningInsight(
+  cleanestWindow: HourWindow,
+  dirtiestWindow: HourWindow,
+): string {
+  const none = t("today.noWindow");
+  const cleanest = windowText(cleanestWindow) ?? none;
+  const dirtiest = windowText(dirtiestWindow) ?? none;
+  const pad = (h: number) => `${String(h % 24).padStart(2, "0")}:00`;
+  const explanation = cleanestWindow
+    ? t("insight.explanation", {
+        cleanestStart: pad(cleanestWindow.startHour),
+        cleanestEnd: pad(cleanestWindow.endHour),
+      })
+    : "";
 
   return `
     <section class="section reveal-on-scroll" aria-labelledby="insight-title">
@@ -140,7 +140,7 @@ export function renderMorningInsight(cleanest: string, dirtiest: string): string
         </div>
         <div class="insight-card">
           <p class="insight-summary-lead">
-            ${t("insight.explanation", { cleanestStart, cleanestEnd })}
+            ${explanation}
           </p>
           <div class="insight-windows">
             <div>
@@ -177,29 +177,25 @@ export function renderHowItWorks(): string {
             <div class="sticky-panel">
               <div class="section-label">${t("howItWorks.exampleLabel")}</div>
               <div id="sticky-panel-content" class="sticky-panel-content">
-                <h3 class="sticky-panel-title">The Reddys (Kukatpally)</h3>
-                <p class="sticky-panel-desc">
-                  Father (38), Mother (35), Son (9, asthma), Grandmother (68). Morning walk at 6 am, mosquito coil at night, petrol car commute.
-                </p>
-                <div class="sticky-panel-detail">
-                  1 child with asthma, 1 senior with daily morning walk
-                </div>
+                <h3 class="sticky-panel-title">${t("sticky.familyTitle")}</h3>
+                <p class="sticky-panel-desc">${t("sticky.familyBody")}</p>
+                <div class="sticky-panel-detail">${t("sticky.familyDetail")}</div>
               </div>
             </div>
           </div>
           <div class="steps-list">
             <div class="step-item" data-step="1">
-              <div class="step-num">Step 1</div>
+              <div class="step-num">${t("common.step", { n: 1 })}</div>
               <h3 class="step-title">${t("howItWorks.step1Title")}</h3>
               <p class="step-body">${t("howItWorks.step1Body")}</p>
             </div>
             <div class="step-item" data-step="2">
-              <div class="step-num">Step 2</div>
+              <div class="step-num">${t("common.step", { n: 2 })}</div>
               <h3 class="step-title">${t("howItWorks.step2Title")}</h3>
               <p class="step-body">${t("howItWorks.step2Body")}</p>
             </div>
             <div class="step-item" data-step="3">
-              <div class="step-num">Step 3</div>
+              <div class="step-num">${t("common.step", { n: 3 })}</div>
               <h3 class="step-title">${t("howItWorks.step3Title")}</h3>
               <p class="step-body">${t("howItWorks.step3Body")}</p>
             </div>
@@ -229,7 +225,7 @@ export function renderTwoLenses(protectCut: number, polluteSaved: number): strin
           <div class="lens-card">
             <h3 class="lens-title">${t("lenses.polluteTitle")}</h3>
             <p class="lens-desc">${t("lenses.polluteDesc")}</p>
-            <div class="lens-stat tabular-nums">${polluteSaved} kg</div>
+            <div class="lens-stat tabular-nums">${t("common.kg", { value: formatIndianNumber(polluteSaved) })}</div>
             <p class="lens-example">${t("lenses.polluteExample", { amount: polluteSaved })}</p>
           </div>
         </div>
@@ -291,9 +287,9 @@ export function renderCommunity(homes: number, weeklyTotal: number): string {
           <p class="community-society-story">
             ${t("community.societyStory")}
           </p>
-          <div class="community-stat tabular-nums">${weeklyTotal} kg CO2</div>
+          <div class="community-stat tabular-nums">${t("common.kgCo2", { value: formatIndianNumber(weeklyTotal) })}</div>
           <p class="community-society-note">
-            ${t("community.societyResult")} (${homes} ${t("community.homesWord")})
+            ${t("community.societyResult")} (${formatIndianNumber(homes)} ${t("community.homesWord")})
           </p>
         </div>
       </div>
@@ -303,18 +299,15 @@ export function renderCommunity(homes: number, weeklyTotal: number): string {
 
 export function renderSourcesMarqueeAndList(): string {
   const sources = [
-    { name: "Central Pollution Control Board (CPCB)", url: "https://cpcb.nic.in" },
-    { name: "United States Environmental Protection Agency (US EPA)", url: "https://www.epa.gov" },
-    { name: "Berkeley Earth", url: "https://berkeleyearth.org" },
-    { name: "Association of Home Appliance Manufacturers (AHAM)", url: "https://ahamverifide.org" },
-    { name: "India GHG Program", url: "https://indiaghgp.org" },
-    { name: "Central Electricity Authority (CEA)", url: "https://cea.nic.in" },
-    { name: "Centre for Science and Environment (CSE)", url: "https://www.cseindia.org" },
-    {
-      name: "Google Air Quality API",
-      url: "https://developers.google.com/maps/documentation/air-quality",
-    },
-  ];
+    { key: "cpcb", url: "https://cpcb.nic.in" },
+    { key: "epa", url: "https://www.epa.gov" },
+    { key: "berkeley", url: "https://berkeleyearth.org" },
+    { key: "aham", url: "https://ahamverifide.org" },
+    { key: "ghg", url: "https://indiaghgp.org" },
+    { key: "cea", url: "https://cea.nic.in" },
+    { key: "cse", url: "https://www.cseindia.org" },
+    { key: "google", url: "https://developers.google.com/maps/documentation/air-quality" },
+  ].map((s) => ({ name: t(`sources.${s.key}`), url: s.url }));
 
   const marqueeItems = sources
     .map(
@@ -393,9 +386,9 @@ export function renderFooter(): string {
           ${t("footer.googleAttribution")}
         </div>
         <div class="footer-nav">
-          <a href="https://github.com" target="_blank" rel="noopener noreferrer">${t("footer.githubRepo")}</a>
-          <a href="#setup">${t("header.planMyDay")}</a>
-          <a href="#demo">${t("hero.tryHyderabad")}</a>
+          <a href="https://github.com/aravind-showcasemetech/saafsaans" target="_blank" rel="noopener noreferrer">${t("footer.githubRepo")}</a>
+          <a href="#/setup">${t("header.planMyDay")}</a>
+          <a href="#/demo">${t("hero.tryHyderabad")}</a>
         </div>
       </div>
     </footer>

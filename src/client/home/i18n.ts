@@ -9,12 +9,25 @@ export type SupportedLang = "en" | "hi" | "te";
 
 const STORAGE_KEY = "saafsaans_lang";
 
+function isSupported(value: string | null): value is SupportedLang {
+  return value === "en" || value === "hi" || value === "te";
+}
+
+/** Reads ?lang= from the query string or from the hash route (#/today?lang=te). */
+export function langFromUrl(): SupportedLang | null {
+  if (typeof window === "undefined") return null;
+  const fromSearch = new URLSearchParams(window.location.search).get("lang");
+  if (isSupported(fromSearch)) return fromSearch;
+  const hash = window.location.hash;
+  const hashQuery = hash.includes("?") ? hash.slice(hash.indexOf("?") + 1) : "";
+  const fromHash = new URLSearchParams(hashQuery).get("lang");
+  return isSupported(fromHash) ? fromHash : null;
+}
+
 function getInitialLanguage(): SupportedLang {
   if (typeof window !== "undefined") {
-    // Check URL search param (?lang=te or ?lang=hi)
-    const urlParams = new URLSearchParams(window.location.search);
-    const langParam = urlParams.get("lang");
-    if (langParam === "hi" || langParam === "te" || langParam === "en") {
+    const langParam = langFromUrl();
+    if (langParam) {
       try {
         localStorage.setItem(STORAGE_KEY, langParam);
       } catch {}
@@ -24,7 +37,7 @@ function getInitialLanguage(): SupportedLang {
     // Check localStorage
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored === "hi" || stored === "te" || stored === "en") {
+      if (isSupported(stored)) {
         return stored;
       }
     } catch {}
@@ -52,7 +65,34 @@ export async function setLanguage(lang: SupportedLang): Promise<void> {
     try {
       localStorage.setItem(STORAGE_KEY, lang);
     } catch {}
+    rewriteUrlLang(lang);
   }
+}
+
+/** Keeps any ?lang= in the URL in step with the chosen language, without a navigation. */
+function rewriteUrlLang(lang: SupportedLang): void {
+  const url = new URL(window.location.href);
+  let changed = false;
+  if (url.searchParams.has("lang")) {
+    url.searchParams.set("lang", lang);
+    changed = true;
+  }
+  const hashQueryAt = url.hash.indexOf("?");
+  if (hashQueryAt >= 0) {
+    const params = new URLSearchParams(url.hash.slice(hashQueryAt + 1));
+    if (params.has("lang")) {
+      params.set("lang", lang);
+      url.hash = `${url.hash.slice(0, hashQueryAt)}?${params.toString()}`;
+      changed = true;
+    }
+  }
+  if (changed) window.history.replaceState(null, "", url);
+}
+
+/** Applies ?lang= from the URL, if present, as the current language. */
+export function syncLanguageFromUrl(): void {
+  const lang = langFromUrl();
+  if (lang && lang !== currentLang) void setLanguage(lang);
 }
 
 export function getLanguage(): SupportedLang {

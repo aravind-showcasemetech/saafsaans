@@ -27,7 +27,7 @@ import { renderSetupView } from "./app/setup.js";
 import { renderShareView } from "./app/share.js";
 import { renderTodayView } from "./app/today.js";
 import { initHomePage } from "./home/home.js";
-import { type SupportedLang, getLanguage, setLanguage, t } from "./home/i18n.js";
+import { type SupportedLang, getLanguage, setLanguage } from "./home/i18n.js";
 import { setupHeaderScroll } from "./home/motion.js";
 import { renderFooter, renderHeader } from "./home/render.js";
 
@@ -86,7 +86,9 @@ function startApp(): void {
 
   router.register("/share", () => {
     const content = mountAppShell(appRoot);
-    renderShareView(content);
+    renderShareView(content).catch((err) => {
+      console.error("Failed to render Share view", err);
+    });
   });
 
   router.register("/demo", () => {

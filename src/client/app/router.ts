@@ -1,6 +1,8 @@
 // router.ts: Simple hash router for SaafSaans.
 // Routes: #/, #/setup, #/today, #/share, #/demo
 
+import { syncLanguageFromUrl } from "../home/i18n.js";
+
 export type RoutePath = "/" | "/setup" | "/today" | "/share" | "/demo";
 
 export type RouteHandler = (path: RoutePath, params?: URLSearchParams) => void;
@@ -44,6 +46,8 @@ class HashRouter {
   }
 
   private handleHashChange(): void {
+    // ?lang=hi or ?lang=te in the URL wins over the stored choice, before the screen renders.
+    syncLanguageFromUrl();
     const hash = window.location.hash;
     const path = this.parseHash();
     this.currentPath = path;

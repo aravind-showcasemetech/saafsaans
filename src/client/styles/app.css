@@ -2,6 +2,9 @@
 
 /* Step Indicators */
 .stepper-header {
+  list-style: none;
+  padding-left: 0;
+  flex-wrap: wrap;
   display: flex;
   align-items: center;
   gap: var(--space-24);
@@ -244,7 +247,6 @@
 
 /* 48-Hour Strip Bar Chart */
 .chart-strip-wrapper {
-  overflow-x: auto;
   padding-bottom: var(--space-8);
   margin-bottom: var(--space-24);
 }
@@ -253,8 +255,7 @@
   display: flex;
   align-items: flex-end;
   height: 120px;
-  gap: 3px;
-  min-width: 680px;
+  gap: 2px;
   border-bottom: 1px solid var(--rule);
   padding-bottom: var(--space-4);
 }
@@ -278,7 +279,9 @@
 }
 
 .chart-bar-hour {
-  font-size: 10px;
+  white-space: nowrap;
+  min-height: 1.4em;
+  font-size: 12px;
   color: var(--ink-2);
   margin-top: 4px;
 }

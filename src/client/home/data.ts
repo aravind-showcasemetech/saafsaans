@@ -14,18 +14,7 @@ export interface AreaAirItem {
   pm25: number;
   dominantPollutant: string;
   isDemo?: boolean;
-  capturedDate?: string;
-}
-
-export interface HomeLiveAirData {
-  city: string;
-  aqi: number;
-  aqiBand: string;
-  pm25: number;
-  updatedTime: string;
-  areas: AreaAirItem[];
-  cleanestHourRange: string;
-  dirtiestHourRange: string;
+  capturedAt?: string;
 }
 
 // Reddy family profile definition matching docs/SPEC.md section 13
@@ -94,63 +83,48 @@ export async function fetchAreasAir(): Promise<AreaAirItem[]> {
   } catch (e) {
     console.error("Failed to fetch areas air data", e);
   }
+  // No invented readings: with no data the hero shows its loading line and the marquee is empty.
+  return [];
+}
 
-  // Fallback demo areas (real captures only in demo mode)
-  return [
-    {
-      name: "Kukatpally",
-      lat: 17.48,
-      lng: 78.41,
-      aqi: 92,
-      aqiBand: "Satisfactory",
-      pm25: 71.63,
-      dominantPollutant: "pm25",
-      isDemo: true,
-      capturedDate: "2026-11-19",
-    },
-    {
-      name: "Dwarka, Delhi",
-      lat: 28.59,
-      lng: 77.05,
-      aqi: 220,
-      aqiBand: "Poor",
-      pm25: 74.05,
-      dominantPollutant: "pm25",
-      isDemo: true,
-      capturedDate: "2026-11-19",
-    },
-  ];
+export interface ReddysExamples {
+  protectDoseCut: number;
+  purifierCadrCfm: number;
+  polluteLessWeeklyCo2: number;
+  communityHomes: number;
+  communityTotalWeeklyKg: number;
 }
 
 export function computeReddysExamples(
   hourlyForecast: readonly { time: string; pm25: number }[],
   currentPm25: number,
-) {
-  // 1. Protect lens example: Bedroom purifier dose cut percentage
+): ReddysExamples {
+  // 1. Protect lens example: bedroom purifier dose cut percentage and its minimum size
   const purifierImpact = computeDayModelSwapImpact(
     "purifier-bedroom",
     reddysHousehold,
     hourlyForecast,
     currentPm25,
   );
-  const protectDoseCut = Math.round(purifierImpact.maxDoseCutPercentage ?? 27);
 
-  // 2. Pollute less lens example: Metro instead of car CO2 saved per week
+  // 2. Pollute less lens example: metro instead of car, CO2 saved per week
   const metroImpact = computeDayModelSwapImpact(
     "metro-not-car",
     reddysHousehold,
     hourlyForecast,
     currentPm25,
   );
-  const polluteLessWeeklyCo2 = Math.round(metroImpact.co2SavedKgPerWeek ?? 16);
+  const polluteLessWeeklyCo2 = Math.round(metroImpact.co2SavedKgPerWeek ?? 0);
 
-  // 3. Community example: Green Meadows 120 homes weekly total
-  const communityResult = communityTotal(polluteLessWeeklyCo2, 120);
+  // 3. Community example: Green Meadows, 120 homes, weekly total
+  const communityHomes = 120;
+  const communityResult = communityTotal(polluteLessWeeklyCo2, communityHomes);
 
   return {
-    protectDoseCut,
+    protectDoseCut: Math.round(purifierImpact.maxDoseCutPercentage ?? 0),
+    purifierCadrCfm: Math.round(purifierImpact.purifierCadrCfm ?? 0),
     polluteLessWeeklyCo2,
-    communityHomes: 120,
+    communityHomes,
     communityTotalWeeklyKg: Math.round(communityResult.totalWeeklySaving),
   };
 }

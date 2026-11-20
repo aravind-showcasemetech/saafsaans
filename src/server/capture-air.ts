@@ -3,6 +3,11 @@ import path from "node:path";
 import { fetchAirData } from "./air.js";
 import { config } from "./config.js";
 
+// Each capture file records when it was taken; "Sample data captured on" labels read it from there.
+function withCapturedAt<T extends object>(air: T): T & { capturedAt: string } {
+  return { capturedAt: new Date().toISOString(), ...air };
+}
+
 async function main() {
   if (!config.mapsApiKey) {
     console.error("MAPS_API_KEY is not set in environment.");
@@ -26,7 +31,7 @@ async function main() {
     true,
   );
   const kukatpallyPath = path.join(fixtureDir, "air-kukatpally.json");
-  fs.writeFileSync(kukatpallyPath, JSON.stringify(kukatpallyAir, null, 2), "utf-8");
+  fs.writeFileSync(kukatpallyPath, JSON.stringify(withCapturedAt(kukatpallyAir), null, 2), "utf-8");
   console.log(`Successfully saved fixture to ${kukatpallyPath}`);
 
   // 2. Dwarka, Delhi
@@ -35,7 +40,7 @@ async function main() {
   console.log(`Calling Air Quality API for Dwarka, Delhi (${dwarkaLat}, ${dwarkaLng})...`);
   const dwarkaAir = await fetchAirData(dwarkaLat, dwarkaLng, config.mapsApiKey, fetch, true);
   const dwarkaPath = path.join(fixtureDir, "air-dwarka.json");
-  fs.writeFileSync(dwarkaPath, JSON.stringify(dwarkaAir, null, 2), "utf-8");
+  fs.writeFileSync(dwarkaPath, JSON.stringify(withCapturedAt(dwarkaAir), null, 2), "utf-8");
   console.log(`Successfully saved fixture to ${dwarkaPath}`);
 }
 

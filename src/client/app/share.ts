@@ -1,174 +1,148 @@
 // share.ts: Share card view
-// WhatsApp text preview and wa.me link (no dashes), homes taking part slider with communityTotal,
-// clean-air window calendar download (.ics, Asia/Kolkata), and print view.
+// WhatsApp text preview and wa.me link, homes taking part slider with communityTotal,
+// clean air window calendar download (.ics, Asia/Kolkata), and print view.
+// The clean window and CO2 figure are computed from the same air data and swaps as Today.
 
 import { escapeHtml } from "../../shared/escape.js";
-import { communityTotal } from "../../shared/impact.js";
-import { getLanguage } from "../home/i18n.js";
+import { cleanestAndDirtiestWindows, communityTotal } from "../../shared/impact.js";
+import { getLanguage, t } from "../home/i18n.js";
+import { fetchAirData } from "./api.js";
+import { formatIndianNumber, hourLabel, placeLabel, windowText } from "./format.js";
 import { recomputeHouseholdTotals } from "./recompute.js";
 import { buildCalendarIcs, buildWhatsAppShareText } from "./share-utils.js";
 import { loadHouseholdProfile, loadLocation, loadPlan, loadToggledSwaps } from "./storage.js";
 
-export function renderShareView(container: HTMLElement): void {
-  const profile = loadHouseholdProfile();
-  const location = loadLocation() || { name: "Kukatpally, Hyderabad", lat: 17.48, lng: 78.41 };
-  const plan = loadPlan();
-  const initialSwaps = plan?.swaps || [];
-  const storedToggles = loadToggledSwaps();
-  const activeSwapIds = new Set<string>(storedToggles || initialSwaps.map((s) => s.id));
+const DEFAULT_HOMES = 10;
 
-  // Compute exact CO2 number aligned with Today screen
-  let weeklyCo2PerHome = 16.4;
-  if (profile) {
-    const hourly = plan ? [{ time: "2026-11-20T00:00:00Z", pm25: plan.currentAqi }] : [];
-    const totals = recomputeHouseholdTotals({
-      profile,
-      hourlyForecast: hourly,
-      currentPm25: plan?.currentAqi ?? 55,
-      activeSwapIds,
-    });
-    weeklyCo2PerHome = Math.round(totals.householdCo2WeeklyKg * 10) / 10;
+function noPlanHtml(): string {
+  return `
+    <section class="section">
+      <div class="container container-narrow">
+        <h1 class="page-title">${t("share.title")}</h1>
+        <p class="page-lead">${t("share.noPlan")}</p>
+        <a href="#/setup" class="btn btn-primary">${t("share.makePlan")}</a>
+      </div>
+    </section>`;
+}
+
+/** Today's date (YYYY-MM-DD) in Asia/Kolkata. */
+function kolkataDateIso(when: Date): string {
+  return new Date(when.getTime() + 5.5 * 3600 * 1000).toISOString().slice(0, 10);
+}
+
+export async function renderShareView(container: HTMLElement): Promise<void> {
+  const profile = loadHouseholdProfile();
+  const location = loadLocation();
+  const plan = loadPlan();
+  if (!profile || !location || !plan) {
+    container.innerHTML = noPlanHtml();
+    return;
   }
 
-  let homesCount = 10;
+  const airData = await fetchAirData(location.lat, location.lng, getLanguage()).catch(() => null);
+  const hourly = airData?.hourlyForecast ?? [];
+  const cleanest = cleanestAndDirtiestWindows(hourly).cleanest;
+  const swapIds = new Set(plan.swaps.map((s) => s.id));
+  const stored = loadToggledSwaps()?.filter((id) => swapIds.has(id));
+  const activeSwapIds = new Set<string>(stored ?? swapIds);
+  const totals = recomputeHouseholdTotals({
+    profile,
+    hourlyForecast: hourly,
+    currentPm25: airData?.pm25 ?? 0,
+    activeSwapIds,
+  });
+  const weeklyCo2 = totals.householdCo2WeeklyKg;
+  const weeklyText = formatIndianNumber(weeklyCo2, 1);
+  const area = placeLabel(location.name);
+  const cleanText = windowText(cleanest);
+  const origin = window.location.origin;
 
-  function render(): void {
-    const community = communityTotal(weeklyCo2PerHome, homesCount);
-    const cleanestStart = "14:00";
-    const cleanestEnd = "17:00";
-
-    const waText = buildWhatsAppShareText({
-      areaName: location.name,
-      cleanestStart,
-      cleanestEnd,
-      swapsCount: activeSwapIds.size > 0 ? activeSwapIds.size : 4,
-      co2SavedKgPerWeek: weeklyCo2PerHome,
-      originUrl: typeof window !== "undefined" ? window.location?.origin : undefined,
+  const waText = buildWhatsAppShareText([
+    t("share.waTitle", { area }),
+    cleanest
+      ? t("share.waClean", {
+          start: hourLabel(cleanest.startHour),
+          end: hourLabel(cleanest.endHour),
+        })
+      : t("share.waNoWindow"),
+    t("share.waChoice", { count: activeSwapIds.size, kg: weeklyText }),
+    origin ? t("share.waLink", { url: origin }) : t("share.waLinkPlain"),
+  ]);
+  const waUrl = `https://wa.me/?text=${encodeURIComponent(waText)}`;
+  const communityText = (homes: number) =>
+    t("common.kgCo2", {
+      value: formatIndianNumber(communityTotal(weeklyCo2, homes).totalWeeklySaving),
     });
 
-    const waUrl = `https://wa.me/?text=${encodeURIComponent(waText)}`;
+  container.innerHTML = `
+    <section class="section">
+      <div class="container container-narrow">
+        <div class="header-nav-wrap"><a href="#/today" class="btn-text">${t("share.back")}</a></div>
+        <h1 class="page-title">${t("share.title")}</h1>
+        <p class="page-lead">${t("share.lead")}</p>
 
-    container.innerHTML = `
-      <section class="section">
-        <div class="container container-narrow">
-          <div class="header-nav-wrap">
-            <a href="#/today" class="btn-text">Back to Today</a>
+        <div class="air-card section-spacer-32">
+          <h2 class="section-label">${t("share.waLabel")}</h2>
+          <pre class="share-wa-preview">${escapeHtml(waText)}</pre>
+          <a id="whatsapp-share-btn" href="${escapeHtml(waUrl)}" target="_blank" rel="noopener" class="btn btn-primary">${t("share.waButton")}</a>
+        </div>
+
+        <div class="air-card section-spacer-32">
+          <div class="section-label">${t("share.communityLabel")}</div>
+          <h2 class="card-heading">${t("share.communityTitle")}</h2>
+          <p class="card-subtext">${t("share.communityHelp")}</p>
+          <div class="slider-control-row">
+            <label for="homes-slider" class="sr-only">${t("share.homesLabel")}</label>
+            <input id="homes-slider" type="range" min="1" max="250" value="${DEFAULT_HOMES}" class="slider-input-flex" />
+            <span id="homes-slider-val" class="tabular-nums slider-val-badge">${t("share.homes", { count: DEFAULT_HOMES })}</span>
           </div>
-
-          <h1 class="page-title">
-            Share your household air plan
-          </h1>
-          <p class="page-lead">
-            Share low-emission daily routines with your housing society, apartment group or family.
-          </p>
-
-          <!-- WhatsApp Share Card -->
-          <div class="air-card section-spacer-32">
-            <div class="section-label">WhatsApp message preview</div>
-            <pre class="share-wa-preview">${escapeHtml(waText)}</pre>
-            <a id="whatsapp-share-btn" href="${escapeHtml(waUrl)}" target="_blank" rel="noopener" class="btn btn-primary">Share on WhatsApp</a>
-          </div>
-
-          <!-- Community Multiplier Slider -->
-          <div class="air-card section-spacer-32">
-            <div class="section-label">Collective action multiplier</div>
-            <h2 class="card-heading">
-              Homes taking part in your society
-            </h2>
-            <p class="card-subtext">
-              Move the slider to see weekly emissions avoided if families in your neighbourhood take part.
-            </p>
-
-            <div class="slider-control-row">
-              <label for="homes-slider" class="sr-only">Number of homes taking part</label>
-              <input
-                id="homes-slider"
-                type="range"
-                min="1"
-                max="250"
-                value="${homesCount}"
-                aria-label="Homes taking part in your society"
-                class="slider-input-flex"
-              />
-              <span id="homes-slider-val" class="tabular-nums slider-val-badge">
-                ${homesCount} homes
-              </span>
-            </div>
-
-            <div class="slider-summary-row">
-              <span class="slider-summary-label">Weekly avoided road emissions:</span>
-              <strong id="community-co2-val" class="tabular-nums slider-summary-val">
-                ${Math.round(community.totalWeeklySaving)} kg CO2
-              </strong>
-            </div>
-          </div>
-
-          <!-- Calendar Download -->
-          <div class="air-card section-spacer-32">
-            <div class="section-label">Calendar integration</div>
-            <h2 class="card-heading">
-              Download clean air windows (.ics)
-            </h2>
-            <p class="card-subtext">
-              Add today's clean-air window (14:00 to 17:00) to Google Calendar or Apple Calendar.
-            </p>
-            <button id="btn-download-ics" class="btn btn-secondary" type="button">Download .ics file</button>
-          </div>
-
-          <!-- Print View -->
-          <div class="print-action-wrap">
-            <button id="btn-print-plan" class="btn btn-secondary" type="button">Print this plan</button>
+          <div class="slider-summary-row" aria-live="polite">
+            <span class="slider-summary-label">${t("share.weekly")}:</span>
+            <strong id="community-co2-val" class="tabular-nums slider-summary-val">${communityText(DEFAULT_HOMES)}</strong>
           </div>
         </div>
-      </section>
-    `;
 
-    attachEvents();
-  }
+        <div class="air-card section-spacer-32">
+          <div class="section-label">${t("share.calendarLabel")}</div>
+          <h2 class="card-heading">${t("share.calendarTitle")}</h2>
+          <p class="card-subtext">${cleanText ? t("share.calendarHelp", { window: escapeHtml(cleanText) }) : t("share.calendarNone")}</p>
+          <button id="btn-download-ics" class="btn btn-secondary" type="button" ${cleanest ? "" : "disabled"}>${t("share.calendarButton")}</button>
+        </div>
 
-  function attachEvents(): void {
-    const slider = container.querySelector<HTMLInputElement>("#homes-slider");
-    const sliderVal = container.querySelector<HTMLElement>("#homes-slider-val");
-    const co2Val = container.querySelector<HTMLElement>("#community-co2-val");
-    const btnIcs = container.querySelector<HTMLButtonElement>("#btn-download-ics");
-    const btnPrint = container.querySelector<HTMLButtonElement>("#btn-print-plan");
+        <div class="print-action-wrap">
+          <button id="btn-print-plan" class="btn btn-secondary" type="button">${t("share.print")}</button>
+        </div>
+      </div>
+    </section>`;
 
-    if (slider && sliderVal && co2Val) {
-      slider.addEventListener("input", () => {
-        homesCount = Number(slider.value);
-        sliderVal.textContent = `${homesCount} homes`;
-        const comm = communityTotal(weeklyCo2PerHome, homesCount);
-        co2Val.textContent = `${Math.round(comm.totalWeeklySaving)} kg CO2`;
-      });
-    }
+  const slider = container.querySelector<HTMLInputElement>("#homes-slider");
+  const sliderVal = container.querySelector<HTMLElement>("#homes-slider-val");
+  const co2Val = container.querySelector<HTMLElement>("#community-co2-val");
+  slider?.addEventListener("input", () => {
+    const homes = Number(slider.value);
+    if (sliderVal) sliderVal.textContent = t("share.homes", { count: homes });
+    if (co2Val) co2Val.textContent = communityText(homes);
+  });
 
-    if (btnIcs) {
-      btnIcs.addEventListener("click", () => {
-        const todayStr = new Date().toISOString().split("T")[0];
-        const icsContent = buildCalendarIcs({
-          dateIso: todayStr,
-          cleanestWindow: { startHour: 14, endHour: 17 },
-          areaName: location.name,
-        });
+  container.querySelector("#btn-download-ics")?.addEventListener("click", () => {
+    if (!cleanest) return;
+    // The window can fall tomorrow, so date the event from the window itself.
+    const dateIso = kolkataDateIso(new Date(cleanest.startTime));
+    const ics = buildCalendarIcs({
+      dateIso,
+      cleanestWindow: cleanest,
+      summary: t("share.icsSummary", { area }),
+      description: t("share.icsDescription"),
+    });
+    const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `saafsaans-clean-air-${dateIso}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  });
 
-        const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `saafsaans-clean-air-${todayStr}.ics`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      });
-    }
-
-    if (btnPrint) {
-      btnPrint.addEventListener("click", () => {
-        window.print();
-      });
-    }
-  }
-
-  render();
+  container.querySelector("#btn-print-plan")?.addEventListener("click", () => window.print());
 }

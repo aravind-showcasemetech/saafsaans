@@ -66,7 +66,7 @@ airRoute.get("/air/areas", async (c) => {
           dominantPollutant: airData.dominantPollutant,
           isApproximate: airData.isApproximate,
           isDemo,
-          capturedDate: isDemo ? "2026-11-19" : undefined,
+          capturedAt: isDemo ? airData.capturedAt : undefined,
         };
       }),
     );
@@ -110,8 +110,8 @@ airRoute.get("/air", async (c) => {
     );
     const withDemo = {
       ...airData,
-      isDemo: config.demoMode || !config.mapsLive,
-      capturedDate: config.demoMode || !config.mapsLive ? "2026-11-19" : undefined,
+      isDemo: !config.mapsLive,
+      capturedAt: config.mapsLive ? undefined : airData.capturedAt,
     };
     airCache.set(cacheKey, withDemo);
     return c.json(withDemo);
