@@ -134,6 +134,7 @@ export async function fetchAirData(
   apiKey: string = config.mapsApiKey ?? "",
   fetchFn: typeof fetch = fetch,
   forceReal = false,
+  languageCode?: string,
 ): Promise<NormalisedAirData> {
   if (!forceReal && (!config.mapsLive || !apiKey)) {
     // If near Dwarka / Delhi (lat > 25)
@@ -146,7 +147,7 @@ export async function fetchAirData(
   const roundedLat = Math.round(lat * 100) / 100;
   const roundedLng = Math.round(lng * 100) / 100;
 
-  const requestBody = {
+  const requestBody: Record<string, unknown> = {
     location: {
       latitude: roundedLat,
       longitude: roundedLng,
@@ -164,6 +165,10 @@ export async function fetchAirData(
       },
     ],
   };
+
+  if (languageCode) {
+    requestBody.languageCode = languageCode;
+  }
 
   // 1. Fetch current conditions
   const currentController = new AbortController();
@@ -219,6 +224,10 @@ export async function fetchAirData(
         endTime: endDt.toISOString(),
       },
     };
+
+    if (languageCode) {
+      forecastBody.languageCode = languageCode;
+    }
 
     if (pageToken) {
       forecastBody.pageToken = pageToken;

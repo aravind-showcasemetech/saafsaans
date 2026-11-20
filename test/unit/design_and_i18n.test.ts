@@ -82,6 +82,93 @@ describe("i18n key consistency", () => {
     expect(missingInTe, `Missing keys in te.json: ${missingInTe.join(", ")}`).toEqual([]);
   });
 
+  it("verifies placeholders match across all three languages", () => {
+    const enPath = path.resolve(process.cwd(), "src/client/i18n/en.json");
+    const hiPath = path.resolve(process.cwd(), "src/client/i18n/hi.json");
+    const tePath = path.resolve(process.cwd(), "src/client/i18n/te.json");
+
+    const enObj = JSON.parse(fs.readFileSync(enPath, "utf-8"));
+    const hiObj = JSON.parse(fs.readFileSync(hiPath, "utf-8"));
+    const teObj = JSON.parse(fs.readFileSync(tePath, "utf-8"));
+
+    const placeholderRegex = /\{([a-zA-Z0-9_]+)\}/g;
+    function getPlaceholders(str: string): string[] {
+      const matches = str.match(placeholderRegex) || [];
+      return matches.sort();
+    }
+
+    function checkObjPlaceholders(
+      en: Record<string, unknown>,
+      target: Record<string, unknown>,
+      lang: string,
+      prefix = "",
+    ) {
+      for (const [k, v] of Object.entries(en)) {
+        const fullKey = prefix ? `${prefix}.${k}` : k;
+        const targetVal = target?.[k];
+        if (typeof v === "object" && v !== null && !Array.isArray(v)) {
+          checkObjPlaceholders(
+            v as Record<string, unknown>,
+            (targetVal || {}) as Record<string, unknown>,
+            lang,
+            fullKey,
+          );
+        } else if (typeof v === "string") {
+          const enPh = getPlaceholders(v);
+          const targetPh = getPlaceholders(typeof targetVal === "string" ? targetVal : "");
+          expect(targetPh, `Placeholders mismatch in ${lang}:${fullKey}`).toEqual(enPh);
+        }
+      }
+    }
+
+    checkObjPlaceholders(enObj, hiObj, "hi");
+    checkObjPlaceholders(enObj, teObj, "te");
+  });
+
+  it("verifies script usage: every hi value contains Devanagari and every te value contains Telugu script", () => {
+    const hiPath = path.resolve(process.cwd(), "src/client/i18n/hi.json");
+    const tePath = path.resolve(process.cwd(), "src/client/i18n/te.json");
+
+    const hiObj = JSON.parse(fs.readFileSync(hiPath, "utf-8"));
+    const teObj = JSON.parse(fs.readFileSync(tePath, "utf-8"));
+
+    const devanagariRegex = /\p{Script=Devanagari}/u;
+    const teluguRegex = /\p{Script=Telugu}/u;
+
+    const allowedEnglishOnlyKeys = new Set([
+      "app.title",
+      "app.tagline",
+      "facts.mosquitoCoil",
+      "facts.incense",
+      "facts.frying",
+      "insight.sourceRef",
+    ]);
+
+    function checkScript(
+      obj: Record<string, unknown>,
+      regex: RegExp,
+      langName: string,
+      prefix = "",
+    ) {
+      for (const [k, v] of Object.entries(obj)) {
+        const fullKey = prefix ? `${prefix}.${k}` : k;
+        if (allowedEnglishOnlyKeys.has(fullKey)) continue;
+
+        if (typeof v === "object" && v !== null && !Array.isArray(v)) {
+          checkScript(v as Record<string, unknown>, regex, langName, fullKey);
+        } else if (typeof v === "string") {
+          const hasScript = regex.test(v);
+          expect(hasScript, `${langName} key "${fullKey}" lacks expected script -> "${v}"`).toBe(
+            true,
+          );
+        }
+      }
+    }
+
+    checkScript(hiObj, devanagariRegex, "hi.json");
+    checkScript(teObj, teluguRegex, "te.json");
+  });
+
   it("fails if any i18n string outside facts and sources contains a digit", () => {
     const langs = ["en", "hi", "te"];
     const violations: string[] = [];

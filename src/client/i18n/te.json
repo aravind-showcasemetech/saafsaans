@@ -8,114 +8,114 @@
     "planMyDay": "నా రోజును ప్లాన్ చేయండి"
   },
   "hero": {
-    "title": "Your family's smog plan for today",
-    "lead": "Exact swaps for the air your family breathes and the air your household puts out. Live numbers from tested formulas, not AI guesses.",
-    "tryHyderabad": "Try a Hyderabad family",
-    "setUpHousehold": "Set up my household",
-    "loadingAir": "Loading live Hyderabad air...",
-    "updatedAt": "Updated"
+    "title": "ఈ రోజు మీ కుటుంబం కోసం స్మాగ్ ప్లాన్",
+    "lead": "మీ కుటుంబం పీల్చే గాలిని మరియు మీ ఇంటి నుండి వచ్చే కాలుష్యాన్ని తగ్గించే స్పష్టమైన చర్యలు. పరీక్షించిన సూత్రాల నుండి వచ్చిన ఖచ్చితమైన వివరాలు.",
+    "tryHyderabad": "హైదరాబాద్ కుటుంబాన్ని చూడండి",
+    "setUpHousehold": "నా ఇంటి వివరాలు నమోదు చేయండి",
+    "loadingAir": "హైదరాబాద్ గాలి నాణ్యత వివరాలు లోడ్ అవుతున్నాయి...",
+    "updatedAt": "తాజా సమాచారం"
   },
   "marquee": {
-    "airTitle": "Live air quality across areas",
-    "airScrollRegion": "Live air quality ticker across city areas",
-    "sourcesTitle": "Scientific and government sources",
-    "sourcesScrollRegion": "Scientific and institutional data sources ticker"
+    "airTitle": "వివిధ ప్రాంతాలలో గాలి నాణ్యత",
+    "airScrollRegion": "నగర ప్రాంతాల గాలి నాణ్యత సమాచారం",
+    "sourcesTitle": "శాస్త్రీయ మరియు ప్రభుత్వ వనరులు",
+    "sourcesScrollRegion": "శాస్త్రీయ మరియు సంస్థాగత సమాచార వనరుల జాబితా"
   },
   "insight": {
-    "label": "Morning insight",
-    "title": "Morning is often the worst time for a walk in winter",
-    "desc": "Winter temperature inversions trap surface particles overnight. Sunlight breaks the inversion by afternoon, making late afternoon significantly cleaner.",
-    "explanation": "Cold air stays close to the ground overnight, holding smoke and dust near street level. As the sun warms the earth, the mixing layer rises, giving Hyderabad its cleanest air between {cleanestStart} and {cleanestEnd}.",
-    "cleanestTitle": "Cleanest window today",
-    "cleanestNote": "Best time for walks, outdoor workouts and opening windows",
-    "dirtiestTitle": "Dirtiest window today",
-    "dirtiestNote": "Keep windows closed and shift vigorous outdoor exercise",
+    "label": "ఉదయపు సమాచారం",
+    "title": "చలికాలంలో ఉదయం నడక ప్రమాదకరంగా మారవచ్చు",
+    "desc": "చలికాలంలో రాత్రి వేళల్లో చల్లటి గాలి కాలుష్య కణాలను నేల దగ్గరే బంధిస్తుంది. మధ్యాహ్నం ఎండ వచ్చిన తర్వాతే గాలి శుభ్రపడుతుంది.",
+    "explanation": "రాత్రి సమయంలో చల్లని గాలి నేల మీదే ఉండి పొగ మరియు ధూళిని పైకి పోనివ్వదు. సూర్యరశ్మి నేలను వెచ్చగా చేసిన తర్వాత, హైదరాబాద్ గాలి {cleanestStart} మరియు {cleanestEnd} మధ్య అత్యంత శుభ్రంగా ఉంటుంది.",
+    "cleanestTitle": "ఈ రోజు అత్యంత శుభ్రమైన సమయం",
+    "cleanestNote": "నడక, వ్యాయామం మరియు కిటికీలు తెరవడానికి అనువైన సమయం",
+    "dirtiestTitle": "ఈ రోజు అత్యంత కాలుష్య సమయం",
+    "dirtiestNote": "కిటికీలు మూసి ఉంచండి మరియు తీవ్రమైన బహిరంగ వ్యాయామాలను వాయిదా వేయండి",
     "sourceRef": "Singh, Singh and Biswal (2020), Science of The Total Environment; Latha and Badarinath (2005)"
   },
   "howItWorks": {
-    "label": "How it works",
-    "title": "Three simple steps to clean air",
-    "desc": "No generic tips. Real routines mapped against live local forecasts.",
-    "exampleLabel": "Real household example",
-    "step1Title": "Tell us who is at home",
-    "step1Body": "Age, health conditions like asthma, routine presets, and bedroom room sizes. Presets let you tap rather than type.",
-    "step2Title": "See the cleanest hours",
-    "step2Body": "Hourly forecast on India's CPCB scale shows exactly when outdoor air is safest for exercise, errands, or airing your rooms.",
-    "step3Title": "Choose swaps and see the numbers",
-    "step3Body": "Gemini chooses and explains the swaps. Every number comes from tested code. Toggling any swap updates your family totals live."
+    "label": "ఇది ఎలా పనిచేస్తుంది",
+    "title": "శుభ్రమైన గాలి కోసం మూడు సులభమైన దశలు",
+    "desc": "సాధారణ చిట్కాలు కావు. మీ రోజువారీ అలవాట్లు మరియు స్థానిక గాలికి సరిపోయే పద్ధతులు.",
+    "exampleLabel": "నిజమైన కుటుంబ ఉదాహరణ",
+    "step1Title": "ఇంట్లో ఎవరెవరు ఉన్నారో చెప్పండి",
+    "step1Body": "వయస్సు, ఆస్తమా వంటి సమస్యలు, దినచర్య మరియు గదుల పరిమాణం. సులభమైన ఎంపికలతో త్వరగా పూర్తి చేయవచ్చు.",
+    "step2Title": "శుభ్రమైన సమయాన్ని తెలుసుకోండి",
+    "step2Body": "నడక, పనులు లేదా ఇళ్లను శుభ్రపరచడానికి బయటి గాలి ఎప్పుడు సురక్షితంగా ఉంటుందో CPCB సూచికలో గంటల వారీగా చూడండి.",
+    "step3Title": "మార్పులను ఎంచుకుని ఫలితాలు చూడండి",
+    "step3Body": "Gemini సరైన చర్యలను ఎంపిక చేసి వివరిస్తుంది. ప్రతి సంఖ్య పరీక్షించిన విధానాల నుండే వస్తుంది. మార్పులపై ఫలితం వెంటనే తెలుస్తుంది."
   },
   "lenses": {
-    "label": "The impact model",
-    "title": "Two lenses: protect and pollute less",
-    "desc": "Every single action shows you what it changes in clear numbers.",
-    "protectTitle": "Protect: what your family breathes",
-    "protectDesc": "Calculates inhaled particle dose for each family member based on activity, room volume and air exchange.",
-    "protectExample": "Example: Bedroom purifier overnight cuts Reddy family bedtime particle dose by {percent}%",
-    "polluteTitle": "Pollute less: what your household puts out",
-    "polluteDesc": "Measures vehicle kilometers taken off the road and kilograms of carbon dioxide avoided from transport swaps.",
-    "polluteExample": "Example: Taking the metro saves the Reddy household {amount} kg of carbon dioxide every week"
+    "label": "ప్రభావ నమూనా",
+    "title": "రెండు దృక్పథాలు: రక్షణ మరియు కాలుష్య తగ్గింపు",
+    "desc": "తీసుకునే ప్రతి చర్య స్పష్టమైన సంఖ్యలలో మార్పును చూపిస్తుంది.",
+    "protectTitle": "రక్షణ: మీ కుటుంబం పీల్చే గాలి",
+    "protectDesc": "పనులు, గది పరిమాణం మరియు గాలి ప్రసరణ ఆధారంగా ప్రతి ఒక్కరి ఊపిరితిత్తుల్లోకి వెళ్లే కణాల పరిమాణాన్ని లెక్కిస్తుంది.",
+    "protectExample": "ఉదాహరణ: పడకగది purifier రాత్రి పూట రెడ్డి కుటుంబం పీల్చే కణాలను {percent}% వరకు తగ్గిస్తుంది",
+    "polluteTitle": "తక్కువ కాలుష్యం: మీ ఇల్లు విడుదల చేసే పొగ",
+    "polluteDesc": "రోడ్డుపై తగ్గిన వాహన దూరం మరియు ప్రయాణ మార్పుల ద్వారా తగ్గిన కార్బన్ డయాక్సైడ్ పరిమాణాన్ని లెక్కిస్తుంది.",
+    "polluteExample": "ఉదాహరణ: metro ప్రయాణం రెడ్డి కుటుంబానికి ప్రతి వారం {amount} కిలోల కార్బన్ డయాక్సైడ్ పొదుపు చేస్తుంది"
   },
   "formulas": {
-    "label": "Full transparency",
-    "title": "How we work out the numbers",
-    "desc": "Open formulas and sourced factors. No black-box computations.",
-    "massBalanceTitle": "Indoor air mass balance",
-    "massBalanceDesc": "Single-room steady-state model using outdoor fine particles, ventilation rate, surface deposition, and air cleaner CADR.",
-    "doseTitle": "Inhaled particle dose",
-    "doseDesc": "Sum of concentration times age-specific inhalation rate times duration across hourly blocks.",
-    "purifierTitle": "Purifier CADR sizing",
-    "purifierDesc": "AHAM and US EPA rule: minimum CADR equals two-thirds of room area, scaled for room ceiling height.",
-    "cigsTitle": "Cigarette equivalence",
-    "cigsDesc": "Berkeley Earth equivalence: daily exposure to fine particles equals cigarette equivalence factor.",
-    "aiPlainLine": "Gemini chooses and explains the swaps. Every number comes from tested code."
+    "label": "పూర్తి పారదర్శకత",
+    "title": "ఫలితాలను మేము ఎలా లెక్కిస్తాము",
+    "desc": "స్పష్టమైన సూత్రాలు మరియు ప్రామాణిక వివరాలు. ఏదీ దాచిపెట్టబడలేదు.",
+    "massBalanceTitle": "ఇంటి లోపలి గాలి సమతుల్యత",
+    "massBalanceDesc": "బయటి సూక్ష్మ కణాలు, గాలి రాకపోకలు మరియు ఎయిర్ క్లీనర్ CADR ఆధారంగా ఒక గది నమూనా.",
+    "doseTitle": "పీల్చే కణాల పరిమాణం",
+    "doseDesc": "గంటల వారీగా కణాల సాంద్రత, వయస్సు ఆధారిత శ్వాస రేటు మరియు సమయాల మొత్తం లెక్కింపు.",
+    "purifierTitle": "purifier సామర్థ్య ఎంపిక",
+    "purifierDesc": "AHAM మరియు US EPA నిబంధన: గది వైశాల్యం మరియు పైకప్పు ఎత్తుకు సరిపడే సరైన CADR సామర్థ్యం.",
+    "cigsTitle": "సిగరెట్లతో సమానమైన ప్రభావం",
+    "cigsDesc": "Berkeley Earth నివేదిక: రోజంతా పీల్చే కణాలను సిగరెట్ల సంఖ్యతో పోల్చి చూసే విధానం.",
+    "aiPlainLine": "Gemini సరైన మార్పులను ఎంచుకుని వివరిస్తుంది. ప్రతి సంఖ్య పరీక్షించిన విధానాల నుండే వస్తుంది."
   },
   "community": {
-    "label": "Collective action",
-    "title": "Community impact adds up quickly",
-    "desc": "Small routine changes across a society multiply into tons of avoided street pollution.",
-    "societyName": "Green Meadows society (Kondapur)",
-    "societyStory": "When participating households coordinate carpools, switch short errands to walking during clean hours, and avoid leaf burning, the local reduction is measurable.",
-    "societyResult": "Avoided road emissions per week across participating families",
-    "homesWord": "homes"
+    "label": "సామూహిక కృషి",
+    "title": "కలసికట్టుగా చేసే ప్రయత్నంతో భారీ మార్పు",
+    "desc": "కాలనీలలోని కుటుంబాలు చేసే చిన్న మార్పులు కలిసి రోడ్లపై పెద్ద ఎత్తున కాలుష్యాన్ని తగ్గిస్తాయి.",
+    "societyName": "గ్రీన్ మెడోస్ సొసైటీ (కొండాపూర్)",
+    "societyStory": "కుటుంబాలు వాహనాలను పంచుకున్నప్పుడు, శుభ్రమైన వేళల్లో నడిచినప్పుడు మరియు ఎండిన ఆకులను కాల్చకుండా ఆపినప్పుడు మార్పు స్పష్టంగా కనిపిస్తుంది.",
+    "societyResult": "పాల్గొన్న కుటుంబాల ద్వారా ప్రతి వారం తగ్గిన వాహన ఉద్గారాలు",
+    "homesWord": "ఇళ్ళు"
   },
   "sources": {
-    "label": "References",
-    "title": "Sourced from verified science and official standards"
+    "label": "ఆధారాలు",
+    "title": "శాస్త్రీయ పరిశోధనలు మరియు అధికారిక ప్రమాణాల ఆధారంగా"
   },
   "finalCta": {
-    "title": "Breathe cleaner air today",
-    "desc": "Start with a pre-configured Hyderabad household or set up your own in two minutes."
+    "title": "ఈ రోజే స్వచ్ఛమైన గాలిని పీల్చుకోండి",
+    "desc": "హైదరాబాద్ కుటుంబ నమూనాతో ప్రారంభించండి లేదా రెండు నిమిషాల్లో మీ ఇంటి వివరాలను నమోదు చేయండి."
   },
   "footer": {
-    "notMedicalAdviceTitle": "Not medical advice",
-    "notMedicalAdviceText": "SaafSaans is an urban environmental planning tool. See a doctor if you experience breathlessness, chest pain, or wheezing that does not settle.",
-    "googleAttribution": "Map and place search powered by Google Maps Platform. Air quality data from Google Air Quality API.",
-    "githubRepo": "GitHub Repository"
+    "notMedicalAdviceTitle": "వైద్య సలహా కాదు",
+    "notMedicalAdviceText": "SaafSaans పర్యావరణ ప్రణాళికా సాధనం. శ్వాస తీసుకోవడంలో ఇబ్బంది, ఛాతీ నొప్పి లేదా ఆయాసం తగ్గకపోతే వైద్యుడిని సంప్రదించండి.",
+    "googleAttribution": "స్థాన శోధన Google Maps Platform ఆధారంగా. గాలి నాణ్యత వివరాలు Google Air Quality API ద్వారా.",
+    "githubRepo": "GitHub రిపోజిటరీ"
   },
   "common": {
-    "pause": "Pause",
-    "play": "Play",
-    "source": "Source"
+    "pause": "ఆపండి",
+    "play": "ప్లే చేయండి",
+    "source": "మూలం"
   },
   "swaps": {
-    "shift-outdoor-exercise": "Move outdoor exercise to the cleanest window when particulate levels are lowest.",
-    "exercise-indoors": "Move strenuous workouts indoors to reduce inhaled particle dose during dirty hours.",
-    "shut-windows-peak": "Keep windows closed during morning and evening pollution spikes to slow infiltration.",
-    "air-house-clean-window": "Ventilate your home during the afternoon when outdoor air is cleanest.",
-    "purifier-bedroom": "Run an air purifier in the bedroom overnight to protect sleeping family members.",
-    "diy-fan-filter": "Use a fan with a high-efficiency filter as an affordable clean air setup.",
-    "mask-outdoors": "Wear a well-fitted mask during travel or outdoor activity to filter particulate matter.",
-    "no-mosquito-coil": "Switch to mosquito nets or plug-in repellents to remove a heavy indoor smoke source.",
-    "incense-outside": "Light incense near open windows or outdoors to avoid high indoor particle levels.",
-    "cook-with-exhaust": "Use an exhaust fan and lids while cooking or frying to clear indoor fumes.",
-    "wet-mop": "Wet-mop floors instead of dry sweeping to trap settled dust without stirring it up.",
-    "metro-not-car": "Take the metro instead of driving to reduce personal exposure and street emissions.",
-    "bus-not-car": "Take the city bus instead of driving to reduce personal road emissions.",
-    "carpool": "Share rides with colleagues to divide vehicle fuel use and emissions.",
-    "walk-short-trips": "Walk or cycle short local trips during cleaner hours instead of driving.",
-    "wfh-day": "Work from home one day each week to skip commute emissions and road exposure.",
-    "no-idling": "Turn off vehicle engines at long traffic signals to cut avoidable exhaust.",
-    "no-burning": "Avoid burning dry leaves or garden waste, and report open fires to authorities."
+    "shift-outdoor-exercise": "గాలిలో కాలుష్య కణాలు తక్కువగా ఉండే శుభ్రమైన సమయంలో వ్యాయామం చేయండి.",
+    "exercise-indoors": "కాలుష్యం ఎక్కువగా ఉన్నప్పుడు ఊపిరితిత్తులను రక్షించడానికి ఇంటి లోపలే వ్యాయామం చేయండి.",
+    "shut-windows-peak": "ఉదయం మరియు సాయంత్రం వేళల్లో కాలుష్యం ఇంట్లోకి రాకుండా కిటికీలు మూసి ఉంచండి.",
+    "air-house-clean-window": "బయటి గాలి శుభ్రంగా ఉన్న మధ్యాహ్న సమయంలో ఇంటి కిటికీలు తెరవండి.",
+    "purifier-bedroom": "రాత్రి పడుకునే సమయంలో కుటుంబ సభ్యుల రక్షణ కోసం పడకగదిలో ఎయిర్ purifier వాడండి.",
+    "diy-fan-filter": "తక్కువ ఖర్చుతో శుభ్రమైన గాలి కోసం ఫ్యాన్ కు సరైన ఫిల్టర్ అమర్చండి.",
+    "mask-outdoors": "ప్రయాణాల్లో లేదా బయట తిరిగేటప్పుడు గాలిలోని ధూళిని ఆపడానికి సరైన మాస్క్ ధరించండి.",
+    "no-mosquito-coil": "ఇంట్లో పొగ రాకుండా ఉండటానికి దోమల కాయిల్ బదులు దోమతెరలు లేదా లిక్విడ్ వాడండి.",
+    "incense-outside": "ఇంటి లోపల పొగ పేరుకుపోకుండా ఉండటానికి అగరుబత్తులను కిటికీల దగ్గర లేదా బయట వెలిగించండి.",
+    "cook-with-exhaust": "వంట చేసేటప్పుడు పొగను బయటకు పంపడానికి ఎగ్జాస్ట్ ఫ్యాన్ వాడండి మరియు మూతలు పెట్టండి.",
+    "wet-mop": "పొడి చీపురుతో ధూళిని లేపకుండా తడి గుడ్డతో నేలను తుడవండి.",
+    "metro-not-car": "రోడ్డుపై పొగను తగ్గించడానికి మరియు కాలుష్యం నుండి తప్పించుకోవడానికి కారు బదులు metro వాడండి.",
+    "bus-not-car": "వ్యక్తిగత రోడ్డు ఉద్గారాలను తగ్గించడానికి కారు బదులు నగర బస్సులో ప్రయాణించండి.",
+    "carpool": "ఇంధనం మరియు పొగను తగ్గించడానికి సహోద్యోగులతో కలిసి ప్రయాణించండి.",
+    "walk-short-trips": "దగ్గరి పనుల కోసం వాహనాలు కాకుండా శుభ్రమైన వేళల్లో నడవడం లేదా సైకిల్ వాడండి.",
+    "wfh-day": "ప్రయాణ పొగ మరియు రోడ్డు కాలుష్యం నుండి తప్పించుకోవడానికి వారానికి ఒక రోజు ఇంటి నుండే పనిచేయండి.",
+    "no-idling": "అనవసరమైన పొగను ఆపడానికి ట్రాఫిక్ సిగ్నల్స్ వద్ద వాహనం ఇంజిన్ ఆపివేయండి.",
+    "no-burning": "ఎండిన ఆకులు లేదా చెత్తను కాల్చవద్దు మరియు ఎక్కడైనా మంటలు కనిపిస్తే అధికారులకు తెలపండి."
   },
   "facts": {
     "mosquitoCoil": "Burning one mosquito coil releases as much PM2.5 as burning 75 to 137 cigarettes.",
@@ -123,12 +123,12 @@
     "frying": "Frying without a stove hood reached a median 4.5 mg/m³ of PM2.5, against 0.5 mg/m³ with the hood on."
   },
   "advice": {
-    "wetMop": "Wet-mop floors instead of dry sweeping to remove dust without resuspending particles.",
-    "diyFanFilter": "A box fan taped to a high-efficiency filter can serve as a low-cost filter setup.",
-    "noIdling": "Turn off vehicle engines at long traffic signals to cut avoidable exhaust.",
-    "noBurning": "Avoid burning dry leaves or garden waste, and report open fires to authorities."
+    "wetMop": "ధూళి గాల్లోకి లేవకుండా ఉండటానికి పొడి చీపురు బదులు తడి గుడ్డతో నేల తుడవండి.",
+    "diyFanFilter": "తక్కువ ఖర్చుతో గాలి శుద్ధి కోసం ఫ్యాన్ కు ఫిల్టర్ అమర్చవచ్చు.",
+    "noIdling": "అనవసర పొగను తగ్గించడానికి ఎక్కువసేపు ఉండే సిగ్నల్స్ వద్ద ఇంజిన్ ఆపండి.",
+    "noBurning": "చెత్తను కాల్చడం మానుకోండి మరియు బహిరంగ దహనాన్ని అధికారులకు తెలపండి."
   },
   "summary": {
-    "default": "Personalised air quality actions for your household routines and local forecast."
+    "default": "మీ ఇంటి అలవాట్లు మరియు స్థానిక వాతావరణం కోసం ప్రత్యేకంగా రూపొందించిన సూచనలు."
   }
 }

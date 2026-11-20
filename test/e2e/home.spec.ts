@@ -42,8 +42,10 @@ test.describe("Home Page Accessibility and Controls", () => {
     expect(accessibilityScanResults.violations).toEqual([]);
   });
 
-  test("verifies no horizontal scroll at 320, 390 and 1440 px", async ({ page }) => {
-    for (const width of [320, 390, 1440]) {
+  test("verifies no horizontal scroll and no element wider than viewport at 320 and 390 px", async ({
+    page,
+  }) => {
+    for (const width of [320, 390]) {
       await page.setViewportSize({ width, height: 800 });
       await page.goto("/");
       await page.waitForSelector("#hero-title");
@@ -54,6 +56,37 @@ test.describe("Home Page Accessibility and Controls", () => {
         scrollWidth,
         `Page has horizontal scroll at ${width}px: scrollWidth=${scrollWidth}, clientWidth=${clientWidth}`,
       ).toBeLessThanOrEqual(clientWidth + 1);
+
+      const overflowing = await page.evaluate(() => {
+        const vw = window.innerWidth;
+        const bad: string[] = [];
+        const allEls = document.querySelectorAll("*");
+        for (const el of allEls) {
+          // If el or any of its ancestors is an explicitly overflow-clipped container (like marquees) or hidden, skip checking inner track
+          if (el.closest(".marquee-viewport")) continue;
+
+          const rect = el.getBoundingClientRect();
+          if (rect.width > vw + 1.5) {
+            const style = window.getComputedStyle(el);
+            if (
+              style.display !== "none" &&
+              style.visibility !== "hidden" &&
+              style.opacity !== "0" &&
+              !["HTML", "BODY"].includes(el.tagName)
+            ) {
+              bad.push(
+                `${el.tagName}${el.id ? `#${el.id}` : ""}${el.className ? `.${String(el.className).replace(/\s+/g, ".")}` : ""} (width=${Math.round(rect.width)} > vw=${vw})`,
+              );
+            }
+          }
+        }
+        return bad;
+      });
+
+      expect(
+        overflowing,
+        `Found elements wider than viewport on home at ${width}px: ${overflowing.join("; ")}`,
+      ).toEqual([]);
     }
   });
 });

@@ -5,22 +5,22 @@
 import type { AreaAirItem } from "./data.js";
 import { t } from "./i18n.js";
 
-function getBandColorClass(band: string): string {
+function getBandClass(band: string): string {
   switch (band.toLowerCase()) {
     case "good":
-      return "var(--band-good)";
+      return "band-good";
     case "satisfactory":
-      return "var(--band-satisfactory)";
+      return "band-satisfactory";
     case "moderately polluted":
-      return "var(--band-moderate)";
+      return "band-moderate";
     case "poor":
-      return "var(--band-poor)";
+      return "band-poor";
     case "very poor":
-      return "var(--band-very-poor)";
+      return "band-very-poor";
     case "severe":
-      return "var(--band-severe)";
+      return "band-severe";
     default:
-      return "var(--band-moderate)";
+      return "band-moderate";
   }
 }
 
@@ -52,7 +52,7 @@ export function renderHero(
         <div class="air-card-top">
           <span class="air-aqi-number tabular-nums">${liveAir.aqi}</span>
           <span class="air-band-tag">
-            <span class="band-indicator-bar" style="background-color: ${getBandColorClass(liveAir.aqiBand)};"></span>
+            <span class="band-indicator-bar ${getBandClass(liveAir.aqiBand)}"></span>
             ${liveAir.aqiBand}
           </span>
         </div>
@@ -64,7 +64,7 @@ export function renderHero(
     `
     : `
       <div class="air-card">
-        <div style="color: var(--ink-2); font-size: var(--text-sm);">${t("hero.loadingAir")}</div>
+        <div class="hero-loading-text">${t("hero.loadingAir")}</div>
       </div>
     `;
 
@@ -91,16 +91,16 @@ export function renderAirMarquee(areas: AreaAirItem[]): string {
   const isDemo = areas.some((a) => a.isDemo);
   const sampleDate = areas[0]?.capturedDate ?? "2026-11-19";
   const demoBanner = isDemo
-    ? `<div style="font-size: var(--text-xs); color: var(--ink-2); margin-bottom: var(--space-8); text-align: center;">Sample data captured on ${sampleDate}</div>`
+    ? `<div class="marquee-sample-note">Sample data captured on ${sampleDate}</div>`
     : "";
 
   const itemsHtml = areas
     .map(
       (a) => `
       <div class="marquee-item">
-        <span style="font-weight: 500;">${a.name}</span>
+        <span class="marquee-item-title">${a.name}</span>
         <span class="tabular-nums">${a.aqi ?? "--"}</span>
-        <span style="color: var(--ink-2);">(${a.aqiBand})</span>
+        <span class="marquee-item-band">(${a.aqiBand})</span>
       </div>
     `,
     )
@@ -139,22 +139,22 @@ export function renderMorningInsight(cleanest: string, dirtiest: string): string
           <p class="section-desc">${t("insight.desc")}</p>
         </div>
         <div class="insight-card">
-          <p style="font-size: var(--text-md); margin-bottom: var(--space-16);">
+          <p class="insight-summary-lead">
             ${t("insight.explanation", { cleanestStart, cleanestEnd })}
           </p>
           <div class="insight-windows">
             <div>
               <div class="window-block-title">${t("insight.cleanestTitle")}</div>
               <div class="window-block-hours tabular-nums">${cleanest}</div>
-              <div style="font-size: var(--text-xs); color: var(--ink-2);">${t("insight.cleanestNote")}</div>
+              <div class="insight-pill-note">${t("insight.cleanestNote")}</div>
             </div>
             <div>
               <div class="window-block-title">${t("insight.dirtiestTitle")}</div>
               <div class="window-block-hours tabular-nums">${dirtiest}</div>
-              <div style="font-size: var(--text-xs); color: var(--ink-2);">${t("insight.dirtiestNote")}</div>
+              <div class="insight-pill-note">${t("insight.dirtiestNote")}</div>
             </div>
           </div>
-          <div style="margin-top: var(--space-24); font-size: var(--text-xs); color: var(--ink-2);">
+          <div class="insight-meta-note">
             ${t("common.source")}: ${t("insight.sourceRef")}
           </div>
         </div>
@@ -177,11 +177,11 @@ export function renderHowItWorks(): string {
             <div class="sticky-panel">
               <div class="section-label">${t("howItWorks.exampleLabel")}</div>
               <div id="sticky-panel-content" class="sticky-panel-content">
-                <h3 style="font-size: var(--text-md); margin-bottom: var(--space-8);">The Reddys (Kukatpally)</h3>
-                <p style="font-size: var(--text-sm); color: var(--ink-2); margin-bottom: var(--space-12);">
+                <h3 class="sticky-panel-title">The Reddys (Kukatpally)</h3>
+                <p class="sticky-panel-desc">
                   Father (38), Mother (35), Son (9, asthma), Grandmother (68). Morning walk at 6 am, mosquito coil at night, petrol car commute.
                 </p>
-                <div style="font-size: var(--text-xs); font-weight: 500; color: var(--accent);">
+                <div class="sticky-panel-detail">
                   1 child with asthma, 1 senior with daily morning walk
                 </div>
               </div>
@@ -222,15 +222,15 @@ export function renderTwoLenses(protectCut: number, polluteSaved: number): strin
         <div class="lenses-grid">
           <div class="lens-card">
             <h3 class="lens-title">${t("lenses.protectTitle")}</h3>
-            <p style="color: var(--ink-2); font-size: var(--text-sm);">${t("lenses.protectDesc")}</p>
+            <p class="lens-desc">${t("lenses.protectDesc")}</p>
             <div class="lens-stat tabular-nums">${protectCut}%</div>
-            <p style="font-size: var(--text-xs); color: var(--ink-2);">${t("lenses.protectExample", { percent: protectCut })}</p>
+            <p class="lens-example">${t("lenses.protectExample", { percent: protectCut })}</p>
           </div>
           <div class="lens-card">
             <h3 class="lens-title">${t("lenses.polluteTitle")}</h3>
-            <p style="color: var(--ink-2); font-size: var(--text-sm);">${t("lenses.polluteDesc")}</p>
+            <p class="lens-desc">${t("lenses.polluteDesc")}</p>
             <div class="lens-stat tabular-nums">${polluteSaved} kg</div>
-            <p style="font-size: var(--text-xs); color: var(--ink-2);">${t("lenses.polluteExample", { amount: polluteSaved })}</p>
+            <p class="lens-example">${t("lenses.polluteExample", { amount: polluteSaved })}</p>
           </div>
         </div>
       </div>
@@ -251,26 +251,26 @@ export function renderFormulas(): string {
           <div class="formula-card">
             <h3>${t("formulas.massBalanceTitle")}</h3>
             <div class="formula-code">C_in = P * a * C_out / (a + k + CADR / V)</div>
-            <p style="font-size: var(--text-xs); color: var(--ink-2);">${t("formulas.massBalanceDesc")}</p>
+            <p class="formula-desc">${t("formulas.massBalanceDesc")}</p>
           </div>
           <div class="formula-card">
             <h3>${t("formulas.doseTitle")}</h3>
             <div class="formula-code">Dose = sum(Concentration * InhalationRate * Hours)</div>
-            <p style="font-size: var(--text-xs); color: var(--ink-2);">${t("formulas.doseDesc")}</p>
+            <p class="formula-desc">${t("formulas.doseDesc")}</p>
           </div>
           <div class="formula-card">
             <h3>${t("formulas.purifierTitle")}</h3>
             <div class="formula-code">CADR (cfm) = 2/3 * Area (sq ft) * (CeilingHeight / 8)</div>
-            <p style="font-size: var(--text-xs); color: var(--ink-2);">${t("formulas.purifierDesc")}</p>
+            <p class="formula-desc">${t("formulas.purifierDesc")}</p>
           </div>
           <div class="formula-card">
             <h3>${t("formulas.cigsTitle")}</h3>
             <div class="formula-code">Cigarettes = 24-hour Average Exposure / 22</div>
-            <p style="font-size: var(--text-xs); color: var(--ink-2);">${t("formulas.cigsDesc")}</p>
+            <p class="formula-desc">${t("formulas.cigsDesc")}</p>
           </div>
         </div>
-        <div style="margin-top: var(--space-32); padding: var(--space-24); background-color: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius);">
-          <p style="font-weight: 500; font-size: var(--text-sm);">${t("formulas.aiPlainLine")}</p>
+        <div class="ai-plain-box">
+          <p class="ai-plain-text">${t("formulas.aiPlainLine")}</p>
         </div>
       </div>
     </section>
@@ -287,12 +287,12 @@ export function renderCommunity(homes: number, weeklyTotal: number): string {
           <p class="section-desc">${t("community.desc")}</p>
         </div>
         <div class="community-card">
-          <h3 style="font-size: var(--text-lg);">${t("community.societyName")}</h3>
-          <p style="color: var(--ink-2); font-size: var(--text-sm); margin-top: var(--space-8);">
+          <h3 class="community-society-title">${t("community.societyName")}</h3>
+          <p class="community-society-story">
             ${t("community.societyStory")}
           </p>
           <div class="community-stat tabular-nums">${weeklyTotal} kg CO2</div>
-          <p style="font-size: var(--text-xs); color: var(--ink-2);">
+          <p class="community-society-note">
             ${t("community.societyResult")} (${homes} ${t("community.homesWord")})
           </p>
         </div>
@@ -320,7 +320,7 @@ export function renderSourcesMarqueeAndList(): string {
     .map(
       (s) => `
       <div class="marquee-item">
-        <span style="font-weight: 500;">${s.name}</span>
+        <span class="marquee-item-title">${s.name}</span>
       </div>
     `,
     )
@@ -329,7 +329,7 @@ export function renderSourcesMarqueeAndList(): string {
   const listItems = sources
     .map(
       (s) => `
-      <li style="margin-bottom: var(--space-8);">
+      <li class="sources-list-item">
         <a href="${s.url}" target="_blank" rel="noopener noreferrer">${s.name}</a>
       </li>
     `,
@@ -344,7 +344,7 @@ export function renderSourcesMarqueeAndList(): string {
           <h2 id="sources-title" class="section-title">${t("sources.title")}</h2>
         </div>
       </div>
-      <div class="marquee-wrapper" aria-label="${t("marquee.sourcesTitle")}" style="margin-bottom: var(--space-48);">
+      <div class="marquee-wrapper sources-marquee-wrap" aria-label="${t("marquee.sourcesTitle")}">
         <div class="marquee-viewport" tabindex="0" role="region" aria-label="${t("marquee.sourcesScrollRegion")}">
           <div class="marquee-track">
             <div class="marquee-items">${marqueeItems}</div>
@@ -358,7 +358,7 @@ export function renderSourcesMarqueeAndList(): string {
         </div>
       </div>
       <div class="container">
-        <ul style="padding-left: var(--space-24); font-size: var(--text-sm);">
+        <ul class="sources-list">
           ${listItems}
         </ul>
       </div>
@@ -368,10 +368,10 @@ export function renderSourcesMarqueeAndList(): string {
 
 export function renderFinalCta(): string {
   return `
-    <section class="section reveal-on-scroll" style="border-top: 1px solid var(--rule); background-color: var(--surface);" aria-labelledby="final-cta-title">
-      <div class="container" style="text-align: left;">
-        <h2 id="final-cta-title" class="section-title" style="font-size: var(--text-2xl);">${t("finalCta.title")}</h2>
-        <p class="section-desc" style="margin-bottom: var(--space-32);">${t("finalCta.desc")}</p>
+    <section class="section final-cta-section reveal-on-scroll" aria-labelledby="final-cta-title">
+      <div class="container final-cta-container">
+        <h2 id="final-cta-title" class="section-title final-cta-title">${t("finalCta.title")}</h2>
+        <p class="section-desc final-cta-desc">${t("finalCta.desc")}</p>
         <div class="hero-cta">
           <a href="#/demo" class="btn btn-primary">${t("hero.tryHyderabad")}</a>
           <a href="#/setup" class="btn btn-secondary">${t("hero.setUpHousehold")}</a>
@@ -386,7 +386,7 @@ export function renderFooter(): string {
     <footer class="site-footer" role="contentinfo">
       <div class="container footer-inner">
         <div>
-          <strong style="color: var(--ink);">${t("footer.notMedicalAdviceTitle")}:</strong>
+          <strong class="footer-disclaimer-title">${t("footer.notMedicalAdviceTitle")}:</strong>
           ${t("footer.notMedicalAdviceText")}
         </div>
         <div>

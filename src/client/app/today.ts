@@ -149,7 +149,7 @@ export async function renderTodayView(container: HTMLElement): Promise<void> {
     const lng = Math.round(location.lng * 100) / 100;
 
     const [airData, planData] = await Promise.all([
-      fetchAirData(lat, lng),
+      fetchAirData(lat, lng, lang),
       fetchPlan({ profile, lat, lng, lang }),
     ]);
 
@@ -184,7 +184,62 @@ function renderContent(
   const cpcbBand = CPCB_AQI_BANDS.find(
     (b) => b.band.toLowerCase() === airData.aqiBand.toLowerCase(),
   );
-  const cpcbStatement = cpcbBand?.healthStatement || "";
+  let cpcbStatement = cpcbBand?.healthStatement || "";
+  if (currentLang === "hi") {
+    switch (cpcbBand?.band) {
+      case "Good":
+        cpcbStatement = "न्यूनतम प्रभाव (translated from CPCB)";
+        break;
+      case "Satisfactory":
+        cpcbStatement = "संवेदनशील लोगों को सांस लेने में हल्की परेशानी हो सकती है। (translated from CPCB)";
+        break;
+      case "Moderately polluted":
+        cpcbStatement =
+          "फेफड़ों की बीमारी (जैसे अस्थमा) वाले लोगों को सांस लेने में परेशानी, और दिल की बीमारी वाले लोगों, बच्चों और बुजुर्गों को परेशानी हो सकती है। (translated from CPCB)";
+        break;
+      case "Poor":
+        cpcbStatement =
+          "लंबे समय तक रहने पर लोगों को सांस लेने में परेशानी, और दिल की बीमारी वाले लोगों को परेशानी हो सकती है। (translated from CPCB)";
+        break;
+      case "Very Poor":
+        cpcbStatement =
+          "लंबे समय तक रहने पर लोगों को सांस की बीमारी हो सकती है। फेफड़ों और दिल की बीमारी वाले लोगों में असर अधिक स्पष्ट हो सकता है। (translated from CPCB)";
+        break;
+      case "Severe":
+        cpcbStatement =
+          "स्वस्थ लोगों पर भी श्वसन संबंधी प्रभाव पड़ सकते हैं और फेफड़ों/दिल की बीमारी वाले लोगों पर गंभीर स्वास्थ्य प्रभाव पड़ सकते हैं। हल्की शारीरिक गतिविधि के दौरान भी स्वास्थ्य प्रभाव महसूस हो सकते हैं। (translated from CPCB)";
+        break;
+      default:
+        cpcbStatement = `${cpcbStatement} (translated from CPCB)`;
+    }
+  } else if (currentLang === "te") {
+    switch (cpcbBand?.band) {
+      case "Good":
+        cpcbStatement = "కనిష్ట ప్రభావం (translated from CPCB)";
+        break;
+      case "Satisfactory":
+        cpcbStatement = "సున్నితమైన వ్యక్తులకు శ్వాస తీసుకోవడంలో స్వల్ప అసౌకర్యం కలగవచ్చు. (translated from CPCB)";
+        break;
+      case "Moderately polluted":
+        cpcbStatement =
+          "ఆస్తమా వంటి ఊపిరితిత్తుల వ్యాధి ఉన్నవారికి శ్వాస తీసుకోవడంలో అసౌకర్యం, మరియు గుండె జబ్బులు ఉన్నవారికి, పిల్లలకు మరియు వృద్ధులకు అసౌకర్యం కలగవచ్చు. (translated from CPCB)";
+        break;
+      case "Poor":
+        cpcbStatement =
+          "ఎక్కువసేపు బహిర్గతమైతే శ్వాస తీసుకోవడంలో అసౌకర్యం, మరియు గుండె జబ్బులు ఉన్నవారికి అసౌకర్యం కలగవచ్చు. (translated from CPCB)";
+        break;
+      case "Very Poor":
+        cpcbStatement =
+          "ఎక్కువసేపు బహిర్గతమైతే శ్వాసకోశ వ్యాధి రావచ్చు. ఊపిరితిత్తులు మరియు గుండె జబ్బులు ఉన్నవారిలో ప్రభావం ఎక్కువగా ఉండవచ్చు. (translated from CPCB)";
+        break;
+      case "Severe":
+        cpcbStatement =
+          "ఆరోగ్యవంతమైన వ్యక్తులపై కూడా శ్వాసకోశ ప్రభావాలు మరియు ఊపిరితిత్తులు/గుండె జబ్బులు ఉన్నవారిపై తీవ్రమైన ఆరోగ్య ప్రభావాలు కలగవచ్చు. తేలికపాటి శారీరక శ్రమ సమయంలో కూడా ఆరోగ్య ప్రభావాలు అనుభవించవచ్చు. (translated from CPCB)";
+        break;
+      default:
+        cpcbStatement = `${cpcbStatement} (translated from CPCB)`;
+    }
+  }
 
   // 48-Hour Strip
   const hourly = airData.hourlyForecast || [];
@@ -242,6 +297,11 @@ function renderContent(
       })
       .join("");
 
+    const maxDoseCut = totals.memberDoses.length
+      ? Math.max(...totals.memberDoses.map((m) => Math.round(m.doseCutPercentage)))
+      : 0;
+    const weeklyCo2 = Math.round(totals.householdCo2WeeklyKg * 10) / 10;
+
     container.innerHTML = `
       <section class="section today-section">
         <div class="container">
@@ -281,7 +341,17 @@ function renderContent(
                 <!-- Google advice per member group -->
                 <div class="air-card-google-section">
                   <div class="air-card-google-heading">
-                    Google health advice for your household members
+                    ${
+                      currentLang !== "en" &&
+                      (
+                        !airData.healthRecommendations?.generalPopulation ||
+                          /^[A-Za-z0-9\s.,'’"()-]+$/.test(
+                            airData.healthRecommendations.generalPopulation,
+                          )
+                      )
+                        ? "Google's advice (in English)"
+                        : "Google health advice for your household members"
+                    }
                   </div>
                   <ul class="air-card-google-list">
                     ${profile.members
@@ -462,7 +532,20 @@ function renderContent(
             <!-- Sticky Side Column: Family Totals -->
             <div class="side-col">
               <aside class="totals-sticky-col" aria-label="Family Totals" aria-live="polite">
-                <div class="section-label">Family totals today</div>
+                <div class="section-label desktop-only-totals-header">Family totals today</div>
+
+                <!-- Slim mobile totals bar (DESIGN.md section 9) -->
+                <div class="mobile-only-totals-bar">
+                  <div class="totals-mobile-bar">
+                    <div class="totals-mobile-headline">
+                      <span>Dose cut: <strong class="tabular-nums">${maxDoseCut}%</strong></span>
+                      <span>CO2: <strong class="tabular-nums">${weeklyCo2} kg/wk</strong></span>
+                    </div>
+                    <button type="button" id="btn-toggle-totals-details" class="btn btn-secondary btn-sm" aria-expanded="false">
+                      Details
+                    </button>
+                  </div>
+                </div>
 
                 <div class="side-col-list">
                   ${totals.memberDoses
@@ -523,6 +606,19 @@ function renderContent(
           saveToggledSwaps(Array.from(activeSwapIds));
           renderView();
         }
+      });
+    }
+
+    // Mobile totals details toggle
+    const toggleDetailsBtn = container.querySelector<HTMLButtonElement>(
+      "#btn-toggle-totals-details",
+    );
+    const totalsStickyCol = container.querySelector<HTMLElement>(".totals-sticky-col");
+    if (toggleDetailsBtn && totalsStickyCol) {
+      toggleDetailsBtn.addEventListener("click", () => {
+        const isExpanded = totalsStickyCol.classList.toggle("is-expanded");
+        toggleDetailsBtn.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+        toggleDetailsBtn.textContent = isExpanded ? "Hide details" : "Details";
       });
     }
 

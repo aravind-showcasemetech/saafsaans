@@ -7,7 +7,36 @@ import teDict from "../i18n/te.json";
 
 export type SupportedLang = "en" | "hi" | "te";
 
-let currentLang: SupportedLang = "en";
+const STORAGE_KEY = "saafsaans_lang";
+
+function getInitialLanguage(): SupportedLang {
+  if (typeof window !== "undefined") {
+    // Check URL search param (?lang=te or ?lang=hi)
+    const urlParams = new URLSearchParams(window.location.search);
+    const langParam = urlParams.get("lang");
+    if (langParam === "hi" || langParam === "te" || langParam === "en") {
+      try {
+        localStorage.setItem(STORAGE_KEY, langParam);
+      } catch {}
+      return langParam;
+    }
+
+    // Check localStorage
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored === "hi" || stored === "te" || stored === "en") {
+        return stored;
+      }
+    } catch {}
+  }
+  return "en";
+}
+
+let currentLang: SupportedLang = getInitialLanguage();
+if (typeof document !== "undefined") {
+  document.documentElement.lang = currentLang;
+}
+
 const dictionaries: Record<SupportedLang, Record<string, unknown>> = {
   en: enDict as Record<string, unknown>,
   hi: hiDict as Record<string, unknown>,
@@ -16,7 +45,14 @@ const dictionaries: Record<SupportedLang, Record<string, unknown>> = {
 
 export async function setLanguage(lang: SupportedLang): Promise<void> {
   currentLang = lang;
-  document.documentElement.lang = lang;
+  if (typeof document !== "undefined") {
+    document.documentElement.lang = lang;
+  }
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(STORAGE_KEY, lang);
+    } catch {}
+  }
 }
 
 export function getLanguage(): SupportedLang {

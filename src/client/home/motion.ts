@@ -104,9 +104,9 @@ export function setupStickyPanel(): void {
               panelContent.style.opacity = "0";
               setTimeout(() => {
                 panelContent.innerHTML = `
-                  <h3 style="font-size: var(--text-md); margin-bottom: var(--space-8);">${data.title}</h3>
-                  <p style="font-size: var(--text-sm); color: var(--ink-2); margin-bottom: var(--space-12);">${data.body}</p>
-                  <div style="font-size: var(--text-xs); font-weight: 500; color: var(--accent);">${data.detail}</div>
+                  <h3 class="sticky-panel-title">${data.title}</h3>
+                  <p class="sticky-panel-desc">${data.body}</p>
+                  <div class="sticky-panel-detail">${data.detail}</div>
                 `;
                 panelContent.style.opacity = "1";
               }, 200);

@@ -15,7 +15,11 @@ html {
   background-color: var(--paper);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+}
+
+html[lang="hi"],
+html[lang="te"] {
+  line-height: 1.7;
 }
 
 body {
@@ -24,7 +28,6 @@ body {
   color: var(--ink);
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
 }
 
 h1,

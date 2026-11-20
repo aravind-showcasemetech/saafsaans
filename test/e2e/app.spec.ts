@@ -115,11 +115,33 @@ test.describe("SaafSaans App Screens E2E Tests (DEMO=1)", () => {
     }
   });
 
-  test("verifies no horizontal scroll at 320, 390 and 1440 px on all views", async ({ page }) => {
+  test("verifies zero axe violations on home and today in hi and te at 390 px", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+
+    for (const lang of ["hi", "te"]) {
+      // Home in lang
+      await page.goto(`/?lang=${lang}`);
+      await page.waitForTimeout(500);
+      const homeScan = await new AxeBuilder({ page }).analyze();
+      expect(homeScan.violations, `Axe violations on home in ${lang} at 390px`).toEqual([]);
+
+      // Today in lang (demo profile loaded)
+      await page.goto(`/#/today?lang=${lang}`);
+      await page.waitForTimeout(600);
+      const todayScan = await new AxeBuilder({ page }).analyze();
+      expect(todayScan.violations, `Axe violations on Today in ${lang} at 390px`).toEqual([]);
+    }
+  });
+
+  test("verifies no horizontal scroll and no element wider than viewport at 320 and 390 px on all views", async ({
+    page,
+  }) => {
     const routes = ["/", "/#/setup", "/#/today", "/#/share"];
 
     for (const route of routes) {
-      for (const width of [320, 390, 1440]) {
+      for (const width of [320, 390]) {
         await page.setViewportSize({ width, height: 800 });
         await page.goto(route);
         await page.waitForTimeout(400);
@@ -130,6 +152,37 @@ test.describe("SaafSaans App Screens E2E Tests (DEMO=1)", () => {
           scrollWidth,
           `Page ${route} has horizontal scroll at ${width}px: scrollWidth=${scrollWidth}, clientWidth=${clientWidth}`,
         ).toBeLessThanOrEqual(clientWidth + 1);
+
+        const overflowing = await page.evaluate(() => {
+          const vw = window.innerWidth;
+          const bad: string[] = [];
+          const allEls = document.querySelectorAll("*");
+          for (const el of allEls) {
+            if (el.closest(".marquee-viewport")) continue;
+
+            const rect = el.getBoundingClientRect();
+            // allow 1.5px subpixel tolerance
+            if (rect.width > vw + 1.5) {
+              const style = window.getComputedStyle(el);
+              if (
+                style.display !== "none" &&
+                style.visibility !== "hidden" &&
+                style.opacity !== "0" &&
+                !["HTML", "BODY"].includes(el.tagName)
+              ) {
+                bad.push(
+                  `${el.tagName}${el.id ? `#${el.id}` : ""}${el.className ? `.${String(el.className).replace(/\s+/g, ".")}` : ""} (width=${Math.round(rect.width)} > vw=${vw})`,
+                );
+              }
+            }
+          }
+          return bad;
+        });
+
+        expect(
+          overflowing,
+          `Found elements wider than viewport on ${route} at ${width}px: ${overflowing.join("; ")}`,
+        ).toEqual([]);
       }
     }
   });

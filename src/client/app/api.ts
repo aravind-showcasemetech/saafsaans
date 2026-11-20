@@ -79,8 +79,12 @@ export async function fetchCommuteDistance(
   return res.json() as Promise<CommuteResult>;
 }
 
-export async function fetchAirData(lat: number, lng: number): Promise<NormalisedAirData> {
-  const res = await fetch(`/api/air?lat=${lat}&lng=${lng}`);
+export async function fetchAirData(
+  lat: number,
+  lng: number,
+  lang = "en",
+): Promise<NormalisedAirData> {
+  const res = await fetch(`/api/air?lat=${lat}&lng=${lng}&lang=${encodeURIComponent(lang)}`);
   if (!res.ok) throw new Error(`Air data failed: ${res.status}`);
   return res.json() as Promise<NormalisedAirData>;
 }

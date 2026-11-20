@@ -15,6 +15,7 @@ export const IndiaLngSchema = z.coerce.number().min(68.0).max(98.0);
 const AirQuerySchema = z.object({
   lat: IndiaLatSchema,
   lng: IndiaLngSchema,
+  lang: z.string().optional(),
 });
 
 export const FIXED_AREAS = [
@@ -90,15 +91,23 @@ airRoute.get("/air", async (c) => {
   // Round coordinates to 2 decimal places before cache check, API call, or logging
   const lat = Math.round(parsed.data.lat * 100) / 100;
   const lng = Math.round(parsed.data.lng * 100) / 100;
+  const lang = parsed.data.lang || "en";
 
-  const cacheKey = `air_${lat}_${lng}`;
+  const cacheKey = `air_${lat}_${lng}_${lang}`;
   const cached = airCache.get(cacheKey) as NormalisedAirData | undefined;
   if (cached) {
     return c.json(cached);
   }
 
   try {
-    const airData = await fetchAirData(lat, lng);
+    const airData = await fetchAirData(
+      lat,
+      lng,
+      config.mapsApiKey,
+      fetch,
+      false,
+      lang !== "en" ? lang : undefined,
+    );
     const withDemo = {
       ...airData,
       isDemo: config.demoMode || !config.mapsLive,

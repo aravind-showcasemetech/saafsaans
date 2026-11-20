@@ -8,114 +8,114 @@
     "planMyDay": "दिन की योजना बनाएं"
   },
   "hero": {
-    "title": "Your family's smog plan for today",
-    "lead": "Exact swaps for the air your family breathes and the air your household puts out. Live numbers from tested formulas, not AI guesses.",
-    "tryHyderabad": "Try a Hyderabad family",
-    "setUpHousehold": "Set up my household",
-    "loadingAir": "Loading live Hyderabad air...",
-    "updatedAt": "Updated"
+    "title": "आज के लिए आपके परिवार का स्मॉग प्लान",
+    "lead": "आपके परिवार की सांस और घर के प्रदूषण को कम करने के सटीक उपाय। जांची गई गणनाओं से सीधे आंकड़े, कोई अनुमान नहीं।",
+    "tryHyderabad": "हैदराबाद परिवार का उदाहरण देखें",
+    "setUpHousehold": "अपने घर की जानकारी जोड़ें",
+    "loadingAir": "हैदराबाद की हवा की जानकारी लोड हो रही है...",
+    "updatedAt": "अपडेट किया गया"
   },
   "marquee": {
-    "airTitle": "Live air quality across areas",
-    "airScrollRegion": "Live air quality ticker across city areas",
-    "sourcesTitle": "Scientific and government sources",
-    "sourcesScrollRegion": "Scientific and institutional data sources ticker"
+    "airTitle": "विभिन्न क्षेत्रों में हवा की गुणवत्ता",
+    "airScrollRegion": "शहर के इलाकों में हवा की स्थिति",
+    "sourcesTitle": "वैज्ञानिक और सरकारी स्रोत",
+    "sourcesScrollRegion": "वैज्ञानिक और संस्थागत डेटा स्रोत सूची"
   },
   "insight": {
-    "label": "Morning insight",
-    "title": "Morning is often the worst time for a walk in winter",
-    "desc": "Winter temperature inversions trap surface particles overnight. Sunlight breaks the inversion by afternoon, making late afternoon significantly cleaner.",
-    "explanation": "Cold air stays close to the ground overnight, holding smoke and dust near street level. As the sun warms the earth, the mixing layer rises, giving Hyderabad its cleanest air between {cleanestStart} and {cleanestEnd}.",
-    "cleanestTitle": "Cleanest window today",
-    "cleanestNote": "Best time for walks, outdoor workouts and opening windows",
-    "dirtiestTitle": "Dirtiest window today",
-    "dirtiestNote": "Keep windows closed and shift vigorous outdoor exercise",
+    "label": "सुबह की जानकारी",
+    "title": "सर्दियों में सुबह की सैर अक्सर सबसे नुकसानदेह होती है",
+    "desc": "सर्दियों में रात भर ठंड के कारण प्रदूषण जमीन के पास जमा रहता है। दोपहर में धूप निकलने पर हवा साफ होने लगती है।",
+    "explanation": "रात भर ठंडी हवा जमीन के करीब रहने से धुआं और धूल नीचे ही ठहर जाते हैं। जैसे ही धूप जमीन को गर्म करती है, हैदराबाद की हवा {cleanestStart} और {cleanestEnd} के बीच सबसे साफ रहती है।",
+    "cleanestTitle": "आज का सबसे साफ समय",
+    "cleanestNote": "सैर, व्यायाम और खिड़कियां खोलने के लिए सबसे सही समय",
+    "dirtiestTitle": "आज का सबसे प्रदूषित समय",
+    "dirtiestNote": "खिड़कियां बंद रखें और बाहर तेज कसरत से बचें",
     "sourceRef": "Singh, Singh and Biswal (2020), Science of The Total Environment; Latha and Badarinath (2005)"
   },
   "howItWorks": {
-    "label": "How it works",
-    "title": "Three simple steps to clean air",
-    "desc": "No generic tips. Real routines mapped against live local forecasts.",
-    "exampleLabel": "Real household example",
-    "step1Title": "Tell us who is at home",
-    "step1Body": "Age, health conditions like asthma, routine presets, and bedroom room sizes. Presets let you tap rather than type.",
-    "step2Title": "See the cleanest hours",
-    "step2Body": "Hourly forecast on India's CPCB scale shows exactly when outdoor air is safest for exercise, errands, or airing your rooms.",
-    "step3Title": "Choose swaps and see the numbers",
-    "step3Body": "Gemini chooses and explains the swaps. Every number comes from tested code. Toggling any swap updates your family totals live."
+    "label": "यह कैसे काम करता है",
+    "title": "साफ हवा के लिए तीन आसान कदम",
+    "desc": "बिना किसी सामान्य सलाह के। आपकी दिनचर्या और स्थानीय हवा के अनुसार सही योजना।",
+    "exampleLabel": "एक असली परिवार का उदाहरण",
+    "step1Title": "बताएं कि घर में कौन है",
+    "step1Body": "उम्र, अस्थमा जैसी परेशानियां, दिनचर्या और कमरों का आकार। आसान विकल्पों से तुरंत चुनें।",
+    "step2Title": "सबसे साफ समय देखें",
+    "step2Body": "घंटे दर घंटे CPCB के पैमाने पर देखें कि सैर, काम या खिड़की खोलने के लिए बाहर की हवा कब सबसे सुरक्षित है।",
+    "step3Title": "उपाय चुनें और आंकड़े देखें",
+    "step3Body": "Gemini सही उपाय चुनकर समझाता है। हर संख्या जांची गई गणना से आती है। किसी भी बदलाव पर कुल असर तुरंत दिखता है।"
   },
   "lenses": {
-    "label": "The impact model",
-    "title": "Two lenses: protect and pollute less",
-    "desc": "Every single action shows you what it changes in clear numbers.",
-    "protectTitle": "Protect: what your family breathes",
-    "protectDesc": "Calculates inhaled particle dose for each family member based on activity, room volume and air exchange.",
-    "protectExample": "Example: Bedroom purifier overnight cuts Reddy family bedtime particle dose by {percent}%",
-    "polluteTitle": "Pollute less: what your household puts out",
-    "polluteDesc": "Measures vehicle kilometers taken off the road and kilograms of carbon dioxide avoided from transport swaps.",
-    "polluteExample": "Example: Taking the metro saves the Reddy household {amount} kg of carbon dioxide every week"
+    "label": "असर का मॉडल",
+    "title": "दो पहलू: बचाव और कम प्रदूषण",
+    "desc": "हर एक कदम से होने वाला बदलाव साफ आंकड़ों में दिखता है।",
+    "protectTitle": "बचाव: परिवार क्या सांस में लेता है",
+    "protectDesc": "काम, कमरे के आकार और हवा के आने-जाने के आधार पर हर सदस्य के अंदर जाने वाले कणों की मात्रा नापता है।",
+    "protectExample": "उदाहरण: रात में बेडरूम का purifier रेड्डी परिवार के सोते समय कणों को {percent}% तक कम करता है",
+    "polluteTitle": "कम प्रदूषण: घर से निकलने वाला धुआं",
+    "polluteDesc": "सड़क पर कम चली गाड़ी के किलोमीटर और यात्रा बदलने से बचने वाली कार्बन डाइऑक्साइड की मात्रा नापता है।",
+    "polluteExample": "उदाहरण: metro से चलने पर रेड्डी परिवार हर हफ्ते {amount} किलो कार्बन डाइऑक्साइड बचाता है"
   },
   "formulas": {
-    "label": "Full transparency",
-    "title": "How we work out the numbers",
-    "desc": "Open formulas and sourced factors. No black-box computations.",
-    "massBalanceTitle": "Indoor air mass balance",
-    "massBalanceDesc": "Single-room steady-state model using outdoor fine particles, ventilation rate, surface deposition, and air cleaner CADR.",
-    "doseTitle": "Inhaled particle dose",
-    "doseDesc": "Sum of concentration times age-specific inhalation rate times duration across hourly blocks.",
-    "purifierTitle": "Purifier CADR sizing",
-    "purifierDesc": "AHAM and US EPA rule: minimum CADR equals two-thirds of room area, scaled for room ceiling height.",
-    "cigsTitle": "Cigarette equivalence",
-    "cigsDesc": "Berkeley Earth equivalence: daily exposure to fine particles equals cigarette equivalence factor.",
-    "aiPlainLine": "Gemini chooses and explains the swaps. Every number comes from tested code."
+    "label": "पूरी पारदर्शिता",
+    "title": "हम आंकड़े कैसे निकालते हैं",
+    "desc": "खुले सूत्र और प्रमाणित मानक। कोई छिपी हुई गणना नहीं।",
+    "massBalanceTitle": "घर के अंदर हवा का संतुलन",
+    "massBalanceDesc": "बाहर के महीन कणों, हवा की आवाजाही और एयर क्लीनर के CADR पर आधारित एक कमरे का मॉडल।",
+    "doseTitle": "सांस में जाने वाले कण",
+    "doseDesc": "हर घंटे में हवा के कण, उम्र के हिसाब से सांस की दर और समय का कुल योग।",
+    "purifierTitle": "purifier के CADR का आकार",
+    "purifierDesc": "AHAM और US EPA का नियम: कमरे के क्षेत्रफल और छत की ऊंचाई के अनुसार सही CADR क्षमता।",
+    "cigsTitle": "सिगरेट के बराबर असर",
+    "cigsDesc": "Berkeley Earth का पैमाना: दिन भर में महीन कणों के संपर्क की सिगरेट से तुलना।",
+    "aiPlainLine": "Gemini सही उपाय चुनता है और समझाता है। हर संख्या जांची गई गणना से आती है।"
   },
   "community": {
-    "label": "Collective action",
-    "title": "Community impact adds up quickly",
-    "desc": "Small routine changes across a society multiply into tons of avoided street pollution.",
-    "societyName": "Green Meadows society (Kondapur)",
-    "societyStory": "When participating households coordinate carpools, switch short errands to walking during clean hours, and avoid leaf burning, the local reduction is measurable.",
-    "societyResult": "Avoided road emissions per week across participating families",
-    "homesWord": "homes"
+    "label": "सामूहिक पहल",
+    "title": "मिलकर किए गए प्रयास से बड़ा बदलाव",
+    "desc": "पूरी सोसायटी में दिनचर्या के छोटे बदलाव मिलकर सड़कों से भारी प्रदूषण कम करते हैं।",
+    "societyName": "ग्रीन मीडोज सोसायटी (कोंडापुर)",
+    "societyStory": "जब परिवार मिलकर गाड़ियां साझा करते हैं, साफ समय में पैदल निकलते हैं और सूखे पत्ते नहीं जलाते, तो असर साफ दिखता है।",
+    "societyResult": "शामिल परिवारों द्वारा हर हफ्ते बचाई गई गाड़ियों की निकासी",
+    "homesWord": "घर"
   },
   "sources": {
-    "label": "References",
-    "title": "Sourced from verified science and official standards"
+    "label": "संदर्भ",
+    "title": "वैज्ञानिक शोध और आधिकारिक मानकों पर आधारित"
   },
   "finalCta": {
-    "title": "Breathe cleaner air today",
-    "desc": "Start with a pre-configured Hyderabad household or set up your own in two minutes."
+    "title": "आज ही सांस लें साफ हवा में",
+    "desc": "हैदराबाद परिवार के उदाहरण से शुरू करें या दो मिनट में अपने घर की योजना बनाएं।"
   },
   "footer": {
-    "notMedicalAdviceTitle": "Not medical advice",
-    "notMedicalAdviceText": "SaafSaans is an urban environmental planning tool. See a doctor if you experience breathlessness, chest pain, or wheezing that does not settle.",
-    "googleAttribution": "Map and place search powered by Google Maps Platform. Air quality data from Google Air Quality API.",
-    "githubRepo": "GitHub Repository"
+    "notMedicalAdviceTitle": "चिकित्सीय सलाह नहीं",
+    "notMedicalAdviceText": "SaafSaans पर्यावरण योजना का एक साधन है। सांस फूलने, सीने में दर्द या लगातार घबराहट होने पर डॉक्टर से मिलें।",
+    "googleAttribution": "स्थान खोज Google Maps Platform द्वारा। वायु गुणवत्ता डेटा Google Air Quality API द्वारा।",
+    "githubRepo": "GitHub रिपॉजिटरी"
   },
   "common": {
-    "pause": "Pause",
-    "play": "Play",
-    "source": "Source"
+    "pause": "रोकें",
+    "play": "चलाएं",
+    "source": "स्रोत"
   },
   "swaps": {
-    "shift-outdoor-exercise": "Move outdoor exercise to the cleanest window when particulate levels are lowest.",
-    "exercise-indoors": "Move strenuous workouts indoors to reduce inhaled particle dose during dirty hours.",
-    "shut-windows-peak": "Keep windows closed during morning and evening pollution spikes to slow infiltration.",
-    "air-house-clean-window": "Ventilate your home during the afternoon when outdoor air is cleanest.",
-    "purifier-bedroom": "Run an air purifier in the bedroom overnight to protect sleeping family members.",
-    "diy-fan-filter": "Use a fan with a high-efficiency filter as an affordable clean air setup.",
-    "mask-outdoors": "Wear a well-fitted mask during travel or outdoor activity to filter particulate matter.",
-    "no-mosquito-coil": "Switch to mosquito nets or plug-in repellents to remove a heavy indoor smoke source.",
-    "incense-outside": "Light incense near open windows or outdoors to avoid high indoor particle levels.",
-    "cook-with-exhaust": "Use an exhaust fan and lids while cooking or frying to clear indoor fumes.",
-    "wet-mop": "Wet-mop floors instead of dry sweeping to trap settled dust without stirring it up.",
-    "metro-not-car": "Take the metro instead of driving to reduce personal exposure and street emissions.",
-    "bus-not-car": "Take the city bus instead of driving to reduce personal road emissions.",
-    "carpool": "Share rides with colleagues to divide vehicle fuel use and emissions.",
-    "walk-short-trips": "Walk or cycle short local trips during cleaner hours instead of driving.",
-    "wfh-day": "Work from home one day each week to skip commute emissions and road exposure.",
-    "no-idling": "Turn off vehicle engines at long traffic signals to cut avoidable exhaust.",
-    "no-burning": "Avoid burning dry leaves or garden waste, and report open fires to authorities."
+    "shift-outdoor-exercise": "बाहर कसरत को उस समय करें जब हवा में कणों का स्तर सबसे कम हो।",
+    "exercise-indoors": "प्रदूषित समय में सांस में जाने वाले कणों को कम करने के लिए घर के अंदर कसरत करें।",
+    "shut-windows-peak": "सुबह और शाम के भारी प्रदूषण के समय घर में धुआं आने से रोकने के लिए खिड़कियां बंद रखें।",
+    "air-house-clean-window": "दोपहर में जब बाहर की हवा सबसे साफ हो तब घर में ताजी हवा आने दें।",
+    "purifier-bedroom": "रात में सोते समय परिवार के सदस्यों के बचाव के लिए बेडरूम में एयर purifier चलाएं।",
+    "diy-fan-filter": "कम खर्च में साफ हवा के लिए पंखे पर उच्च क्षमता वाला फिल्टर लगाएं।",
+    "mask-outdoors": "सफर या बाहर के कामों के दौरान हवा के महीन कणों को रोकने के लिए सही फिटिंग वाला मास्क पहनें।",
+    "no-mosquito-coil": "घर के अंदर धुएं से बचने के लिए मच्छरदानी या इलेक्ट्रिक रिपेलेंट का उपयोग करें।",
+    "incense-outside": "घर में भारी धुएं से बचने के लिए अगरबत्ती खुली खिड़की के पास या बाहर जलाएं।",
+    "cook-with-exhaust": "खाना बनाते समय धुएं को बाहर निकालने के लिए एग्जॉस्ट फैन चलाएं और बर्तनों को ढक कर रखें।",
+    "wet-mop": "सूखी झाड़ू से धूल उड़ाने के बजाय गीला पोछा लगाएं ताकि बैठी धूल साफ हो सके।",
+    "metro-not-car": "सड़क पर धुआं घटाने और खुद को प्रदूषण से बचाने के लिए कार के बजाय metro का उपयोग करें।",
+    "bus-not-car": "सड़क पर होने वाले प्रदूषण को कम करने के लिए कार के बजाय बस से सफर करें।",
+    "carpool": "ईंधन और धुएं को बांटने के लिए साथियों के साथ कार साझा करें।",
+    "walk-short-trips": "पास के छोटे कामों के लिए गाड़ी के बजाय साफ घंटों में पैदल या साइकिल से जाएं।",
+    "wfh-day": "सफर के धुएं और सड़क के प्रदूषण से बचने के लिए हफ्ते में एक दिन घर से काम करें।",
+    "no-idling": "अनावश्यक धुएं को रोकने के लिए लंबे ट्रैफिक सिग्नल पर गाड़ी का इंजन बंद करें।",
+    "no-burning": "सूखे पत्ते या कचरा जलाने से बचें और कहीं आग दिखने पर नगर निगम को सूचित करें।"
   },
   "facts": {
     "mosquitoCoil": "Burning one mosquito coil releases as much PM2.5 as burning 75 to 137 cigarettes.",
@@ -123,12 +123,12 @@
     "frying": "Frying without a stove hood reached a median 4.5 mg/m³ of PM2.5, against 0.5 mg/m³ with the hood on."
   },
   "advice": {
-    "wetMop": "Wet-mop floors instead of dry sweeping to remove dust without resuspending particles.",
-    "diyFanFilter": "A box fan taped to a high-efficiency filter can serve as a low-cost filter setup.",
-    "noIdling": "Turn off vehicle engines at long traffic signals to cut avoidable exhaust.",
-    "noBurning": "Avoid burning dry leaves or garden waste, and report open fires to authorities."
+    "wetMop": "धूल उड़ाए बिना सफाई के लिए सूखी झाड़ू के बजाय गीले पोछे का उपयोग करें।",
+    "diyFanFilter": "पंखे पर फिल्टर लगाकर कम खर्च में हवा साफ करने की व्यवस्था बनाई जा सकती है।",
+    "noIdling": "अनावश्यक धुएं से बचने के लिए बड़े ट्रैफिक सिग्नल पर इंजन बंद रखें।",
+    "noBurning": "सूखे पत्ते या कचरा जलाने से बचें और खुले में जलती आग की सूचना दें।"
   },
   "summary": {
-    "default": "Personalised air quality actions for your household routines and local forecast."
+    "default": "आपके घर की दिनचर्या और स्थानीय हवा के अनुसार तैयार व्यक्तिगत सुझाव।"
   }
 }
