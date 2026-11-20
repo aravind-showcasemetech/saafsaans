@@ -31,7 +31,7 @@ export function calculatorHtml(prefix: string, room: RoomDefaults): string {
         ${numberField(`${prefix}-height`, t("calc.height"), room.heightFt, ROOM_LIMITS.heightMinFt, ROOM_LIMITS.heightMaxFt)}
       </fieldset>
       ${actionButton({ label: t("calc.button"), id: `${prefix}-calc-go`, submit: true })}
-      <div class="calc-result" id="${prefix}-calc-result" role="status" aria-live="polite"></div>
+      <div class="calc-result" id="${prefix}-calc-result" role="status" aria-live="polite">${calculatorResultHtml(room.lengthFt, room.widthFt, room.heightFt)}</div>
     </form>`;
 }
 
@@ -56,7 +56,10 @@ export function calculatorResultHtml(lengthFt: number, widthFt: number, heightFt
     </ol>`;
 }
 
-/** Wires the form: the submit button, or Enter in any field, works out the size and announces it. */
+/**
+ * Wires the form: the result shows for the default room from the start and updates as the inputs
+ * change; the submit button (or Enter) does the same for keyboard users.
+ */
 export function attachCalculator(root: HTMLElement, prefix: string): void {
   const form = root.querySelector<HTMLFormElement>(`#${prefix}-calc`);
   const out = root.querySelector<HTMLElement>(`#${prefix}-calc-result`);
@@ -66,6 +69,7 @@ export function attachCalculator(root: HTMLElement, prefix: string): void {
   const run = () => {
     out.innerHTML = calculatorResultHtml(value("length"), value("width"), value("height"));
   };
+  form.addEventListener("input", run);
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     run();

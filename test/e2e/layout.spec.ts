@@ -97,8 +97,9 @@ for (const name of ["home", "today"] as const) {
       els.map((el) => el.getBoundingClientRect()).map((r) => [r.width, r.height]),
     );
     for (const [w, h] of sizes) {
-      expect(w).toBeGreaterThanOrEqual(44);
-      expect(h).toBeGreaterThanOrEqual(44);
+      // Half a pixel for sub-pixel layout (43.9998 is a 44 px box mid-transition).
+      expect(w).toBeGreaterThanOrEqual(43.5);
+      expect(h).toBeGreaterThanOrEqual(43.5);
     }
   });
 }

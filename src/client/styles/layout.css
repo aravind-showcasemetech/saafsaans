@@ -46,6 +46,56 @@
   flex-wrap: wrap;
 }
 
+.lang-select,
+.label-short {
+  display: none;
+}
+
+/* Phones (390 px and below): wordmark, a compact language menu and "Plan my day" on one row. */
+@media (max-width: 400px) {
+  .header-inner {
+    flex-wrap: nowrap;
+    gap: var(--space-8);
+  }
+
+  .brand-wordmark {
+    font-size: var(--text-md);
+  }
+
+  .header-actions {
+    flex-wrap: nowrap;
+    gap: var(--space-8);
+  }
+
+  .lang-switch,
+  .label-long {
+    display: none;
+  }
+
+  .label-short {
+    display: inline;
+  }
+
+  .lang-select {
+    display: block;
+    min-height: var(--tap);
+    max-width: 7.5rem;
+    padding: var(--space-4) var(--space-8);
+    background: var(--surface-2);
+    color: var(--ink);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    font: inherit;
+    font-size: var(--text-xs);
+  }
+
+  .header-plan {
+    padding: var(--space-8) var(--space-12);
+    font-size: var(--text-xs);
+    white-space: nowrap;
+  }
+}
+
 /* Footer */
 .site-footer {
   border-top: 1px solid var(--rule);

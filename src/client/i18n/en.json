@@ -5,7 +5,8 @@
   },
   "header": {
     "language": "Select language",
-    "planMyDay": "Plan my day"
+    "planMyDay": "Plan my day",
+    "planShort": "My plan"
   },
   "hero": {
     "title": "Your family's smog plan for today",
@@ -580,7 +581,7 @@
       "roomLine": "Shutting windows helps a little. A purifier of the right size makes the biggest difference.",
       "factsTitle": "Smoke you make indoors",
       "calcTitle": "The Reddys' bedroom: {length} by {width} ft, {height} ft high",
-      "actionHint": "Change the room size above and press the button to work it out."
+      "actionHint": "The size updates as you change the room."
     },
     "alt": {
       "title": "Sustainable alternatives",
