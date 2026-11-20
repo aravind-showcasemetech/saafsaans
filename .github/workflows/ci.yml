@@ -13,8 +13,6 @@ jobs:
   app:
     name: Check, build, smoke and Playwright
     runs-on: ubuntu-latest
-    env:
-      DEMO: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,16 +20,21 @@ jobs:
           node-version: 22
           cache: "npm"
       - run: npm ci
+      # Unit and server tests run outside demo mode and before any build (test/setup-env.ts).
       - name: Lint, type check and unit tests with coverage floors
         run: npm run check
       - name: Build
         run: npm run build
-      - name: Smoke test the built app
+      - name: Smoke test the built app (DEMO=1)
         run: npm run smoke
+        env:
+          DEMO: "1"
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
       - name: Playwright and axe against the built app (DEMO=1)
         run: npx playwright test
+        env:
+          DEMO: "1"
       - name: Upload Playwright report on failure
         if: failure()
         uses: actions/upload-artifact@v4

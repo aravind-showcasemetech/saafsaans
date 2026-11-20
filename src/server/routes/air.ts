@@ -1,13 +1,11 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import type { NormalisedAirData } from "../../shared/air-types.js";
-import { fetchAirData } from "../air.js";
+import { getAirFor } from "../air.js";
 import { airCache } from "../cache.js";
-import { config } from "../config.js";
+import type { Config } from "../config.js";
 import { logEvent } from "../log.js";
 import type { AppEnv } from "./common.js";
-
-export const airRoute = new Hono<AppEnv>();
 
 // Helper to check coordinates within India roughly:
 // Lat: ~6.0 to ~38.0, Lng: ~68.0 to ~98.0
@@ -37,88 +35,89 @@ export const DEMO_AREAS = [
   { name: "Dwarka, Delhi", lat: 28.59, lng: 77.05 },
 ] as const;
 
-// GET /api/air/areas
-airRoute.get("/air/areas", async (c) => {
-  const reqId = c.get("requestId");
-  const isDemo = !config.mapsLive;
-  const cacheKey = isDemo ? "air_areas_list_demo" : "air_areas_list";
-  const cached = airCache.get(cacheKey);
-  if (cached) {
-    return c.json(cached);
-  }
+/** GET /air/areas and GET /air, answering from live data or the saved captures per config. */
+export function createAirRoute(config: Config): Hono<AppEnv> {
+  const airRoute = new Hono<AppEnv>();
+  const getAir = getAirFor(config);
 
-  const areasToFetch = isDemo ? DEMO_AREAS : FIXED_AREAS;
+  // GET /api/air/areas
+  airRoute.get("/air/areas", async (c) => {
+    const reqId = c.get("requestId");
+    const isDemo = !config.mapsLive;
+    const cacheKey = isDemo ? "air_areas_list_demo" : "air_areas_list";
+    const cached = airCache.get(cacheKey);
+    if (cached) {
+      return c.json(cached);
+    }
 
-  try {
-    const results = await Promise.all(
-      areasToFetch.map(async (area) => {
-        const areaCacheKey = `air_${area.lat}_${area.lng}`;
-        let airData = airCache.get(areaCacheKey) as NormalisedAirData | undefined;
-        if (!airData) {
-          airData = await fetchAirData(area.lat, area.lng);
-          airCache.set(areaCacheKey, airData);
-        }
-        return {
-          name: area.name,
-          lat: area.lat,
-          lng: area.lng,
-          aqi: airData.currentAqi,
-          aqiBand: airData.aqiBand,
-          pm25: airData.pm25,
-          dominantPollutant: airData.dominantPollutant,
-          isApproximate: airData.isApproximate,
-          isDemo,
-          capturedAt: isDemo ? airData.capturedAt : undefined,
-        };
-      }),
-    );
+    const areasToFetch = isDemo ? DEMO_AREAS : FIXED_AREAS;
 
-    airCache.set(cacheKey, results, 30 * 60);
-    return c.json(results);
-  } catch (err) {
-    logEvent("error", "areas_api_failure", { requestId: reqId, status: 500 });
-    return c.json({ error: "Failed to fetch area air quality data", requestId: reqId }, 500);
-  }
-});
-airRoute.get("/air", async (c) => {
-  const reqId = c.get("requestId");
-  const query = c.req.query();
-  const parsed = AirQuerySchema.safeParse(query);
+    try {
+      const results = await Promise.all(
+        areasToFetch.map(async (area) => {
+          const areaCacheKey = `air_${area.lat}_${area.lng}`;
+          let airData = airCache.get(areaCacheKey) as NormalisedAirData | undefined;
+          if (!airData) {
+            airData = await getAir(area.lat, area.lng);
+            airCache.set(areaCacheKey, airData);
+          }
+          return {
+            name: area.name,
+            lat: area.lat,
+            lng: area.lng,
+            aqi: airData.currentAqi,
+            aqiBand: airData.aqiBand,
+            pm25: airData.pm25,
+            dominantPollutant: airData.dominantPollutant,
+            isApproximate: airData.isApproximate,
+            isDemo,
+            capturedAt: isDemo ? airData.capturedAt : undefined,
+          };
+        }),
+      );
 
-  if (!parsed.success) {
-    logEvent("warn", "bad_input", { requestId: reqId, status: 400 });
-    return c.json({ error: "Invalid coordinates", requestId: reqId }, 400);
-  }
+      airCache.set(cacheKey, results, 30 * 60);
+      return c.json(results);
+    } catch {
+      logEvent("error", "areas_api_failure", { requestId: reqId, status: 500 });
+      return c.json({ error: "Failed to fetch area air quality data", requestId: reqId }, 500);
+    }
+  });
+  airRoute.get("/air", async (c) => {
+    const reqId = c.get("requestId");
+    const query = c.req.query();
+    const parsed = AirQuerySchema.safeParse(query);
 
-  // Round coordinates to 2 decimal places before cache check, API call, or logging
-  const lat = Math.round(parsed.data.lat * 100) / 100;
-  const lng = Math.round(parsed.data.lng * 100) / 100;
-  const lang = parsed.data.lang || "en";
+    if (!parsed.success) {
+      logEvent("warn", "bad_input", { requestId: reqId, status: 400 });
+      return c.json({ error: "Invalid coordinates", requestId: reqId }, 400);
+    }
 
-  const cacheKey = `air_${lat}_${lng}_${lang}`;
-  const cached = airCache.get(cacheKey) as NormalisedAirData | undefined;
-  if (cached) {
-    return c.json(cached);
-  }
+    // Round coordinates to 2 decimal places before cache check, API call, or logging
+    const lat = Math.round(parsed.data.lat * 100) / 100;
+    const lng = Math.round(parsed.data.lng * 100) / 100;
+    const lang = parsed.data.lang || "en";
 
-  try {
-    const airData = await fetchAirData(
-      lat,
-      lng,
-      config.mapsApiKey,
-      fetch,
-      false,
-      lang !== "en" ? lang : undefined,
-    );
-    const withDemo = {
-      ...airData,
-      isDemo: !config.mapsLive,
-      capturedAt: config.mapsLive ? undefined : airData.capturedAt,
-    };
-    airCache.set(cacheKey, withDemo);
-    return c.json(withDemo);
-  } catch {
-    logEvent("error", "external_api_failure", { requestId: reqId, status: 500 });
-    return c.json({ error: "Failed to fetch air quality data", requestId: reqId }, 500);
-  }
-});
+    const cacheKey = `air_${lat}_${lng}_${lang}`;
+    const cached = airCache.get(cacheKey) as NormalisedAirData | undefined;
+    if (cached) {
+      return c.json(cached);
+    }
+
+    try {
+      const airData = await getAir(lat, lng, lang !== "en" ? lang : undefined);
+      const withDemo = {
+        ...airData,
+        isDemo: !config.mapsLive,
+        capturedAt: config.mapsLive ? undefined : airData.capturedAt,
+      };
+      airCache.set(cacheKey, withDemo);
+      return c.json(withDemo);
+    } catch {
+      logEvent("error", "external_api_failure", { requestId: reqId, status: 500 });
+      return c.json({ error: "Failed to fetch air quality data", requestId: reqId }, 500);
+    }
+  });
+
+  return airRoute;
+}

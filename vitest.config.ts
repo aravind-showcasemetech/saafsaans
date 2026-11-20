@@ -5,6 +5,8 @@ export default defineConfig({
     globals: true,
     environment: "node",
     exclude: ["**/node_modules/**", "**/dist/**", "test/e2e/**"],
+    // Clears DEMO and API keys from the shell so results never depend on the environment.
+    setupFiles: ["test/setup-env.ts"],
     // Structured request logs (one JSON line each) are expected output, not test noise.
     onConsoleLog: (log) => !log.startsWith('{"time"'),
     coverage: {

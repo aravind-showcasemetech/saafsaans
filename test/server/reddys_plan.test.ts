@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createApp } from "../../src/server/app.js";
+import { loadConfig } from "../../src/server/config.js";
 import { kukatpallyDemoAir } from "../../src/server/demo/air.js";
 import { demoHouseholds } from "../../src/server/demo/households.js";
 import { computeHouseholdDayComparison } from "../../src/shared/day.js";
@@ -18,7 +19,7 @@ describe("The Reddys' plan", () => {
   };
 
   async function plan() {
-    const res = await createApp({ gemini: null }).request("/api/plan", {
+    const res = await createApp({ config: loadConfig({}), gemini: null }).request("/api/plan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

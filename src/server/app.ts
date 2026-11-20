@@ -1,6 +1,7 @@
 // app.ts: Builds the Hono app: request ids and logs, security headers, compression,
 // caching rules, the API, and the built front end from dist/client.
 import crypto from "node:crypto";
+import fs from "node:fs";
 import { getConnInfo } from "@hono/node-server/conninfo";
 import { serveStatic } from "@hono/node-server/serve-static";
 import { type Context, Hono } from "hono";
@@ -83,8 +84,14 @@ export function createApp(deps: AppDeps = {}): Hono<AppEnv> {
   app.route("/api", createApi({ gemini, config: cfg, ipOf }));
   app.get("/healthz", (c) => c.json({ status: "ok" }));
 
-  app.get("/", serveStatic({ path: `${CLIENT_DIST}/index.html` }));
-  app.use("/*", serveStatic({ root: CLIENT_DIST }));
+  // The built front end, when there is one. Tests and the API alone run without a build; then
+  // there is one JSON warning instead of serveStatic's plain-text one on every request.
+  if (fs.existsSync(`${CLIENT_DIST}/index.html`)) {
+    app.get("/", serveStatic({ path: `${CLIENT_DIST}/index.html` }));
+    app.use("/*", serveStatic({ root: CLIENT_DIST }));
+  } else {
+    logEvent("warn", "client_build_missing", { path: CLIENT_DIST });
+  }
   app.notFound((c) =>
     c.req.path.startsWith("/api")
       ? c.json({ error: "Not found", requestId: c.get("requestId") }, 404)

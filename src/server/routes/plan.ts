@@ -6,9 +6,9 @@ import { computeHouseholdDayComparison } from "../../shared/day.js";
 import { CPCB_AQI_BANDS } from "../../shared/factors.js";
 import { type PlanResponse, PlanResponseSchema } from "../../shared/plan-schema.js";
 import { HouseholdProfileSchema } from "../../shared/schemas.js";
-import { fetchAirData } from "../air.js";
+import { getAirFor } from "../air.js";
 import { airCache, planCache } from "../cache.js";
-import { config } from "../config.js";
+import type { Config } from "../config.js";
 import type { GeminiDeps } from "../gemini/client.js";
 import { anonymiseMembersForGemini, containsDigit, sanitizeModelText } from "../gemini/common.js";
 import { callGeminiChoosePlan } from "../gemini/plan.js";
@@ -35,18 +35,23 @@ const PlanBodySchema = z.object({
 type Lang = z.infer<typeof PlanBodySchema>["lang"];
 type Chosen = { actionId: string; reason?: string };
 
-async function airFor(lat: number, lng: number): Promise<NormalisedAirData> {
+async function airFor(
+  getAir: ReturnType<typeof getAirFor>,
+  lat: number,
+  lng: number,
+): Promise<NormalisedAirData> {
   const key = `air_${lat}_${lng}`;
   const cached = airCache.get(key) as NormalisedAirData | undefined;
   if (cached) return cached;
-  const air = await fetchAirData(lat, lng);
+  const air = await getAir(lat, lng);
   airCache.set(key, air);
   return air;
 }
 
 /** POST /plan: catalogue filter, numbers from src/shared, Gemini picks and explains (or the ranker). */
-export function createPlanRoute(gemini: GeminiDeps | null): Hono<AppEnv> {
+export function createPlanRoute(gemini: GeminiDeps | null, config: Config): Hono<AppEnv> {
   const route = new Hono<AppEnv>();
+  const getAir = getAirFor(config);
 
   route.post("/plan", async (c) => {
     const requestId = c.get("requestId");
@@ -65,7 +70,7 @@ export function createPlanRoute(gemini: GeminiDeps | null): Hono<AppEnv> {
 
     let airData: NormalisedAirData;
     try {
-      airData = await airFor(lat, lng);
+      airData = await airFor(getAir, lat, lng);
     } catch {
       logEvent("error", "air_fetch_failed", { requestId });
       return c.json({ error: "Failed to fetch air quality data", requestId }, 500);

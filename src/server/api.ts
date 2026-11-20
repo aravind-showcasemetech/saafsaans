@@ -4,7 +4,7 @@ import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import type { Config } from "./config.js";
 import type { GeminiDeps } from "./gemini/client.js";
-import { airRoute } from "./routes/air.js";
+import { createAirRoute } from "./routes/air.js";
 import type { AppEnv } from "./routes/common.js";
 import { commuteRoute } from "./routes/commute.js";
 import { demoRoute } from "./routes/demo.js";
@@ -37,11 +37,11 @@ export function createApi(deps: ApiDeps): Hono<AppEnv> {
   );
 
   api.get("/healthz", (c) => c.json({ status: "ok" }));
-  api.route("/", airRoute);
+  api.route("/", createAirRoute(deps.config));
   api.route("/", demoRoute);
   api.route("/", placesRoute);
   api.route("/", commuteRoute);
-  api.route("/", createPlanRoute(deps.gemini));
+  api.route("/", createPlanRoute(deps.gemini, deps.config));
   api.route("/", createRefineRoute(deps.gemini));
   return api;
 }

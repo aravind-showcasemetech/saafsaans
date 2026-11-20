@@ -4,7 +4,7 @@ import type {
   NormalisedHourlyForecastItem,
 } from "../shared/air-types.js";
 import { aqiBandFromPm25 } from "../shared/impact.js";
-import { config } from "./config.js";
+import { type Config, config } from "./config.js";
 import { dwarkaDemoAir, kukatpallyDemoAir } from "./demo/air.js";
 
 const AIR_QUALITY_BASE_URL = "https://airquality.googleapis.com/v1";
@@ -263,4 +263,12 @@ export async function fetchAirData(
   } while (pageToken && pagesFetched < MAX_PAGES && allForecastHours.length < 48);
 
   return normaliseAirQuality(currentResponse, allForecastHours);
+}
+
+/** Air data for a cell under this config: live when Maps is live, else the saved captures. */
+export function getAirFor(cfg: Config) {
+  return (lat: number, lng: number, languageCode?: string): Promise<NormalisedAirData> =>
+    cfg.mapsLive && cfg.mapsApiKey
+      ? fetchAirData(lat, lng, cfg.mapsApiKey, fetch, true, languageCode)
+      : Promise.resolve(lat > 25 ? dwarkaDemoAir : kukatpallyDemoAir);
 }
