@@ -1,11 +1,8 @@
 import { serve } from "@hono/node-server";
 import { app } from "./app.js";
+import { config } from "./config.js";
+import { logEvent } from "./log.js";
 
-const port = Number(process.env.PORT) || 3000;
-
-console.log(`Server is running on port ${port}`);
-
-serve({
-  fetch: app.fetch,
-  port,
+serve({ fetch: app.fetch, port: config.port }, (info) => {
+  logEvent("info", "server_started", { port: info.port });
 });

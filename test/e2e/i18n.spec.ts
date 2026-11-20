@@ -1,4 +1,5 @@
-import { type Page, expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 // Words kept as written in every language (AGENTS.md rule 7 and the brand wordmark).
 const ALLOWLIST = [

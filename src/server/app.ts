@@ -1,83 +1,97 @@
-import fs from "node:fs";
-import path from "node:path";
-import { Hono } from "hono";
-import { api } from "./api.js";
+// app.ts: Builds the Hono app: request ids and logs, security headers, compression,
+// caching rules, the API, and the built front end from dist/client.
+import crypto from "node:crypto";
+import { getConnInfo } from "@hono/node-server/conninfo";
+import { serveStatic } from "@hono/node-server/serve-static";
+import { type Context, Hono } from "hono";
+import { compress } from "hono/compress";
+import { matchedRoutes } from "hono/route";
+import { createApi } from "./api.js";
+import { type Config, config as defaultConfig } from "./config.js";
+import { type GeminiDeps, geminiFromConfig } from "./gemini/client.js";
+import { logEvent } from "./log.js";
+import type { AppEnv } from "./routes/common.js";
+import { clientIp, securityHeaders } from "./security.js";
 
-export const app = new Hono();
+const CLIENT_DIST = "./dist/client";
 
-// Mount api routes
-app.route("/api", api);
+export interface AppDeps {
+  config?: Config;
+  /** null turns Gemini off (template text); omit to build the real client from config. */
+  gemini?: GeminiDeps | null;
+}
 
-// Direct /healthz as required by spec and tests
-app.get("/healthz", (c) => {
-  return c.json({ status: "ok" });
-});
-
-// Serve built frontend assets in production if dist/client exists
-const clientDist = path.resolve(process.cwd(), "dist/client");
-
-app.get("*", async (c, next) => {
-  if (c.req.path.startsWith("/api")) {
-    return next();
+function socketAddress(c: Context): string | undefined {
+  try {
+    return getConnInfo(c).remote.address;
+  } catch {
+    return undefined; // app.request() in tests has no socket
   }
+}
 
-  if (fs.existsSync(clientDist)) {
-    const reqPath = c.req.path === "/" ? "/index.html" : c.req.path;
-    const filePath = path.join(clientDist, reqPath);
-    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-      const ext = path.extname(filePath);
-      const mimeTypes: Record<string, string> = {
-        ".html": "text/html; charset=UTF-8",
-        ".js": "text/javascript; charset=UTF-8",
-        ".css": "text/css; charset=UTF-8",
-        ".json": "application/json",
-        ".svg": "image/svg+xml",
-        ".png": "image/png",
-        ".ico": "image/x-icon",
-      };
-      const contentType = mimeTypes[ext] || "application/octet-stream";
-      return new Response(fs.readFileSync(filePath), {
-        headers: { "Content-Type": contentType },
-      });
-    }
+/** The matched route pattern (never the raw path, which can carry ids); "static" for files. */
+function routeLabel(c: Context): string {
+  const handlers = matchedRoutes(c).filter((r) => r.method !== "ALL");
+  return handlers.length > 0 ? handlers[handlers.length - 1].path : "static";
+}
 
-    // Also allow serving static assets from src/client during dev or for translations
-    const clientSrc = path.resolve(process.cwd(), "src/client");
-    if (c.req.path.startsWith("/src/client")) {
-      const srcRelPath = c.req.path.replace(/^\/src\/client/, "");
-      const srcFilePath = path.join(clientSrc, srcRelPath);
-      if (fs.existsSync(srcFilePath) && fs.statSync(srcFilePath).isFile()) {
-        const ext = path.extname(srcFilePath);
-        const mimeTypes: Record<string, string> = {
-          ".html": "text/html; charset=UTF-8",
-          ".js": "text/javascript; charset=UTF-8",
-          ".ts": "text/javascript; charset=UTF-8",
-          ".css": "text/css; charset=UTF-8",
-          ".json": "application/json",
-          ".svg": "image/svg+xml",
-          ".png": "image/png",
-          ".ico": "image/x-icon",
-        };
-        const contentType = mimeTypes[ext] || "application/octet-stream";
-        return new Response(fs.readFileSync(srcFilePath), {
-          headers: { "Content-Type": contentType },
-        });
-      }
-    }
+export function createApp(deps: AppDeps = {}): Hono<AppEnv> {
+  const cfg = deps.config ?? defaultConfig;
+  const gemini = deps.gemini === undefined ? geminiFromConfig(cfg) : deps.gemini;
+  const ipOf = (c: Context) =>
+    clientIp(c.req.header("x-forwarded-for"), cfg.trustedProxies, socketAddress(c));
 
-    // Fallback to index.html for SPA client
-    const indexPath = path.join(clientDist, "index.html");
-    if (fs.existsSync(indexPath)) {
-      return new Response(fs.readFileSync(indexPath), {
-        headers: { "Content-Type": "text/html; charset=UTF-8" },
-      });
-    }
-    if (fs.existsSync(indexPath)) {
-      return new Response(fs.readFileSync(indexPath), {
-        headers: { "Content-Type": "text/html; charset=UTF-8" },
-      });
-    }
-  }
+  const app = new Hono<AppEnv>();
 
-  return c.text("SaafSaans", 200);
-});
+  // Request id and one structured log line per request: no bodies, keys or user text.
+  app.use("*", async (c, next) => {
+    const requestId = crypto.randomUUID();
+    c.set("requestId", requestId);
+    const start = performance.now();
+    await next();
+    c.header("X-Request-Id", requestId);
+    logEvent(c.res.status >= 500 ? "error" : "info", "request", {
+      requestId,
+      method: c.req.method,
+      route: routeLabel(c),
+      status: c.res.status,
+      durationMs: Math.round(performance.now() - start),
+    });
+  });
+
+  app.use("*", securityHeaders());
+  app.use("*", compress());
+
+  // Hashed build assets never change; HTML and API answers are never stored.
+  app.use("*", async (c, next) => {
+    await next();
+    const type = c.res.headers.get("Content-Type") ?? "";
+    if (c.req.path.startsWith("/assets/") && c.res.status === 200) {
+      c.res.headers.set("Cache-Control", "public, max-age=31536000, immutable");
+    } else if (
+      c.req.path.startsWith("/api") ||
+      c.req.path === "/healthz" ||
+      type.includes("text/html") ||
+      type.includes("application/json")
+    ) {
+      c.res.headers.set("Cache-Control", "no-store");
+    } else if (c.res.status === 200) {
+      c.res.headers.set("Cache-Control", "public, max-age=86400");
+    }
+  });
+
+  app.route("/api", createApi({ gemini, config: cfg, ipOf }));
+  app.get("/healthz", (c) => c.json({ status: "ok" }));
+
+  app.get("/", serveStatic({ path: `${CLIENT_DIST}/index.html` }));
+  app.use("/*", serveStatic({ root: CLIENT_DIST }));
+  app.notFound((c) =>
+    c.req.path.startsWith("/api")
+      ? c.json({ error: "Not found", requestId: c.get("requestId") }, 404)
+      : c.text("Not found", 404),
+  );
+
+  return app;
+}
+
+export const app = createApp();

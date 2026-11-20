@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 test.describe("Home Page Accessibility and Controls", () => {
   test("loads the home page and verifies no axe violations with motion on", async ({ page }) => {

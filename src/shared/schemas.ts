@@ -96,8 +96,8 @@ export const HomeProfileSchema = z.object({
 
 export const HouseholdProfileSchema = z.object({
   members: z.array(MemberProfileSchema).min(1).max(20),
-  commute: CommuteProfileSchema.default({}),
-  home: HomeProfileSchema.default({}),
+  commute: CommuteProfileSchema.prefault({}),
+  home: HomeProfileSchema.prefault({}),
 });
 
 export const AqiBandNameSchema = z.enum([

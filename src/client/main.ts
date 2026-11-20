@@ -1,5 +1,7 @@
 // main.ts: SaafSaans client entry point
 
+import "./zod-csp.js";
+
 // Import self-hosted Noto Sans fonts (weights 400, 500, 600 only)
 import "@fontsource/noto-sans/400.css";
 import "@fontsource/noto-sans/500.css";

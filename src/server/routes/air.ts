@@ -4,8 +4,10 @@ import type { NormalisedAirData } from "../../shared/air-types.js";
 import { fetchAirData } from "../air.js";
 import { airCache } from "../cache.js";
 import { config } from "../config.js";
+import { logEvent } from "../log.js";
+import type { AppEnv } from "./common.js";
 
-export const airRoute = new Hono();
+export const airRoute = new Hono<AppEnv>();
 
 // Helper to check coordinates within India roughly:
 // Lat: ~6.0 to ~38.0, Lng: ~68.0 to ~98.0
@@ -15,7 +17,7 @@ export const IndiaLngSchema = z.coerce.number().min(68.0).max(98.0);
 const AirQuerySchema = z.object({
   lat: IndiaLatSchema,
   lng: IndiaLngSchema,
-  lang: z.string().optional(),
+  lang: z.enum(["en", "hi", "te"]).optional(),
 });
 
 export const FIXED_AREAS = [
@@ -37,8 +39,8 @@ export const DEMO_AREAS = [
 
 // GET /api/air/areas
 airRoute.get("/air/areas", async (c) => {
-  const reqId = c.get("requestId" as never) || "";
-  const isDemo = config.demoMode;
+  const reqId = c.get("requestId");
+  const isDemo = !config.mapsLive;
   const cacheKey = isDemo ? "air_areas_list_demo" : "air_areas_list";
   const cached = airCache.get(cacheKey);
   if (cached) {
@@ -74,17 +76,17 @@ airRoute.get("/air/areas", async (c) => {
     airCache.set(cacheKey, results, 30 * 60);
     return c.json(results);
   } catch (err) {
-    console.error(`Request ${reqId} failed: status 500 Areas API Failure`, err);
+    logEvent("error", "areas_api_failure", { requestId: reqId, status: 500 });
     return c.json({ error: "Failed to fetch area air quality data", requestId: reqId }, 500);
   }
 });
 airRoute.get("/air", async (c) => {
-  const reqId = c.get("requestId" as never) || "";
+  const reqId = c.get("requestId");
   const query = c.req.query();
   const parsed = AirQuerySchema.safeParse(query);
 
   if (!parsed.success) {
-    console.error(`Request ${reqId} failed: status 400 Bad Input`);
+    logEvent("warn", "bad_input", { requestId: reqId, status: 400 });
     return c.json({ error: "Invalid coordinates", requestId: reqId }, 400);
   }
 
@@ -116,7 +118,7 @@ airRoute.get("/air", async (c) => {
     airCache.set(cacheKey, withDemo);
     return c.json(withDemo);
   } catch {
-    console.error(`Request ${reqId} failed: status 500 External API Failure`);
+    logEvent("error", "external_api_failure", { requestId: reqId, status: 500 });
     return c.json({ error: "Failed to fetch air quality data", requestId: reqId }, 500);
   }
 });

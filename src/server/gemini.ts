@@ -11,6 +11,13 @@ export {
 } from "./gemini/common.js";
 
 export {
+  type GeminiClient,
+  type GeminiDeps,
+  type GeminiReply,
+  geminiFromConfig,
+} from "./gemini/client.js";
+
+export {
   callGeminiChoosePlan,
   type CallGeminiPlanParams,
   type GeminiPlanCallResult,

@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 test.describe("SaafSaans App Screens E2E Tests (DEMO=1)", () => {
   test("loads demo household and navigates to #/today", async ({ page }) => {

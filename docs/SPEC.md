@@ -173,8 +173,10 @@ shows advice without a number, labelled as such.
   - `GET /healthz`.
 - **Caching:** air data per ~1 km cell for 30 minutes; plans by a hash of (profile, AQI band,
   language) for 30 minutes.
-- **Limits:** request body 8 KB, refine text 500 characters, per-IP rate limit, a global cap on
-  Gemini calls a minute.
+- **Limits:** request body 8 KB, refine text 500 characters, per-IP rate limits (60 requests a
+  minute on `/api/*`, 10 a minute on `/api/plan` and `/api/refine`, 429 with `Retry-After`), a
+  global cap on Gemini calls a minute. The client IP comes from `X-Forwarded-For` using
+  `TRUSTED_PROXIES` hops (1 on Cloud Run, 0 when run directly). See `SECURITY.md`.
 - **State:** the profile is kept in the browser's `localStorage` only. No accounts, no database.
 - **Front end:** light (vanilla TypeScript or a small framework), translations in `en.json`,
   `hi.json`, `te.json`, Indian number formatting, the `lang` attribute set on AI text.

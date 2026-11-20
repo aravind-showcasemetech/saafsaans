@@ -3,9 +3,11 @@ import { z } from "zod";
 import type { CommuteModesResponse } from "../../shared/air-types.js";
 import { commuteCache } from "../cache.js";
 import { fetchCommuteRoutes } from "../commute.js";
+import { logEvent } from "../log.js";
 import { IndiaLatSchema, IndiaLngSchema } from "./air.js";
+import type { AppEnv } from "./common.js";
 
-export const commuteRoute = new Hono();
+export const commuteRoute = new Hono<AppEnv>();
 
 const CommuteBodySchema = z.object({
   origin: z.object({
@@ -20,19 +22,19 @@ const CommuteBodySchema = z.object({
 
 // POST /api/commute
 commuteRoute.post("/commute", async (c) => {
-  const reqId = c.get("requestId" as never) || "";
+  const reqId = c.get("requestId");
   let rawBody: unknown;
 
   try {
     rawBody = await c.req.json();
   } catch {
-    console.error(`Request ${reqId} failed: status 400 Bad JSON`);
+    logEvent("warn", "bad_json", { requestId: reqId, status: 400 });
     return c.json({ error: "Invalid JSON body", requestId: reqId }, 400);
   }
 
   const parsed = CommuteBodySchema.safeParse(rawBody);
   if (!parsed.success) {
-    console.error(`Request ${reqId} failed: status 400 Bad Input`);
+    logEvent("warn", "bad_input", { requestId: reqId, status: 400 });
     return c.json({ error: "Invalid origin or destination coordinates", requestId: reqId }, 400);
   }
 
@@ -56,7 +58,7 @@ commuteRoute.post("/commute", async (c) => {
     commuteCache.set(cacheKey, routes);
     return c.json(routes);
   } catch {
-    console.error(`Request ${reqId} failed: status 500 External API Failure`);
+    logEvent("error", "external_api_failure", { requestId: reqId, status: 500 });
     return c.json({ error: "Failed to compute commute routes", requestId: reqId }, 500);
   }
 });

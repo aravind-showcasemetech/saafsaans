@@ -4,17 +4,15 @@ import { z } from "zod";
 import type { NormalisedAirData } from "../../shared/air-types.js";
 import { computeHouseholdDayComparison } from "../../shared/day.js";
 import { CPCB_AQI_BANDS } from "../../shared/factors.js";
-import { PlanResponseSchema } from "../../shared/plan-schema.js";
+import { type PlanResponse, PlanResponseSchema } from "../../shared/plan-schema.js";
 import { HouseholdProfileSchema } from "../../shared/schemas.js";
 import { fetchAirData } from "../air.js";
 import { airCache, planCache } from "../cache.js";
 import { config } from "../config.js";
-import {
-  anonymiseMembersForGemini,
-  callGeminiChoosePlan,
-  containsDigit,
-  sanitizeModelText,
-} from "../gemini.js";
+import type { GeminiDeps } from "../gemini/client.js";
+import { anonymiseMembersForGemini, containsDigit, sanitizeModelText } from "../gemini/common.js";
+import { callGeminiChoosePlan } from "../gemini/plan.js";
+import { logEvent } from "../log.js";
 import {
   computeActionNumbers,
   filterApplicableActions,
@@ -23,8 +21,9 @@ import {
   rankApplicableActions,
 } from "../plan.js";
 import { IndiaLatSchema, IndiaLngSchema } from "./air.js";
+import { type AppEnv, hasNickname, readJson } from "./common.js";
 
-export const planRoute = new Hono();
+const MAX_SWAPS = 6;
 
 const PlanBodySchema = z.object({
   profile: HouseholdProfileSchema,
@@ -33,216 +32,166 @@ const PlanBodySchema = z.object({
   lang: z.enum(["en", "hi", "te"]).default("en"),
 });
 
-planRoute.post("/plan", async (c) => {
-  const reqId = c.get("requestId" as never) || "";
-  let rawBody: unknown;
+type Lang = z.infer<typeof PlanBodySchema>["lang"];
+type Chosen = { actionId: string; reason?: string };
 
-  try {
-    rawBody = await c.req.json();
-  } catch {
-    console.error(`Request ${reqId} failed: status 400 Bad JSON`);
-    return c.json({ error: "Invalid JSON body", requestId: reqId }, 400);
-  }
+async function airFor(lat: number, lng: number): Promise<NormalisedAirData> {
+  const key = `air_${lat}_${lng}`;
+  const cached = airCache.get(key) as NormalisedAirData | undefined;
+  if (cached) return cached;
+  const air = await fetchAirData(lat, lng);
+  airCache.set(key, air);
+  return air;
+}
 
-  const parsed = PlanBodySchema.safeParse(rawBody);
-  if (!parsed.success) {
-    console.error(`Request ${reqId} failed: status 400 Bad Input`);
-    return c.json({ error: "Invalid plan input", requestId: reqId }, 400);
-  }
+/** POST /plan: catalogue filter, numbers from src/shared, Gemini picks and explains (or the ranker). */
+export function createPlanRoute(gemini: GeminiDeps | null): Hono<AppEnv> {
+  const route = new Hono<AppEnv>();
 
-  // Reject nickname field to ensure nicknames never leave the browser
-  const rawRecord =
-    typeof rawBody === "object" && rawBody !== null ? (rawBody as Record<string, unknown>) : null;
-  const rawProfile =
-    typeof rawRecord?.profile === "object" && rawRecord.profile !== null
-      ? (rawRecord.profile as Record<string, unknown>)
-      : null;
-  if (Array.isArray(rawProfile?.members)) {
-    for (const m of rawProfile.members) {
-      if (
-        m &&
-        typeof m === "object" &&
-        "nickname" in m &&
-        (m as Record<string, unknown>).nickname !== undefined
-      ) {
-        console.error(`Request ${reqId} failed: status 400 Nickname field rejected`);
-        return c.json({ error: "Nickname field is not permitted", requestId: reqId }, 400);
+  route.post("/plan", async (c) => {
+    const requestId = c.get("requestId");
+    const raw = await readJson(c);
+    if (raw === undefined) return c.json({ error: "Invalid JSON body", requestId }, 400);
+
+    const parsed = PlanBodySchema.safeParse(raw);
+    if (!parsed.success) return c.json({ error: "Invalid plan input", requestId }, 400);
+    // Nicknames never leave the browser.
+    if (hasNickname(raw))
+      return c.json({ error: "Nickname field is not permitted", requestId }, 400);
+
+    const { profile, lang } = parsed.data;
+    const lat = Math.round(parsed.data.lat * 100) / 100;
+    const lng = Math.round(parsed.data.lng * 100) / 100;
+
+    let airData: NormalisedAirData;
+    try {
+      airData = await airFor(lat, lng);
+    } catch {
+      logEvent("error", "air_fetch_failed", { requestId });
+      return c.json({ error: "Failed to fetch air quality data", requestId }, 500);
+    }
+
+    // The plan carries this cell's AQI and forecast, so the cell is part of the key.
+    const planKey = `plan_${crypto
+      .createHash("sha256")
+      .update(JSON.stringify({ profile, lat, lng, aqiBand: airData.aqiBand, lang }))
+      .digest("hex")}`;
+    const cachedPlan = planCache.get(planKey);
+    if (cachedPlan) return c.json(cachedPlan);
+
+    const applicable = filterApplicableActions(profile, airData);
+    const computed = new Map(
+      applicable.map((act) => [act.id, computeActionNumbers(act, profile, airData, lang)]),
+    );
+
+    let chosen: Chosen[] = [];
+    let summary = getTemplateSummary(lang);
+    let fromModel = false;
+
+    if (gemini) {
+      const result = await callGeminiChoosePlan({
+        gemini,
+        anonymisedProfile: {
+          members: anonymiseMembersForGemini(profile.members),
+          commute: profile.commute,
+          home: profile.home,
+        },
+        applicableActions: applicable.map((a) => ({
+          id: a.id,
+          title: a.title,
+          lens: a.lens,
+          kind: a.kind,
+        })),
+        aqiBand: airData.aqiBand,
+        lang,
+      });
+      logEvent("info", "gemini_plan", {
+        requestId,
+        ok: Boolean(result.data),
+        latencyMs: result.latencyMs,
+        totalTokens: result.totalTokens,
+      });
+
+      if (result.data) {
+        // Only ids from the applicable catalogue, no repeats, at most six (AGENTS.md rule 2).
+        const seen = new Set<string>();
+        for (const swap of result.data.swaps) {
+          if (computed.has(swap.actionId) && !seen.has(swap.actionId) && seen.size < MAX_SWAPS) {
+            seen.add(swap.actionId);
+            chosen.push(swap);
+          }
+        }
+        fromModel = chosen.length > 0;
+        const modelSummary = sanitizeModelText(result.data.familySummary);
+        if (fromModel && modelSummary && !containsDigit(modelSummary)) {
+          summary = modelSummary.slice(0, 400);
+        }
       }
     }
-  }
 
-  const { profile, lat, lng, lang } = parsed.data;
-  const roundLat = Math.round(lat * 100) / 100;
-  const roundLng = Math.round(lng * 100) / 100;
-
-  // 1. Get air data for the cell
-  const airCacheKey = `air_${roundLat}_${roundLng}`;
-  let airData = airCache.get(airCacheKey) as NormalisedAirData | undefined;
-  if (!airData) {
-    try {
-      airData = await fetchAirData(roundLat, roundLng);
-      airCache.set(airCacheKey, airData);
-    } catch {
-      console.error(`Request ${reqId} failed: status 500 Air API Failure`);
-      return c.json({ error: "Failed to fetch air quality data", requestId: reqId }, 500);
+    if (!fromModel) {
+      chosen = rankApplicableActions(Array.from(computed.values()), profile)
+        .slice(0, MAX_SWAPS)
+        .map((item) => ({ actionId: item.id }));
     }
-  }
 
-  // Check plan cache
-  const planHash = crypto
-    .createHash("sha256")
-    .update(JSON.stringify({ profile, aqiBand: airData.aqiBand, lang }))
-    .digest("hex");
-  const planCacheKey = `plan_${planHash}`;
-  const cachedPlan = planCache.get(planCacheKey);
-  if (cachedPlan) {
-    return c.json(cachedPlan);
-  }
-
-  // 2. Filter applicable actions & compute numbers
-  const applicableActions = filterApplicableActions(profile, airData);
-  const computedList = applicableActions.map((act) =>
-    computeActionNumbers(act, profile, airData, lang),
-  );
-  const computedMap = new Map(computedList.map((c) => [c.id, c]));
-
-  let planSource: "gemini" | "fallback" | "demo" = config.demoMode ? "demo" : "fallback";
-  let promptTokens: number | undefined;
-  let candidatesTokens: number | undefined;
-  let totalTokens: number | undefined;
-  let latencyMs = 0;
-
-  let chosenOrder: Array<{ actionId: string; reason?: string }> = [];
-  let summary = getTemplateSummary(lang);
-
-  // 3. Call Gemini if enabled
-  if (config.geminiLive || process.env.NODE_ENV === "test") {
-    const anonymisedMembers = anonymiseMembersForGemini(profile.members);
-    const result = await callGeminiChoosePlan({
-      anonymisedProfile: {
-        members: anonymisedMembers,
-        commute: profile.commute,
-        home: profile.home,
-      },
-      applicableActions: applicableActions.map((a) => ({
-        id: a.id,
-        title: a.title,
-        lens: a.lens,
-        kind: a.kind,
-      })),
-      aqiBand: airData.aqiBand,
-      lang,
+    const swaps = chosen.flatMap((pick) => {
+      const item = computed.get(pick.actionId);
+      if (!item) return [];
+      const modelReason = pick.reason ? sanitizeModelText(pick.reason) : "";
+      const useModel = fromModel && modelReason !== "" && !containsDigit(modelReason);
+      return [
+        {
+          id: item.id,
+          lens: item.lens,
+          kind: item.kind,
+          title: item.title,
+          savingNumber: item.savingNumber,
+          savingUnit: item.savingUnit,
+          savingRange: item.savingRange,
+          factText: item.factText,
+          isEstimate: item.isEstimate,
+          factorSections: item.factorSections,
+          purifierCadrCfm: item.purifierCadrCfm,
+          appliesToMemberIds: item.appliesToMemberIds,
+          reason: useModel ? modelReason.slice(0, 240) : getTemplateReason(item.id, lang as Lang),
+          reasonSource: useModel ? ("gemini" as const) : ("template" as const),
+          reasonLang: lang,
+        },
+      ];
     });
 
-    latencyMs = result.latencyMs;
-    promptTokens = result.promptTokens;
-    candidatesTokens = result.candidatesTokens;
-    totalTokens = result.totalTokens;
+    const active = new Set(swaps.map((s) => s.id));
+    const day = computeHouseholdDayComparison({
+      profile,
+      hourlyForecast: airData.hourlyForecast,
+      currentPm25: airData.pm25,
+      swapsActive: {
+        shiftOutdoorExercise: active.has("shift-outdoor-exercise"),
+        exerciseIndoors: active.has("exercise-indoors"),
+        purifierBedroom: active.has("purifier-bedroom"),
+        shutWindowsPeak: active.has("shut-windows-peak"),
+        airHouseCleanWindow: active.has("air-house-clean-window"),
+        maskOutdoors: active.has("mask-outdoors"),
+      },
+    });
+    const band = CPCB_AQI_BANDS.find((b) => b.band === airData.aqiBand) ?? CPCB_AQI_BANDS[2];
 
-    if (result.data) {
-      const seenIds = new Set<string>();
-      for (const swap of result.data.swaps) {
-        if (computedMap.has(swap.actionId) && !seenIds.has(swap.actionId) && seenIds.size < 6) {
-          seenIds.add(swap.actionId);
-          chosenOrder.push(swap);
-        }
-      }
-
-      if (chosenOrder.length > 0) {
-        planSource = config.demoMode ? "demo" : "gemini";
-      }
-
-      if (result.data.familySummary) {
-        let cleanSummary = sanitizeModelText(result.data.familySummary);
-        if (containsDigit(cleanSummary)) {
-          cleanSummary = getTemplateSummary(lang);
-        }
-        summary = cleanSummary.slice(0, 400);
-      }
-    }
-  }
-
-  console.log(
-    `[PLAN] reqId=${reqId} src=${planSource} latencyMs=${latencyMs} promptTokens=${promptTokens ?? 0} candidateTokens=${candidatesTokens ?? 0} totalTokens=${totalTokens ?? 0}`,
-  );
-
-  // Fallback to deterministic ranker if needed
-  if (chosenOrder.length === 0) {
-    planSource = config.demoMode ? "demo" : "fallback";
-    const ranked = rankApplicableActions(Array.from(computedMap.values()), profile);
-    chosenOrder = ranked.slice(0, 6).map((item) => ({ actionId: item.id }));
-    summary = getTemplateSummary(lang);
-  }
-
-  // Build swaps
-  const swaps = chosenOrder
-    .map((chosen) => {
-      const computed = computedMap.get(chosen.actionId);
-      if (!computed) return null;
-
-      let reason = chosen.reason ? sanitizeModelText(chosen.reason) : "";
-      let reasonSource: "gemini" | "template" = "gemini";
-
-      if (!reason || containsDigit(reason) || (planSource !== "gemini" && planSource !== "demo")) {
-        reason = getTemplateReason(chosen.actionId, lang);
-        reasonSource = "template";
-      } else {
-        reason = reason.slice(0, 240);
-      }
-
-      return {
-        id: computed.id,
-        lens: computed.lens,
-        kind: computed.kind,
-        title: computed.title,
-        savingNumber: computed.savingNumber,
-        savingUnit: computed.savingUnit,
-        savingRange: computed.savingRange,
-        factText: computed.factText,
-        isEstimate: computed.isEstimate,
-        factorSections: computed.factorSections,
-        purifierCadrCfm: computed.purifierCadrCfm,
-        appliesToMemberIds: computed.appliesToMemberIds,
-        reason,
-        reasonSource,
-      };
-    })
-    .filter((s): s is NonNullable<typeof s> => s !== null);
-
-  // Active swaps for full day model calculation
-  const activeSwapIds = new Set(swaps.map((s) => s.id));
-  const dayComparison = computeHouseholdDayComparison({
-    profile,
-    hourlyForecast: airData.hourlyForecast,
-    currentPm25: airData.pm25,
-    swapsActive: {
-      shiftOutdoorExercise: activeSwapIds.has("shift-outdoor-exercise"),
-      exerciseIndoors: activeSwapIds.has("exercise-indoors"),
-      purifierBedroom: activeSwapIds.has("purifier-bedroom"),
-      shutWindowsPeak: activeSwapIds.has("shut-windows-peak"),
-      airHouseCleanWindow: activeSwapIds.has("air-house-clean-window"),
-      maskOutdoors: activeSwapIds.has("mask-outdoors"),
-    },
+    const body: PlanResponse = PlanResponseSchema.parse({
+      source: config.demoMode ? "demo" : fromModel ? "gemini" : "fallback",
+      summary,
+      swaps,
+      currentAqi: airData.currentAqi,
+      aqiBand: airData.aqiBand,
+      cpcbHealthStatement: band.healthStatement,
+      googleHealthAdvice: airData.healthRecommendations ?? {},
+      memberDoses: day.memberComparisons,
+      isDemo: !config.mapsLive,
+      capturedAt: config.mapsLive ? undefined : airData.capturedAt,
+    });
+    planCache.set(planKey, body);
+    return c.json(body);
   });
 
-  // CPCB band health statement
-  const matchedBand = CPCB_AQI_BANDS.find((b) => b.band === airData.aqiBand) ?? CPCB_AQI_BANDS[2];
-  const cpcbHealthStatement = matchedBand.healthStatement;
-
-  const responseBody = {
-    source: planSource,
-    summary,
-    swaps,
-    currentAqi: airData.currentAqi,
-    aqiBand: airData.aqiBand,
-    cpcbHealthStatement,
-    googleHealthAdvice: airData.healthRecommendations ?? {},
-    memberDoses: dayComparison.memberComparisons,
-    isDemo: !config.mapsLive,
-    capturedAt: config.mapsLive ? undefined : airData.capturedAt,
-  };
-
-  const validated = PlanResponseSchema.parse(responseBody);
-  planCache.set(planCacheKey, validated);
-  return c.json(validated);
-});
+  return route;
+}

@@ -7,6 +7,11 @@ const EnvSchema = z.object({
   GEMINI_API_KEY: z.string().optional(),
   GEMINI_MODEL: z.string().optional(),
   GEMINI_MAX_PER_MINUTE: z.coerce.number().default(10),
+  // Proxies in front of the app that append to X-Forwarded-For (1 on Cloud Run, 0 when run directly).
+  TRUSTED_PROXIES: z.coerce.number().int().min(0).max(5).default(0),
+  // Per-IP request limits a minute: all of /api, and the Gemini-backed /api/plan and /api/refine.
+  RATE_LIMIT_API_PER_MINUTE: z.coerce.number().int().min(1).default(60),
+  RATE_LIMIT_AI_PER_MINUTE: z.coerce.number().int().min(1).default(10),
   DEMO: z
     .enum(["0", "1"])
     .optional()
@@ -20,13 +25,20 @@ export type Config = {
   geminiApiKey?: string;
   geminiModel?: string;
   geminiMaxPerMinute: number;
+  trustedProxies: number;
+  rateLimitApiPerMinute: number;
+  rateLimitAiPerMinute: number;
   demoMode: boolean;
   mapsLive: boolean;
   geminiLive: boolean;
 };
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
-  const parsed = EnvSchema.safeParse(env);
+  // A name left empty (as copied from .env.example) means "use the default".
+  const set = Object.fromEntries(
+    Object.entries(env).filter(([, v]) => v !== undefined && v !== ""),
+  );
+  const parsed = EnvSchema.safeParse(set);
   if (!parsed.success) {
     throw new Error(`Invalid environment variables: ${parsed.error.message}`);
   }
@@ -51,6 +63,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     geminiApiKey,
     geminiModel,
     geminiMaxPerMinute: data.GEMINI_MAX_PER_MINUTE,
+    trustedProxies: data.TRUSTED_PROXIES,
+    rateLimitApiPerMinute: data.RATE_LIMIT_API_PER_MINUTE,
+    rateLimitAiPerMinute: data.RATE_LIMIT_AI_PER_MINUTE,
     demoMode: isDemo,
     mapsLive,
     geminiLive,

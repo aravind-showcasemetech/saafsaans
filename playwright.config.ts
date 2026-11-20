@@ -19,6 +19,10 @@ export default defineConfig({
     env: {
       PORT: "3000",
       DEMO: "1",
+      // One browser makes dozens of page loads a minute from 127.0.0.1; the real limits are
+      // covered by test/server/security.test.ts.
+      RATE_LIMIT_API_PER_MINUTE: "10000",
+      RATE_LIMIT_AI_PER_MINUTE: "10000",
     },
   },
 });

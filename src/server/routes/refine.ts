@@ -1,10 +1,10 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { HouseholdProfileSchema } from "../../shared/schemas.js";
-import { config } from "../config.js";
-import { callGeminiRefineProfile } from "../gemini.js";
-
-export const refineRoute = new Hono();
+import type { GeminiDeps } from "../gemini/client.js";
+import { callGeminiRefineProfile } from "../gemini/refine.js";
+import { logEvent } from "../log.js";
+import { type AppEnv, hasNickname, readJson } from "./common.js";
 
 const RefineBodySchema = z.object({
   profile: HouseholdProfileSchema,
@@ -12,90 +12,49 @@ const RefineBodySchema = z.object({
   lang: z.enum(["en", "hi", "te"]).default("en"),
 });
 
-refineRoute.post("/refine", async (c) => {
-  const reqId = c.get("requestId" as never) || "";
-  let rawBody: unknown;
+/** POST /refine: Gemini turns free text into profile changes; without Gemini the profile is unchanged. */
+export function createRefineRoute(gemini: GeminiDeps | null): Hono<AppEnv> {
+  const route = new Hono<AppEnv>();
 
-  try {
-    rawBody = await c.req.json();
-  } catch {
-    console.error(`Request ${reqId} failed: status 400 Bad JSON`);
-    return c.json({ error: "Invalid JSON body", requestId: reqId }, 400);
-  }
+  route.post("/refine", async (c) => {
+    const requestId = c.get("requestId");
+    const raw = await readJson(c);
+    if (raw === undefined) return c.json({ error: "Invalid JSON body", requestId }, 400);
 
-  const parsed = RefineBodySchema.safeParse(rawBody);
-  if (!parsed.success) {
-    console.error(`Request ${reqId} failed: status 400 Bad Input`);
-    return c.json({ error: "Invalid refine input", requestId: reqId }, 400);
-  }
+    const parsed = RefineBodySchema.safeParse(raw);
+    if (!parsed.success) return c.json({ error: "Invalid refine input", requestId }, 400);
+    // Nicknames never leave the browser.
+    if (hasNickname(raw))
+      return c.json({ error: "Nickname field is not permitted", requestId }, 400);
 
-  // Reject nickname field to ensure nicknames never leave the browser
-  const rawRecord =
-    typeof rawBody === "object" && rawBody !== null ? (rawBody as Record<string, unknown>) : null;
-  const rawProfile =
-    typeof rawRecord?.profile === "object" && rawRecord.profile !== null
-      ? (rawRecord.profile as Record<string, unknown>)
-      : null;
-  if (Array.isArray(rawProfile?.members)) {
-    for (const m of rawProfile.members) {
-      if (
-        m &&
-        typeof m === "object" &&
-        "nickname" in m &&
-        (m as Record<string, unknown>).nickname !== undefined
-      ) {
-        console.error(`Request ${reqId} failed: status 400 Nickname field rejected`);
-        return c.json({ error: "Nickname field is not permitted", requestId: reqId }, 400);
-      }
-    }
-  }
+    const { profile, text, lang } = parsed.data;
+    if (!gemini) return c.json({ profile, source: "fallback" });
 
-  const { profile, text, lang } = parsed.data;
-
-  let latencyMs = 0;
-  let promptTokens: number | undefined;
-  let candidatesTokens: number | undefined;
-  let totalTokens: number | undefined;
-  let source = "fallback";
-
-  let updatedProfile = profile;
-
-  if (config.geminiLive || process.env.NODE_ENV === "test") {
-    const refineResult = await callGeminiRefineProfile({
+    const result = await callGeminiRefineProfile({
+      gemini,
       currentProfile: profile,
       refineText: text,
       lang,
     });
+    logEvent("info", "gemini_refine", {
+      requestId,
+      ok: Boolean(result.updatedProfile),
+      latencyMs: result.latencyMs,
+      totalTokens: result.totalTokens,
+    });
+    if (!result.updatedProfile) return c.json({ profile, source: "fallback" });
 
-    latencyMs = refineResult.latencyMs;
-    promptTokens = refineResult.promptTokens;
-    candidatesTokens = refineResult.candidatesTokens;
-    totalTokens = refineResult.totalTokens;
-
-    if (refineResult.updatedProfile) {
-      // Re-validate the whole profile with Zod, reject anything outside schema, never change location
-      const revalidated = HouseholdProfileSchema.safeParse(refineResult.updatedProfile);
-      if (revalidated.success) {
-        // Ensure location/places cannot be changed
-        updatedProfile = {
-          ...revalidated.data,
-          commute: {
-            ...revalidated.data.commute,
-            startPlace: profile.commute.startPlace,
-            endPlace: profile.commute.endPlace,
-          },
-        };
-        source = "gemini";
-      }
-    }
-  }
-
-  console.log(
-    `[REFINE] reqId=${reqId} src=${source} latencyMs=${latencyMs} promptTokens=${promptTokens ?? 0} candidateTokens=${candidatesTokens ?? 0} totalTokens=${totalTokens ?? 0}`,
-  );
-
-  return c.json({
-    profile: updatedProfile,
-    source,
+    // The model may never move the household: places always come from the request.
+    const updated = {
+      ...result.updatedProfile,
+      commute: {
+        ...result.updatedProfile.commute,
+        startPlace: profile.commute.startPlace,
+        endPlace: profile.commute.endPlace,
+      },
+    };
+    return c.json({ profile: updated, source: "gemini" });
   });
-});
+
+  return route;
+}
