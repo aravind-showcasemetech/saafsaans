@@ -9,7 +9,7 @@ test.describe("SaafSaans App Screens E2E Tests (DEMO=1)", () => {
     await page.locator("a[href='#/demo']").first().click();
 
     await page.waitForSelector(".today-layout");
-    await expect(page.locator("h1")).toHaveText("Today's Air Plan");
+    await expect(page.locator("h1")).toHaveText("Today's air plan");
 
     // Air now card check
     await expect(page.locator(".air-aqi-number")).toBeVisible();
@@ -132,5 +132,54 @@ test.describe("SaafSaans App Screens E2E Tests (DEMO=1)", () => {
         ).toBeLessThanOrEqual(clientWidth + 1);
       }
     }
+  });
+
+  test("verifies swaps render without NaN, undefined or null and match contracts", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.waitForSelector(".hero-title");
+    await page.locator("a[href='#/demo']").first().click();
+    await page.waitForSelector(".today-layout");
+
+    // Check no swap shows NaN, undefined or null
+    const swapRows = page.locator(".swap-row");
+    const count = await swapRows.count();
+    expect(count).toBeGreaterThan(0);
+
+    for (let i = 0; i < count; i++) {
+      const row = swapRows.nth(i);
+      const text = await row.innerText();
+      expect(text).not.toContain("NaN");
+      expect(text).not.toContain("undefined");
+      expect(text).not.toContain("null");
+    }
+
+    // Check mask card shows a range "34% to 93%"
+    const maskRow = page.locator(".swap-row[data-swap-id='mask-outdoors']");
+    if ((await maskRow.count()) > 0) {
+      const maskText = await maskRow.innerText();
+      expect(maskText).toMatch(/34%\s*to\s*93%/);
+    }
+
+    // Check sourced fact card shows its factText
+    const coilRow = page.locator(".swap-row[data-swap-id='no-mosquito-coil']");
+    if ((await coilRow.count()) > 0) {
+      const coilText = await coilRow.innerText();
+      expect(coilText).toContain("Burning one mosquito coil");
+    }
+
+    // Check that Today and Share show the same CO2 number
+    const todayCo2El = page.locator(".totals-sticky-col .side-col-co2-val");
+    const todayCo2Full = await todayCo2El.innerText();
+    const todayMatch = todayCo2Full.match(/([0-9.]+)/);
+    const todayCo2 = todayMatch ? Number(todayMatch[1]) : 0;
+    expect(todayCo2).toBeGreaterThan(0);
+
+    await page.goto("/#/share");
+    await page.waitForSelector("#whatsapp-share-btn");
+    const waShareEl = page.locator(".share-wa-preview");
+    const waText = await waShareEl.innerText();
+    expect(waText).toContain(`${todayCo2} kg of CO2`);
   });
 });

@@ -27,6 +27,8 @@ export const NormalisedAirDataSchema = z.object({
   healthRecommendations: HealthRecommendationsSchema,
   hourlyForecast: z.array(NormalisedHourlyForecastItemSchema),
   isApproximate: z.boolean().default(false),
+  isDemo: z.boolean().optional(),
+  capturedDate: z.string().optional(),
 });
 
 export type HealthRecommendations = z.infer<typeof HealthRecommendationsSchema>;

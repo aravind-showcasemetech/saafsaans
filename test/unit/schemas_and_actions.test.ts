@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { ACTIONS, ACTIONS_BY_ID } from "../../src/shared/actions";
+import { escapeHtml } from "../../src/shared/escape";
 import {
   CPCB_AQI_BANDS,
   INHALATION_RATES_M3_PER_MIN,
   TRANSPORT_CO2_FACTORS,
 } from "../../src/shared/factors";
+import { PlanResponseSchema } from "../../src/shared/plan-schema";
 import {
   CommuteProfileSchema,
   HomeProfileSchema,
@@ -168,6 +170,41 @@ describe("src/shared/schemas", () => {
     };
 
     const parsed = PlanOutputSchema.safeParse(mockPlan);
+    expect(parsed.success).toBe(true);
+  });
+
+  it("escapes HTML in nicknames and user inputs (XSS safety)", () => {
+    const maliciousNickname = "<img src=x onerror=alert(1)>";
+    const escaped = escapeHtml(maliciousNickname);
+    expect(escaped).toBe("&lt;img src=x onerror=alert(1)&gt;");
+    expect(escaped).not.toContain("<");
+    expect(escaped).not.toContain(">");
+  });
+
+  it("validates PlanResponseSchema correctly", () => {
+    const validPlan = {
+      source: "demo",
+      summary: "Plan summary",
+      currentAqi: 92,
+      aqiBand: "Satisfactory",
+      cpcbHealthStatement: "Minor discomfort",
+      googleHealthAdvice: {},
+      memberDoses: [],
+      swaps: [
+        {
+          id: "mask-outdoors",
+          lens: "protect",
+          kind: "computed",
+          title: "Wear an N95 mask outdoors",
+          savingRange: { min: 34, max: 93, unit: "%" },
+          isEstimate: false,
+          factorSections: ["7"],
+          reason: "Wear a mask",
+          reasonSource: "template",
+        },
+      ],
+    };
+    const parsed = PlanResponseSchema.safeParse(validPlan);
     expect(parsed.success).toBe(true);
   });
 });

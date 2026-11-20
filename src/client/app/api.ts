@@ -1,8 +1,15 @@
 // api.ts: Client API helper calling server endpoints.
 
 import type { NormalisedAirData } from "../../shared/air-types.js";
+import {
+  type PlanResponse,
+  PlanResponseSchema,
+  type PlanSwapItem,
+} from "../../shared/plan-schema.js";
 import type { HouseholdProfile } from "../../shared/schemas.js";
 import type { StoredLocation } from "./storage.js";
+
+export type { PlanSwapItem, PlanResponse };
 
 export interface DemoHouseholdItem {
   id: string;
@@ -31,26 +38,6 @@ export interface CommuteResult {
   distanceKm: number;
   durationMinutes: number;
   mode: string;
-}
-
-export interface PlanSwapItem {
-  id: string;
-  title: string;
-  affectedMembers?: string[];
-  number: number;
-  unit: string;
-  isEstimate: boolean;
-  reason: string;
-  reasonLang: string;
-  formula: string;
-  factorsSection: string;
-}
-
-export interface PlanResponse {
-  headline?: string;
-  swaps: PlanSwapItem[];
-  communityTotal?: number;
-  airQuality?: NormalisedAirData;
 }
 
 export async function fetchDemoHouseholds(): Promise<DemoHouseholdItem[]> {
@@ -113,7 +100,13 @@ export async function fetchPlan(params: {
     const errData = (await res.json().catch(() => ({}))) as { error?: string };
     throw new Error(errData.error || `Plan failed with status ${res.status}`);
   }
-  return res.json() as Promise<PlanResponse>;
+  const rawData = await res.json();
+  const parsed = PlanResponseSchema.safeParse(rawData);
+  if (!parsed.success) {
+    console.error("Plan response failed schema validation:", parsed.error);
+    throw new Error("Received an invalid plan response from server.");
+  }
+  return parsed.data;
 }
 
 export async function fetchRefine(params: {

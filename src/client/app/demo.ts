@@ -2,6 +2,7 @@
 // Calls GET /api/demo/households, loads selected demo household into storage,
 // maps nicknames back in client storage, and routes directly to #/today.
 
+import { escapeHtml } from "../../shared/escape.js";
 import { type DemoHouseholdItem, fetchDemoHouseholds } from "./api.js";
 import { router } from "./router.js";
 import { saveHouseholdProfile, saveLocation, saveNicknames } from "./storage.js";
@@ -14,17 +15,17 @@ interface DemoItemWithMeta extends DemoHouseholdItem {
 export async function renderDemoSelect(container: HTMLElement): Promise<void> {
   container.innerHTML = `
     <section class="section">
-      <div class="container" style="max-width: 680px;">
-        <h1 style="font-size: var(--text-2xl); font-weight: 600; margin-bottom: var(--space-8);">
-          Try a Demo Household
+      <div class="container container-narrow">
+        <h1 class="page-title">
+          Try a demo household
         </h1>
-        <p style="color: var(--ink-2); margin-bottom: var(--space-24); font-size: var(--text-sm);">
+        <p class="step-subtext">
           Choose a pre-configured real household to explore the personalized smog plan immediately.
         </p>
 
         <div id="demo-households-list">
-          <div class="loading-placeholder-line" style="height: 100px;"></div>
-          <div class="loading-placeholder-line" style="height: 100px; margin-top: 12px;"></div>
+          <div class="loading-placeholder-line loading-box-140"></div>
+          <div class="loading-placeholder-line loading-box-120"></div>
         </div>
       </div>
     </section>
@@ -38,11 +39,11 @@ export async function renderDemoSelect(container: HTMLElement): Promise<void> {
     listEl.innerHTML = list
       .map(
         (h) => `
-        <div class="air-card" style="margin-bottom: var(--space-16); cursor: pointer;" data-id="${h.id}">
-          <div class="section-label">${h.location.name}</div>
-          <h3 style="font-size: var(--text-md); margin-top: 2px; margin-bottom: var(--space-4);">${h.name || h.id}</h3>
-          <p style="font-size: var(--text-xs); color: var(--ink-2); margin-bottom: var(--space-12);">${h.description || ""}</p>
-          <button class="btn btn-primary btn-select-demo" data-id="${h.id}" type="button">Load ${h.name || h.id}</button>
+        <div class="air-card section-spacer-16 cursor-pointer" data-id="${escapeHtml(h.id)}">
+          <div class="section-label">${escapeHtml(h.location.name)}</div>
+          <h3 class="card-heading">${escapeHtml(h.name || h.id)}</h3>
+          <p class="card-subtext">${escapeHtml(h.description || "")}</p>
+          <button class="btn btn-primary btn-select-demo" data-id="${escapeHtml(h.id)}" type="button">Load ${escapeHtml(h.name || h.id)}</button>
         </div>
       `,
       )
@@ -74,7 +75,7 @@ export async function renderDemoSelect(container: HTMLElement): Promise<void> {
     console.error("Failed to load demo households", err);
     container.innerHTML = `
       <section class="section">
-        <div class="container" style="max-width: 680px;">
+        <div class="container container-narrow">
           <p class="error-msg">Could not load demo households. Please try again.</p>
         </div>
       </section>

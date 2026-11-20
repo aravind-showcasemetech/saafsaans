@@ -36,7 +36,7 @@ export function recomputeHouseholdTotals(params: {
     },
   });
 
-  // Calculate transport savings directly from factors
+  // Calculate transport savings directly from factors with no double-counting between transit and WFH
   let co2SavedKgPerDay = 0;
   let co2SavedKgPerWeek = 0;
 
@@ -45,33 +45,39 @@ export function recomputeHouseholdTotals(params: {
   const peopleSharing = profile.commute.peopleSharing ?? 1;
   const workingDays = profile.commute.workingDaysPerWeek ?? 5;
 
-  if (activeSwapIds.has("metro-not-car")) {
-    const impact = computeDayModelSwapImpact("metro-not-car", profile, hourlyForecast, currentPm25);
-    co2SavedKgPerDay += impact.co2SavedKgPerDay ?? 0;
-    co2SavedKgPerWeek += impact.co2SavedKgPerWeek ?? 0;
-  } else if (activeSwapIds.has("bus-not-car")) {
-    const impact = computeDayModelSwapImpact("bus-not-car", profile, hourlyForecast, currentPm25);
-    co2SavedKgPerDay += impact.co2SavedKgPerDay ?? 0;
-    co2SavedKgPerWeek += impact.co2SavedKgPerWeek ?? 0;
-  } else if (activeSwapIds.has("carpool")) {
-    const impact = computeDayModelSwapImpact("carpool", profile, hourlyForecast, currentPm25);
-    co2SavedKgPerDay += impact.co2SavedKgPerDay ?? 0;
-    co2SavedKgPerWeek += impact.co2SavedKgPerWeek ?? 0;
-  } else if (activeSwapIds.has("walk-short-trips")) {
-    const impact = computeDayModelSwapImpact(
-      "walk-short-trips",
+  const hasMetro = activeSwapIds.has("metro-not-car");
+  const hasBus = activeSwapIds.has("bus-not-car");
+  const hasCarpool = activeSwapIds.has("carpool");
+  const hasWalk = activeSwapIds.has("walk-short-trips");
+  const hasWfh = activeSwapIds.has("wfh-day");
+
+  // Determine active transit swap (if any)
+  let transitSwapId: "metro-not-car" | "bus-not-car" | "carpool" | "walk-short-trips" | null = null;
+  if (hasMetro) transitSwapId = "metro-not-car";
+  else if (hasBus) transitSwapId = "bus-not-car";
+  else if (hasCarpool) transitSwapId = "carpool";
+  else if (hasWalk) transitSwapId = "walk-short-trips";
+
+  if (transitSwapId) {
+    const transitImpact = computeDayModelSwapImpact(
+      transitSwapId,
       profile,
       hourlyForecast,
       currentPm25,
     );
-    co2SavedKgPerDay += impact.co2SavedKgPerDay ?? 0;
-    co2SavedKgPerWeek += impact.co2SavedKgPerWeek ?? 0;
+    const dailySaving = transitImpact.co2SavedKgPerDay ?? 0;
+    co2SavedKgPerDay += dailySaving;
+
+    // If WFH is also active, transit applies only to the days actually commuted (workingDays - 1)
+    const transitDays = hasWfh ? Math.max(0, workingDays - 1) : workingDays;
+    co2SavedKgPerWeek += dailySaving * transitDays;
   }
 
-  if (activeSwapIds.has("wfh-day")) {
-    const impact = computeDayModelSwapImpact("wfh-day", profile, hourlyForecast, currentPm25);
-    co2SavedKgPerDay += impact.co2SavedKgPerDay ?? 0;
-    co2SavedKgPerWeek += impact.co2SavedKgPerWeek ?? 0;
+  if (hasWfh) {
+    const wfhImpact = computeDayModelSwapImpact("wfh-day", profile, hourlyForecast, currentPm25);
+    // WFH avoids 1 full commute day of the original commute mode
+    const wfhWeekly = wfhImpact.co2SavedKgPerWeek ?? 0;
+    co2SavedKgPerWeek += wfhWeekly;
   }
 
   return {

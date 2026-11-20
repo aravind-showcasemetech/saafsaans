@@ -99,8 +99,13 @@ airRoute.get("/air", async (c) => {
 
   try {
     const airData = await fetchAirData(lat, lng);
-    airCache.set(cacheKey, airData);
-    return c.json(airData);
+    const withDemo = {
+      ...airData,
+      isDemo: config.demoMode || !config.mapsLive,
+      capturedDate: config.demoMode || !config.mapsLive ? "2026-11-19" : undefined,
+    };
+    airCache.set(cacheKey, withDemo);
+    return c.json(withDemo);
   } catch {
     console.error(`Request ${reqId} failed: status 500 External API Failure`);
     return c.json({ error: "Failed to fetch air quality data", requestId: reqId }, 500);

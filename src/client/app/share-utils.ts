@@ -16,13 +16,17 @@ export function buildWhatsAppShareText(params: {
   cleanestEnd: string; // e.g. "17:00"
   swapsCount: number;
   co2SavedKgPerWeek: number;
+  originUrl?: string;
 }): string {
-  const { areaName, cleanestStart, cleanestEnd, swapsCount, co2SavedKgPerWeek } = params;
+  const { areaName, cleanestStart, cleanestEnd, swapsCount, co2SavedKgPerWeek, originUrl } = params;
+  const url =
+    originUrl ||
+    (typeof window !== "undefined" && window.location?.origin ? window.location.origin : "");
   const lines = [
     `SaafSaans air plan for ${areaName}:`,
     `Cleanest air window today is between ${cleanestStart} and ${cleanestEnd}.`,
     `Our household chose ${swapsCount} actions, avoiding ${co2SavedKgPerWeek} kg of CO2 weekly.`,
-    "Get your family plan at https://saafsaans.org",
+    url ? `Get your family plan at ${url}` : "Get your family plan with SaafSaans",
   ];
   return lines.join("\n\n");
 }
@@ -43,7 +47,8 @@ export function buildCalendarIcs(params: {
   const dtEnd = `${cleanDate}T${pad(cleanestWindow.endHour)}0000`;
 
   const now = `${new Date().toISOString().replace(/[-:]/g, "").split(".")[0]}Z`;
-  const uid = `saafsaans-clean-air-${cleanDate}-${cleanestWindow.startHour}@saafsaans.org`;
+  const randomSuffix = Math.random().toString(36).substring(2, 10);
+  const uid = `saafsaans-clean-air-${cleanDate}-${cleanestWindow.startHour}-${randomSuffix}`;
 
   return [
     "BEGIN:VCALENDAR",

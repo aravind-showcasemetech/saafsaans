@@ -3,6 +3,7 @@
 // Refine box (500 chars).
 
 import type { NormalisedAirData } from "../../shared/air-types.js";
+import { escapeHtml } from "../../shared/escape.js";
 import { CPCB_AQI_BANDS } from "../../shared/factors.js";
 import { cleanestAndDirtiestWindows } from "../../shared/impact.js";
 import type { HouseholdProfile } from "../../shared/schemas.js";
@@ -30,22 +31,22 @@ import {
   saveToggledSwaps,
 } from "./storage.js";
 
-function getBandColor(band: string): string {
+function getBandClass(band: string): string {
   switch (band.toLowerCase()) {
     case "good":
-      return "var(--band-good)";
+      return "band-good";
     case "satisfactory":
-      return "var(--band-satisfactory)";
+      return "band-satisfactory";
     case "moderately polluted":
-      return "var(--band-moderate)";
+      return "band-moderate";
     case "poor":
-      return "var(--band-poor)";
+      return "band-poor";
     case "very poor":
-      return "var(--band-very-poor)";
+      return "band-very-poor";
     case "severe":
-      return "var(--band-severe)";
+      return "band-severe";
     default:
-      return "var(--band-moderate)";
+      return "band-moderate";
   }
 }
 
@@ -123,18 +124,18 @@ export async function renderTodayView(container: HTMLElement): Promise<void> {
   container.innerHTML = `
     <section class="section">
       <div class="container">
-        <div style="margin-bottom: var(--space-32);">
-          <div class="loading-placeholder-line" style="width: 240px; height: 28px;"></div>
+        <div class="section-spacer-32">
+          <div class="loading-placeholder-line loading-box-title"></div>
           <div class="loading-placeholder-line short"></div>
         </div>
         <div class="today-layout">
           <div class="main-col">
-            <div class="loading-placeholder-line" style="height: 140px; width: 100%;"></div>
-            <div class="loading-placeholder-line" style="height: 120px; width: 100%; margin-top: 16px;"></div>
-            <div class="loading-placeholder-line" style="height: 80px; width: 100%; margin-top: 16px;"></div>
+            <div class="loading-placeholder-line loading-box-140"></div>
+            <div class="loading-placeholder-line loading-box-120"></div>
+            <div class="loading-placeholder-line loading-box-80"></div>
           </div>
           <div class="side-col">
-            <div class="loading-placeholder-line" style="height: 200px; width: 100%;"></div>
+            <div class="loading-placeholder-line loading-box-200"></div>
           </div>
         </div>
       </div>
@@ -159,10 +160,10 @@ export async function renderTodayView(container: HTMLElement): Promise<void> {
     console.error("Failed to load Today view:", errorObj);
     container.innerHTML = `
       <section class="section">
-        <div class="container" style="max-width: 600px;">
-          <h1 style="font-size: var(--text-lg); margin-bottom: var(--space-8);">Could not load plan</h1>
-          <p style="color: var(--ink-2); margin-bottom: var(--space-16);">
-            ${errorObj.message || "An error occurred while fetching air data."}
+        <div class="container container-error">
+          <h1 class="error-title">Could not load plan</h1>
+          <p class="error-desc">
+            ${escapeHtml(errorObj.message || "An error occurred while fetching air data.")}
           </p>
           <a href="#/setup" class="btn btn-secondary">Review setup</a>
         </div>
@@ -204,6 +205,9 @@ function renderContent(
     return nicknames[idOrRef] || idOrRef;
   }
 
+  const isDemo = Boolean(planData.isDemo || airData.isDemo);
+  const capturedDate = planData.capturedDate || airData.capturedDate || "2026-11-19";
+
   function renderView(): void {
     // Recompute live totals
     const totals = recomputeHouseholdTotals({
@@ -219,7 +223,7 @@ function renderContent(
       .slice(0, 24)
       .map((h, i: number) => {
         const heightPct = Math.min(100, Math.round(((h.pm25 || 0) / maxPm25) * 100));
-        const color = getBandColor(
+        const colorClass = getBandClass(
           h.aqi
             ? h.aqi > 200
               ? "Poor"
@@ -231,7 +235,7 @@ function renderContent(
         const hourLabel = i % 4 === 0 ? `${i}:00` : "";
         return `
           <div class="chart-bar-col">
-            <div class="chart-bar" style="height: ${heightPct}%; background-color: ${color};" title="${h.time}: ${h.pm25} µg/m³"></div>
+            <div class="chart-bar ${colorClass}" data-height="${heightPct}" title="${escapeHtml(h.time)}: ${h.pm25} µg/m³"></div>
             <span class="chart-bar-hour">${hourLabel}</span>
           </div>
         `;
@@ -239,13 +243,13 @@ function renderContent(
       .join("");
 
     container.innerHTML = `
-      <section class="section" style="padding-top: var(--space-48);">
+      <section class="section today-section">
         <div class="container">
           <!-- Top area header -->
-          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--space-24); flex-wrap: wrap; gap: var(--space-8);">
+          <div class="header-actions-wrap">
             <div>
-              <div class="section-label">${location.name}</div>
-              <h1 style="font-size: var(--text-2xl); font-weight: 600;">Today's Air Plan</h1>
+              <div class="section-label">${escapeHtml(location.name)}</div>
+              <h1 class="today-page-title">Today's air plan</h1>
             </div>
             <div>
               <a href="#/share" class="btn btn-secondary">Share plan</a>
@@ -256,28 +260,30 @@ function renderContent(
             <!-- Main column -->
             <div class="main-col">
               <!-- Air now card -->
-              <div class="air-card" style="margin-bottom: var(--space-24);">
-                <div class="section-label">Air now</div>
+              <div class="air-card section-spacer-24">
+                <div class="section-label">
+                  Air now${isDemo ? ` <span class="demo-badge-wrap">Sample data captured on ${escapeHtml(capturedDate)}</span>` : ""}
+                </div>
                 <div class="air-card-top">
                   <span class="air-aqi-number tabular-nums">${airData.currentAqi}</span>
                   <span class="air-band-tag">
-                    <span class="band-indicator-bar" style="background-color: ${getBandColor(airData.aqiBand)};"></span>
-                    ${airData.aqiBand}
+                    <span class="band-indicator-bar ${getBandClass(airData.aqiBand)}"></span>
+                    ${escapeHtml(airData.aqiBand)}
                   </span>
                 </div>
-                <div style="font-size: var(--text-sm); margin-top: var(--space-8); color: var(--ink);">
-                  Main pollutant: <strong>${(airData.dominantPollutant || "PM2.5").toUpperCase()}</strong> (${airData.pm25} µg/m³)
+                <div class="air-card-main-pollutant">
+                  Main pollutant: <strong>${(airData.dominantPollutant || "pm2.5").toLowerCase() === "pm25" ? "PM2.5" : escapeHtml(airData.dominantPollutant.toUpperCase())}</strong> (${airData.pm25} µg/m³)
                 </div>
-                <div style="margin-top: var(--space-12); font-size: var(--text-sm); color: var(--ink-2); line-height: 1.4;">
-                  <strong>CPCB health statement:</strong> "${cpcbStatement}"
+                <div class="air-card-cpcb-stmt">
+                  <strong>CPCB health statement:</strong> "${escapeHtml(cpcbStatement)}"
                 </div>
 
                 <!-- Google advice per member group -->
-                <div style="margin-top: var(--space-16); padding-top: var(--space-12); border-top: 1px solid var(--rule);">
-                  <div style="font-size: 11px; text-transform: uppercase; color: var(--ink-2); letter-spacing: 0.05em; margin-bottom: var(--space-8);">
+                <div class="air-card-google-section">
+                  <div class="air-card-google-heading">
                     Google health advice for your household members
                   </div>
-                  <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: var(--space-8);">
+                  <ul class="air-card-google-list">
                     ${profile.members
                       .map((m) => {
                         const name = getMemberName(m.id);
@@ -304,79 +310,104 @@ function renderContent(
                         }
 
                         return `
-                          <li style="font-size: var(--text-xs); color: var(--ink);">
-                            <strong>${name}:</strong> ${advice}
+                          <li class="air-card-google-item">
+                            <strong>${escapeHtml(name)}:</strong> ${escapeHtml(advice)}
                           </li>
                         `;
                       })
                       .join("")}
                   </ul>
-                  <div style="font-size: 10px; color: var(--ink-2); margin-top: var(--space-8);">
+                  <div class="air-card-disclaimer">
                     Health advice labelled from Google Air Quality API. Not medical advice.
                   </div>
                 </div>
               </div>
 
               <!-- 48-Hour Strip -->
-              <div style="margin-bottom: var(--space-32);">
+              <div class="section-spacer-32">
                 <div class="section-label">Hourly forecast (next 24 to 48 hours)</div>
                 <div class="chart-strip-wrapper">
                   <div class="chart-strip-track">
                     ${barsHtml}
                   </div>
                 </div>
-                <div style="display: flex; gap: var(--space-24); font-size: var(--text-xs); color: var(--ink-2);">
-                  <div>Cleanest window: <strong class="tabular-nums" style="color: var(--ink);">${cleanestText}</strong></div>
-                  <div>Dirtiest window: <strong class="tabular-nums" style="color: var(--ink);">${dirtiestText}</strong></div>
+                <div class="chart-bar-clean-dirt-wrap">
+                  <div>Cleanest window: <strong class="tabular-nums text-ink">${escapeHtml(cleanestText)}</strong></div>
+                  <div>Dirtiest window: <strong class="tabular-nums text-ink">${escapeHtml(dirtiestText)}</strong></div>
                 </div>
               </div>
 
               <!-- Swaps Section -->
-              <div style="margin-bottom: var(--space-32);">
-                <h2 style="font-size: var(--text-lg); margin-bottom: var(--space-16);">Recommended Swaps</h2>
+              <div class="section-spacer-32">
+                <h2 class="section-heading">Recommended swaps</h2>
                 <div id="swaps-list">
                   ${initialSwaps
                     .map((swap) => {
                       const isChecked = activeSwapIds.has(swap.id);
-                      const helpsWho = (swap.affectedMembers || [])
+                      const helpsWho = (swap.appliesToMemberIds || [])
                         .map((id: string) => getMemberName(id))
                         .join(", ");
 
-                      const factorLinks = swap.factorsSection
-                        ? `<a href="https://github.com/google/saafsaans/blob/main/docs/FACTORS.md#section-${swap.factorsSection}" target="_blank" rel="noopener">FACTORS.md §${swap.factorsSection}</a>`
-                        : "";
+                      const factorLinks = (swap.factorSections || [])
+                        .map(
+                          (sec: string) =>
+                            `<a href="https://github.com/aravind-showcasemetech/saafsaans/blob/main/docs/FACTORS.md#section-${sec}" target="_blank" rel="noopener">FACTORS.md §${sec}</a>`,
+                        )
+                        .join(", ");
+
+                      let renderMetric = "";
+                      if (swap.id === "mask-outdoors" || swap.savingRange) {
+                        const minVal = swap.savingRange?.min ?? 34;
+                        const maxVal = swap.savingRange?.max ?? 93;
+                        const unitVal = swap.savingRange?.unit ?? "%";
+                        renderMetric = `${minVal}% to ${maxVal}${unitVal}`;
+                      } else if (swap.kind === "sourcedFact" && swap.factText) {
+                        renderMetric = escapeHtml(swap.factText);
+                      } else if (swap.kind === "adviceOnly") {
+                        renderMetric = "";
+                      } else if (
+                        swap.savingNumber !== undefined &&
+                        !Number.isNaN(swap.savingNumber)
+                      ) {
+                        const numVal = Math.round(swap.savingNumber * 10) / 10;
+                        const estText = swap.isEstimate
+                          ? ` <span class="swap-estimate-badge">(Estimate)</span>`
+                          : "";
+                        renderMetric = `${numVal} <span class="swap-unit-subtext">${escapeHtml(swap.savingUnit || "")}</span>${estText}`;
+                      }
 
                       return `
-                        <div class="swap-row" data-swap-id="${swap.id}">
+                        <div class="swap-row" data-swap-id="${escapeHtml(swap.id)}">
                           <div class="swap-row-header">
-                            <div style="flex: 1;">
-                              <h3 style="font-size: var(--text-md); margin-top: 2px;">${swap.title}</h3>
+                            <div class="flex-1">
+                              <h3 class="swap-title">${escapeHtml(swap.title)}</h3>
                               ${
                                 helpsWho
-                                  ? `<div style="font-size: var(--text-xs); color: var(--accent); margin-top: 2px;">Helps: ${helpsWho}</div>`
+                                  ? `<div class="swap-helps-who">Helps: ${escapeHtml(helpsWho)}</div>`
                                   : ""
                               }
                             </div>
-                            <label style="display: flex; align-items: center; gap: var(--space-8); font-size: var(--text-xs); cursor: pointer; white-space: nowrap;">
-                              <input type="checkbox" class="swap-toggle-cb" data-id="${swap.id}" ${isChecked ? "checked" : ""} />
+                            <label class="checkbox-label-xs">
+                              <input type="checkbox" class="swap-toggle-cb" data-id="${escapeHtml(swap.id)}" ${isChecked ? "checked" : ""} />
                               <span>I'll do this</span>
                             </label>
                           </div>
 
-                          <div class="swap-number-tabular">
-                            ${Math.round(swap.number * 10) / 10} <span style="font-size: var(--text-xs); font-weight: 400; color: var(--ink-2);">${swap.unit || ""}</span>
-                            ${swap.isEstimate ? `<span style="font-size: 11px; font-weight: 400; color: var(--ink-2); margin-left: 4px;">(Estimate)</span>` : ""}
-                          </div>
+                          ${
+                            renderMetric
+                              ? `<div class="swap-number-tabular">${renderMetric}</div>`
+                              : ""
+                          }
 
-                          <p lang="${swap.reasonLang || currentLang}" style="font-size: var(--text-xs); color: var(--ink-2); margin-top: var(--space-8);">
-                            ${swap.reason || ""}
+                          <p lang="${escapeHtml(swap.reasonLang || currentLang)}" class="swap-reason-text">
+                            ${escapeHtml(swap.reason || "")}
                           </p>
 
                           <details class="swap-details">
                             <summary>How we worked this out</summary>
-                            <div style="margin-top: var(--space-8);">
-                              <div>Formula: ${swap.formula || "Calculated with pure day-model functions from tested factors."}</div>
-                              ${factorLinks ? `<div style="margin-top: 4px;">Sources: ${factorLinks}</div>` : ""}
+                            <div class="swap-details-content">
+                              <div>Formula: ${escapeHtml(swap.formula || "Calculated with pure day-model functions from tested factors.")}</div>
+                              ${factorLinks ? `<div class="swap-details-sources">Sources: ${factorLinks}</div>` : ""}
                             </div>
                           </details>
                         </div>
@@ -387,20 +418,20 @@ function renderContent(
               </div>
 
               <!-- Indoor Kit -->
-              <div class="air-card" style="margin-bottom: var(--space-32);">
+              <div class="air-card section-spacer-32">
                 <div class="section-label">Indoor kit</div>
-                <h3 style="font-size: var(--text-md); margin-bottom: var(--space-8);">Indoor Air Quality Hacks</h3>
-                <ul style="font-size: var(--text-xs); color: var(--ink); line-height: 1.6; padding-left: var(--space-16);">
+                <h3 class="card-heading">Indoor air quality hacks</h3>
+                <ul class="indoor-hacks-list">
                   <li>Bedroom purifier: AHAM rule requires minimum CADR <strong>${Math.round(((profile.home.bedroomAreaSqFt * 2) / 3) * (profile.home.ceilingHeightFt / 8))} CFM</strong> for your bedroom volume.</li>
-                  <li>Airing your home: Best time to open windows is during the afternoon clean air window (<strong>${cleanestText}</strong>).</li>
-                  <li>Keep windows tightly shut during morning inversion hours (<strong>${dirtiestText}</strong>).</li>
-                  <li>Wet-mop floors with water instead of dry sweeping to trap particles without resuspending dust.</li>
+                  <li>Airing your home: Best time to open windows is during the afternoon clean air window (<strong>${escapeHtml(cleanestText)}</strong>).</li>
+                  <li>Keep windows tightly shut during morning inversion hours (<strong>${escapeHtml(dirtiestText)}</strong>).</li>
+                  <li>Wet-mop floors instead of dry sweeping to remove dust without stirring up fine particles.</li>
                 </ul>
               </div>
 
               <!-- Fixed Health Warning & Advice -->
-              <div style="border-top: 1px solid var(--rule); padding-top: var(--space-16); margin-bottom: var(--space-32); font-size: var(--text-xs); color: var(--ink-2);">
-                <p style="margin-bottom: var(--space-4);">
+              <div class="health-warning-box">
+                <p class="health-warning-p1">
                   <strong>Not medical advice.</strong> SaafSaans is an urban environmental planning assistant.
                 </p>
                 <p>
@@ -409,9 +440,9 @@ function renderContent(
               </div>
 
               <!-- Refine Box (500 chars) -->
-              <div class="refine-section" style="border: 1px solid var(--rule); border-radius: var(--radius); padding: var(--space-16); background-color: var(--surface);">
-                <h3 style="font-size: var(--text-md); margin-bottom: var(--space-8);">Refine your routine</h3>
-                <p style="font-size: var(--text-xs); color: var(--ink-2); margin-bottom: var(--space-12);">
+              <div class="refine-container">
+                <h3 class="refine-heading">Refine your routine</h3>
+                <p class="refine-subtext">
                   Tell Gemini about any schedule change (e.g. "my son has football at 7 am on Saturdays").
                 </p>
                 <textarea
@@ -421,8 +452,8 @@ function renderContent(
                   maxlength="500"
                   placeholder="Describe your routine change..."
                 ></textarea>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--space-8);">
-                  <span id="refine-char-count" style="font-size: 11px; color: var(--ink-2);">500 characters remaining</span>
+                <div class="refine-footer">
+                  <span id="refine-char-count" class="char-count-text">500 characters remaining</span>
                   <button id="btn-submit-refine" class="btn btn-secondary" type="button">Update plan</button>
                 </div>
               </div>
@@ -433,19 +464,19 @@ function renderContent(
               <aside class="totals-sticky-col" aria-label="Family Totals" aria-live="polite">
                 <div class="section-label">Family totals today</div>
 
-                <div style="margin-top: var(--space-16); display: flex; flex-direction: column; gap: var(--space-16);">
+                <div class="side-col-list">
                   ${totals.memberDoses
                     .map((m) => {
                       const name = getMemberName(m.memberId);
                       return `
-                        <div style="border-bottom: 1px solid var(--rule); padding-bottom: var(--space-8);">
-                          <div style="font-weight: 500; font-size: var(--text-sm);">${name}</div>
-                          <div style="display: flex; justify-content: space-between; margin-top: 4px; font-size: var(--text-xs);">
-                            <span style="color: var(--ink-2);">Dose cut:</span>
+                        <div class="side-col-member-row">
+                          <div class="side-col-member-name">${escapeHtml(name)}</div>
+                          <div class="side-col-metric-row">
+                            <span class="text-ink-2">Dose cut:</span>
                             <strong class="tabular-nums">${Math.round(m.doseCutPercentage)}%</strong>
                           </div>
-                          <div style="display: flex; justify-content: space-between; margin-top: 2px; font-size: var(--text-xs);">
-                            <span style="color: var(--ink-2);">Cigarettes avoided:</span>
+                          <div class="side-col-metric-row-sm">
+                            <span class="text-ink-2">Cigarettes avoided:</span>
                             <strong class="tabular-nums">${Math.round(m.cigarettesAvoided * 10) / 10}</strong>
                           </div>
                         </div>
@@ -453,10 +484,10 @@ function renderContent(
                     })
                     .join("")}
 
-                  <div style="padding-top: var(--space-4);">
-                    <div style="font-size: var(--text-xs); color: var(--ink-2);">Household CO2 avoided</div>
-                    <div style="font-size: var(--text-xl); font-weight: 600; margin-top: 2px;" class="tabular-nums">
-                      ${Math.round(totals.householdCo2WeeklyKg * 10) / 10} <span style="font-size: var(--text-xs); font-weight: 400; color: var(--ink-2);">kg / week</span>
+                  <div class="side-col-co2-wrap">
+                    <div class="side-col-co2-label">Household CO2 avoided</div>
+                    <div class="side-col-co2-val tabular-nums">
+                      ${Math.round(totals.householdCo2WeeklyKg * 10) / 10} <span class="swap-unit-subtext">kg / week</span>
                     </div>
                   </div>
                 </div>
@@ -471,6 +502,14 @@ function renderContent(
   }
 
   function attachEvents(): void {
+    // Apply chart bar heights programmatically to keep CSS CSP compliant with zero inline style attributes
+    for (const bar of container.querySelectorAll<HTMLElement>(".chart-bar[data-height]")) {
+      const h = bar.getAttribute("data-height");
+      if (h) {
+        bar.style.height = `${h}%`;
+      }
+    }
+
     // Checkbox toggles
     for (const cb of container.querySelectorAll<HTMLInputElement>(".swap-toggle-cb")) {
       cb.addEventListener("change", () => {

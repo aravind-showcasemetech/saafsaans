@@ -32,6 +32,7 @@ describe("share-utils: WhatsApp and iCalendar builders", () => {
     expect(ics).toContain("DTEND;TZID=Asia/Kolkata:20261120T170000");
     expect(ics).toContain("SUMMARY:Clean Air Window in Kukatpally");
     expect(ics).toContain("END:VCALENDAR");
+    expect(ics).not.toContain("saafsaans.org");
     expect(ics).not.toContain("—");
     expect(ics).not.toContain("–");
   });

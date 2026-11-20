@@ -3,6 +3,7 @@
 // Validates with shared Zod schemas, saves to localStorage.
 // Nicknames stay in localStorage and are mapped to m1, m2... before sending.
 
+import { escapeHtml } from "../../shared/escape.js";
 import type {
   AgeBand,
   CookingMethod,
@@ -131,9 +132,9 @@ export function renderSetupView(container: HTMLElement): void {
   function render(): void {
     container.innerHTML = `
       <section class="section">
-        <div class="container" style="max-width: 760px;">
-          <h1 style="font-size: var(--text-2xl); font-weight: 600; margin-bottom: var(--space-16);">
-            Set Up Your Household Air Plan
+        <div class="container container-setup">
+          <h1 class="setup-page-title">
+            Set up your household
           </h1>
           <div class="stepper-header" role="tablist">
             <div class="step-indicator ${currentStep === 1 ? "active" : ""}" role="tab" aria-selected="${currentStep === 1}">
@@ -158,8 +159,8 @@ export function renderSetupView(container: HTMLElement): void {
 
   function renderStep1Location(): string {
     return `
-      <h2 style="font-size: var(--text-xl); margin-bottom: var(--space-8);">Where do you live?</h2>
-      <p style="color: var(--ink-2); margin-bottom: var(--space-24); font-size: var(--text-sm);">
+      <h2 class="step-title">Where do you live?</h2>
+      <p class="step-subtext">
         Forecasts, routes and clean air windows are calculated for this place.
       </p>
 
@@ -175,21 +176,21 @@ export function renderSetupView(container: HTMLElement): void {
             aria-expanded="false"
             aria-controls="place-suggestions-listbox"
             placeholder="e.g. Kukatpally, Kondapur, Dwarka"
-            value="${selectedLocation.name}"
+            value="${escapeHtml(selectedLocation.name)}"
           />
-          <ul id="place-suggestions-listbox" class="combobox-listbox" role="listbox" style="display: none;"></ul>
+          <ul id="place-suggestions-listbox" class="combobox-listbox hidden" role="listbox"></ul>
         </div>
-        <div style="margin-top: var(--space-8); display: flex; justify-content: space-between; align-items: center;">
+        <div class="combobox-meta-row">
           <button id="btn-use-location" class="btn-text" type="button">Use my location</button>
-          <span style="font-size: 11px; color: var(--ink-2);">Coordinates rounded to 2 decimals (~1 km)</span>
+          <span class="combobox-meta-text">Coordinates rounded to 2 decimals (~1 km)</span>
         </div>
       </div>
 
-      <div style="font-size: var(--text-xs); color: var(--ink-2); margin-bottom: var(--space-32); padding-top: var(--space-8); border-top: 1px solid var(--rule);">
+      <div class="privacy-notice-box">
         Powered by Google Maps Platform
       </div>
 
-      <div style="display: flex; justify-content: flex-end;">
+      <div class="flex-justify-end">
         <button id="btn-to-step-2" class="btn btn-primary" type="button">Next: Household</button>
       </div>
     `;
@@ -197,8 +198,8 @@ export function renderSetupView(container: HTMLElement): void {
 
   function renderStep2Household(): string {
     return `
-      <h2 style="font-size: var(--text-xl); margin-bottom: var(--space-8);">Who is at home?</h2>
-      <p style="color: var(--ink-2); margin-bottom: var(--space-24); font-size: var(--text-sm);">
+      <h2 class="step-title">Who is at home?</h2>
+      <p class="step-subtext">
         Add family members, routines, travel mode and bedroom details.
       </p>
 
@@ -208,19 +209,19 @@ export function renderSetupView(container: HTMLElement): void {
             (m, idx) => `
           <div class="member-entry-card" data-index="${idx}">
             <div class="member-card-header">
-              <span style="font-weight: 600;">Member ${idx + 1}</span>
+              <span class="member-header-title">Member ${idx + 1}</span>
               ${
                 householdMembers.length > 1
                   ? `<button class="btn-text btn-remove-member" data-index="${idx}" type="button">Remove</button>`
                   : ""
               }
             </div>
-            <div class="grid-12" style="gap: var(--space-12);">
-              <div style="grid-column: span 6;">
+            <div class="grid-12 grid-gap-12">
+              <div class="col-span-6">
                 <label class="form-label">Nickname (stored in browser only)</label>
-                <input type="text" class="form-input member-nickname" data-index="${idx}" value="${m.nickname}" />
+                <input type="text" class="form-input member-nickname" data-index="${idx}" value="${escapeHtml(m.nickname)}" />
               </div>
-              <div style="grid-column: span 6;">
+              <div class="col-span-6">
                 <label class="form-label">Age group</label>
                 <select class="form-select member-age" data-index="${idx}">
                   <option value="under-6" ${m.ageBand === "under-6" ? "selected" : ""}>Under 6</option>
@@ -233,7 +234,7 @@ export function renderSetupView(container: HTMLElement): void {
                   <option value="71-plus" ${m.ageBand === "71-plus" ? "selected" : ""}>71+</option>
                 </select>
               </div>
-              <div style="grid-column: span 6;">
+              <div class="col-span-6">
                 <label class="form-label">Sensitivity</label>
                 <select class="form-select member-sensitivity" data-index="${idx}">
                   <option value="none" ${m.sensitivity === "none" ? "selected" : ""}>None</option>
@@ -242,7 +243,7 @@ export function renderSetupView(container: HTMLElement): void {
                   <option value="pregnancy" ${m.sensitivity === "pregnancy" ? "selected" : ""}>Pregnancy</option>
                 </select>
               </div>
-              <div style="grid-column: span 6;">
+              <div class="col-span-6">
                 <label class="form-label">Routine preset</label>
                 <select class="form-select member-routine" data-index="${idx}">
                   <option value="school_child" ${m.routinePreset === "school_child" ? "selected" : ""}>School child</option>
@@ -252,13 +253,13 @@ export function renderSetupView(container: HTMLElement): void {
                   <option value="retired" ${m.routinePreset === "retired" ? "selected" : ""}>Retired</option>
                 </select>
               </div>
-              <div style="grid-column: span 6;">
+              <div class="col-span-6">
                 <label class="form-label">Outdoor exercise (min)</label>
                 <input type="number" min="0" max="240" class="form-input member-exercise-min" data-index="${idx}" value="${m.outdoorExerciseMinutes}" />
               </div>
-              <div style="grid-column: span 6;">
+              <div class="col-span-6">
                 <label class="form-label">Exercise time</label>
-                <input type="text" placeholder="HH:mm (e.g. 06:00)" class="form-input member-exercise-time" data-index="${idx}" value="${m.outdoorExerciseTime}" />
+                <input type="text" placeholder="HH:mm (e.g. 06:00)" class="form-input member-exercise-time" data-index="${idx}" value="${escapeHtml(m.outdoorExerciseTime)}" />
               </div>
             </div>
           </div>
@@ -267,13 +268,13 @@ export function renderSetupView(container: HTMLElement): void {
           .join("")}
       </div>
 
-      <div style="margin-bottom: var(--space-24);">
+      <div class="section-spacer-24">
         <button id="btn-add-member" class="btn btn-secondary" type="button">+ Add family member</button>
       </div>
 
-      <h3 style="font-size: var(--text-lg); margin-top: var(--space-32); margin-bottom: var(--space-16);">Travel & Commute</h3>
-      <div class="grid-12" style="gap: var(--space-12); margin-bottom: var(--space-24);">
-        <div style="grid-column: span 6;">
+      <h3 class="section-heading-spaced">Travel & Commute</h3>
+      <div class="grid-12 grid-gap-12 section-spacer-24">
+        <div class="col-span-6">
           <label class="form-label">Main travel mode</label>
           <select id="commute-mode-select" class="form-select">
             <option value="petrol_car" ${commuteMode === "petrol_car" ? "selected" : ""}>Petrol car</option>
@@ -287,23 +288,23 @@ export function renderSetupView(container: HTMLElement): void {
             <option value="walk_cycle" ${commuteMode === "walk_cycle" ? "selected" : ""}>Walk or cycle</option>
           </select>
         </div>
-        <div style="grid-column: span 6;">
+        <div class="col-span-6">
           <label class="form-label">One-way distance (km)</label>
           <input id="commute-dist-input" type="number" min="0" max="100" class="form-input" value="${commuteDistanceKm}" />
         </div>
       </div>
 
-      <h3 style="font-size: var(--text-lg); margin-top: var(--space-32); margin-bottom: var(--space-16);">Home & Bedroom</h3>
-      <div class="grid-12" style="gap: var(--space-12); margin-bottom: var(--space-24);">
-        <div style="grid-column: span 6;">
+      <h3 class="section-heading-spaced">Home & Bedroom</h3>
+      <div class="grid-12 grid-gap-12 section-spacer-24">
+        <div class="col-span-6">
           <label class="form-label">Bedroom area (sq ft)</label>
           <input id="bedroom-sqft-input" type="number" min="50" max="1000" class="form-input" value="${bedroomSqFt}" />
         </div>
-        <div style="grid-column: span 6;">
+        <div class="col-span-6">
           <label class="form-label">Ceiling height (ft)</label>
           <input id="ceiling-height-input" type="number" min="7" max="20" class="form-input" value="${ceilingHeightFt}" />
         </div>
-        <div style="grid-column: span 6;">
+        <div class="col-span-6">
           <label class="form-label">Window habit</label>
           <select id="window-habit-select" class="form-select">
             <option value="mostly_shut" ${windowHabit === "mostly_shut" ? "selected" : ""}>Mostly shut</option>
@@ -311,7 +312,7 @@ export function renderSetupView(container: HTMLElement): void {
             <option value="mostly_open" ${windowHabit === "mostly_open" ? "selected" : ""}>Mostly open</option>
           </select>
         </div>
-        <div style="grid-column: span 6;">
+        <div class="col-span-6">
           <label class="form-label">Cooking method</label>
           <select id="cooking-method-select" class="form-select">
             <option value="gas" ${cookingMethod === "gas" ? "selected" : ""}>LPG gas</option>
@@ -321,22 +322,22 @@ export function renderSetupView(container: HTMLElement): void {
         </div>
       </div>
 
-      <div style="margin-bottom: var(--space-24); display: flex; flex-direction: column; gap: var(--space-8);">
-        <label style="display: flex; align-items: center; gap: var(--space-8); font-size: var(--text-sm); cursor: pointer;">
+      <div class="checkbox-group-vertical">
+        <label class="checkbox-label-sm">
           <input type="checkbox" id="check-has-purifier" ${hasPurifier ? "checked" : ""} />
           <span>Already have an air purifier</span>
         </label>
-        <label style="display: flex; align-items: center; gap: var(--space-8); font-size: var(--text-sm); cursor: pointer;">
+        <label class="checkbox-label-sm">
           <input type="checkbox" id="check-uses-incense" ${usesIncense ? "checked" : ""} />
           <span>Light agarbatti (incense) indoors</span>
         </label>
-        <label style="display: flex; align-items: center; gap: var(--space-8); font-size: var(--text-sm); cursor: pointer;">
+        <label class="checkbox-label-sm">
           <input type="checkbox" id="check-uses-coils" ${usesMosquitoCoils ? "checked" : ""} />
           <span>Use mosquito coils at night</span>
         </label>
       </div>
 
-      <div style="display: flex; justify-content: space-between; margin-top: var(--space-32);">
+      <div class="stepper-nav-footer">
         <button id="btn-back-step-1" class="btn btn-secondary" type="button">Back</button>
         <button id="btn-save-setup" class="btn btn-primary" type="button">Save and see my plan</button>
       </div>
@@ -356,7 +357,7 @@ export function renderSetupView(container: HTMLElement): void {
         searchInput.addEventListener("input", async () => {
           const val = searchInput.value.trim();
           if (val.length < 2) {
-            listbox.style.display = "none";
+            listbox.classList.add("hidden");
             searchInput.setAttribute("aria-expanded", "false");
             return;
           }
@@ -367,20 +368,20 @@ export function renderSetupView(container: HTMLElement): void {
               listbox.innerHTML = suggestions
                 .map(
                   (s: PlaceSuggestion, i: number) => `
-                <li id="opt-${i}" class="combobox-option" role="option" data-id="${s.placeId}" data-text="${s.primaryText}">
-                  ${s.primaryText}${s.secondaryText ? ` <span style="font-size: 11px; color: var(--ink-2);">${s.secondaryText}</span>` : ""}
+                <li id="opt-${i}" class="combobox-option" role="option" data-id="${escapeHtml(s.placeId)}" data-text="${escapeHtml(s.primaryText)}">
+                  ${escapeHtml(s.primaryText)}${s.secondaryText ? ` <span class="combobox-meta-text">${escapeHtml(s.secondaryText)}</span>` : ""}
                 </li>
               `,
                 )
                 .join("");
-              listbox.style.display = "block";
+              listbox.classList.remove("hidden");
               searchInput.setAttribute("aria-expanded", "true");
             } else {
-              listbox.style.display = "none";
+              listbox.classList.add("hidden");
               searchInput.setAttribute("aria-expanded", "false");
             }
           } catch {
-            listbox.style.display = "none";
+            listbox.classList.add("hidden");
           }
         });
 
@@ -390,7 +391,7 @@ export function renderSetupView(container: HTMLElement): void {
             const placeId = target.getAttribute("data-id") || "";
             const text = target.getAttribute("data-text") || "";
             searchInput.value = text;
-            listbox.style.display = "none";
+            listbox.classList.add("hidden");
             searchInput.setAttribute("aria-expanded", "false");
 
             try {

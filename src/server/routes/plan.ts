@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { NormalisedAirData } from "../../shared/air-types.js";
 import { computeHouseholdDayComparison } from "../../shared/day.js";
 import { CPCB_AQI_BANDS } from "../../shared/factors.js";
+import { PlanResponseSchema } from "../../shared/plan-schema.js";
 import { HouseholdProfileSchema } from "../../shared/schemas.js";
 import { fetchAirData } from "../air.js";
 import { airCache, planCache } from "../cache.js";
@@ -237,8 +238,11 @@ planRoute.post("/plan", async (c) => {
     cpcbHealthStatement,
     googleHealthAdvice: airData.healthRecommendations ?? {},
     memberDoses: dayComparison.memberComparisons,
+    isDemo: config.demoMode || !config.mapsLive,
+    capturedDate: config.demoMode || !config.mapsLive ? "2026-11-19" : undefined,
   };
 
-  planCache.set(planCacheKey, responseBody);
-  return c.json(responseBody);
+  const validated = PlanResponseSchema.parse(responseBody);
+  planCache.set(planCacheKey, validated);
+  return c.json(validated);
 });
