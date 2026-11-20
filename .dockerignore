@@ -1,0 +1,23 @@
+# Secrets never enter the image
+.env
+.env.*
+!.env.example
+
+# Installed or generated locally; the image builds its own
+node_modules
+dist
+coverage
+test-results
+playwright-report
+blob-report
+
+# Not needed to build or run the app
+.git
+.github
+.claude
+test
+scripts
+docs
+*.md
+Dockerfile
+.dockerignore

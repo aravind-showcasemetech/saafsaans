@@ -6,15 +6,64 @@ on:
   pull_request:
     branches: ["**"]
 
+permissions:
+  contents: read
+
 jobs:
-  check:
+  app:
+    name: Check, build, smoke and Playwright
     runs-on: ubuntu-latest
+    env:
+      DEMO: "1"
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: "npm"
       - run: npm ci
-      - run: npm run check
+      - name: Lint, type check and unit tests with coverage floors
+        run: npm run check
+      - name: Build
+        run: npm run build
+      - name: Smoke test the built app
+        run: npm run smoke
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Playwright and axe against the built app (DEMO=1)
+        run: npx playwright test
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7
+
+  container:
+    name: Docker image builds, runs and passes the smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build the image
+        run: docker build -t saafsaans:ci .
+      - name: Run it with DEMO=1
+        run: docker run -d --name saafsaans -p 8080:8080 -e DEMO=1 saafsaans:ci
+      - name: Wait for the health check
+        run: |
+          for i in $(seq 1 30); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' saafsaans)
+            [ "$status" = "healthy" ] && exit 0
+            sleep 2
+          done
+          docker logs saafsaans
+          exit 1
+      - name: Smoke test the container
+        run: SMOKE_URL=http://localhost:8080 node scripts/smoke-test.js
+      - name: Runs as a non-root user
+        run: test "$(docker exec saafsaans id -u)" != "0"

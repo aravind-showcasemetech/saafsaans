@@ -18,8 +18,11 @@ describe("Phase 3: Server clients, normaliser, cache and endpoints", () => {
   });
 
   describe("1. Normaliser against captured fixture", () => {
-    it("matches normalised structure of test/fixtures/air-kukatpally.json", () => {
-      const fixturePath = path.resolve(process.cwd(), "test/fixtures/air-kukatpally.json");
+    it("matches normalised structure of src/server/demo/captures/air-kukatpally.json", () => {
+      const fixturePath = path.resolve(
+        process.cwd(),
+        "src/server/demo/captures/air-kukatpally.json",
+      );
       const fixture = JSON.parse(fs.readFileSync(fixturePath, "utf-8"));
 
       expect(fixture.currentAqi).toBeTypeOf("number");

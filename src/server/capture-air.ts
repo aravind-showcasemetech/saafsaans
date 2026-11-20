@@ -14,7 +14,7 @@ async function main() {
     process.exit(1);
   }
 
-  const fixtureDir = path.resolve(process.cwd(), "test/fixtures");
+  const fixtureDir = path.resolve(process.cwd(), "src/server/demo/captures");
   if (!fs.existsSync(fixtureDir)) {
     fs.mkdirSync(fixtureDir, { recursive: true });
   }

@@ -1,12 +1,11 @@
 // compute.ts: Computes numbers for applicable swaps according to docs/SPEC.md and docs/FACTORS.md.
 // Uses src/shared/day.ts for day-model computed actions and avoids invented values.
 
-import fs from "node:fs";
-import path from "node:path";
 import type { ActionDefinition } from "../../shared/actions.js";
 import type { NormalisedAirData } from "../../shared/air-types.js";
 import { computeDayModelSwapImpact } from "../../shared/day.js";
 import type { HouseholdProfile } from "../../shared/schemas.js";
+import { serverText } from "../text.js";
 
 export interface ComputedSwapItem {
   id: string;
@@ -52,7 +51,7 @@ export function computeActionNumbers(
 
   // Sourced fact text or advice text from i18n
   if (impact.factTextKey) {
-    base.factText = getI18nText(impact.factTextKey, lang);
+    base.factText = serverText(impact.factTextKey, lang);
   }
 
   if (action.lens === "protect") {
@@ -100,28 +99,4 @@ export function computeActionNumbers(
   }
 
   return base;
-}
-
-export function getI18nText(keyPath: string, lang: "en" | "hi" | "te"): string {
-  try {
-    const filePath = path.resolve(process.cwd(), `src/client/i18n/${lang}.json`);
-    const content = fs.existsSync(filePath)
-      ? JSON.parse(fs.readFileSync(filePath, "utf-8"))
-      : JSON.parse(
-          fs.readFileSync(path.resolve(process.cwd(), "src/client/i18n/en.json"), "utf-8"),
-        );
-
-    const parts = keyPath.split(".");
-    let curr: unknown = content;
-    for (const p of parts) {
-      if (curr && typeof curr === "object" && p in curr) {
-        curr = (curr as Record<string, unknown>)[p];
-      } else {
-        return "";
-      }
-    }
-    return typeof curr === "string" ? curr : "";
-  } catch {
-    return "";
-  }
 }

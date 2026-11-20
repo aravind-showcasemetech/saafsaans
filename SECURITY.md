@@ -36,6 +36,7 @@ Please open a private security advisory on the GitHub repository rather than a p
 | Nicknames leave the browser | The browser sends members as `m1`, `m2`; the server rejects any request that carries a nickname | `src/client/app/setup.ts`, `src/server/routes/common.ts` | `test/server/plan_and_refine.test.ts` (test 11) |
 | Stale caches of personal pages | HTML and API answers are `Cache-Control: no-store`; only hashed build assets are cached (`immutable`) | `src/server/app.ts` | `test/server/security.test.ts` |
 | Vulnerable or malicious dependencies | Few dependencies; `npm audit --omit=dev --audit-level=high` and gitleaks run on every push and weekly; Dependabot opens updates for npm and GitHub Actions | `.github/workflows/security.yml`, `.github/dependabot.yml` | CI |
+| Container escape or tampering | Multi-stage image on `node:22-slim`; the run stage holds only `dist`, production `node_modules` and `package.json`, runs as the non-root `node` user, and has a `/healthz` health check; `.dockerignore` keeps `.env`, `node_modules`, build and test output out of the build context | `Dockerfile`, `.dockerignore` | CI `container` job builds the image, waits for healthy, runs the smoke test against it and checks the user is not root |
 
 ## Configuration
 
