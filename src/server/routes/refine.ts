@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { HouseholdProfileSchema } from "../../shared/schemas.js";
 import type { GeminiDeps } from "../gemini/client.js";
+import { profileForGemini } from "../gemini/common.js";
 import { callGeminiRefineProfile } from "../gemini/refine.js";
 import { logEvent } from "../log.js";
 import { type AppEnv, hasNickname, readJson } from "./common.js";
@@ -32,7 +33,8 @@ export function createRefineRoute(gemini: GeminiDeps | null): Hono<AppEnv> {
 
     const result = await callGeminiRefineProfile({
       gemini,
-      currentProfile: profile,
+      // Place names never go to Gemini; they are put back from the request below.
+      currentProfile: profileForGemini(profile),
       refineText: text,
       lang,
     });

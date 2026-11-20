@@ -27,5 +27,6 @@ export function totalsHtml(
       <thead><tr><th scope="col">${escapeHtml(t("home.impact.person"))}</th><th scope="col">${escapeHtml(t("totals.doseCut"))}</th><th scope="col">${escapeHtml(t("totals.cigarettes"))}</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
+    <p class="muted small totals-note">${escapeHtml(t("totals.indoorNote"))}</p>
     <p class="co2-total">${escapeHtml(t("totals.co2"))}: <span class="big-number tabular-nums side-col-co2-val">${formatIndianNumber(totals.householdCo2WeeklyKg, 1)}</span> <span class="unit">${escapeHtml(t("totals.perWeek"))}</span></p>`;
 }

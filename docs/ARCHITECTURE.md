@@ -121,7 +121,8 @@ test/             unit, server, end-to-end (Playwright with axe)
 5. **Model output is untrusted:** schema check, known action ids only, no digits, no HTML, and
    no health advice from the model. Health text comes only from CPCB and Google.
 6. **Privacy by design:** no accounts and no database; nicknames never leave the browser;
-   logs carry a request id, route, status and duration only.
+   place names and coordinates never go to Gemini (it sees members as m1, m2 and the commute's
+   mode and distance only); logs carry a request id, route, status and duration only.
 
 ## 6. Build, test and deploy
 

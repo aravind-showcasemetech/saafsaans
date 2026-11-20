@@ -91,3 +91,21 @@ test.describe("Compact phone header", () => {
     await expect(page.locator("#lang-select")).toHaveValue("te");
   });
 });
+
+test.describe("Family totals note", () => {
+  test("explains that indoor smoke swaps are shown with sourced figures", async ({ page }) => {
+    await openDemoFamily(page);
+    const note = page.locator("#today-totals .totals-note");
+    await expect(note).toHaveText(
+      "Indoor smoke changes (coil, incense, cooking) are shown with their sourced figures, not as a dose percentage.",
+    );
+    // It sits directly under the totals table.
+    const follows = await page.evaluate(
+      () =>
+        document
+          .querySelector("#totals-list")
+          ?.nextElementSibling?.classList.contains("totals-note") ?? false,
+    );
+    expect(follows).toBe(true);
+  });
+});

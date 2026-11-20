@@ -233,6 +233,42 @@ describe("Gemini choosing and explaining swaps, and refinement", () => {
     expect(json.profile.home.hasPurifier).toBe(reddysProfile.home.hasPurifier);
   });
 
+  it("12. never sends place names to Gemini in plan", async () => {
+    expect(reddysProfile.commute.startPlace).toBe("Kukatpally");
+    expect(reddysProfile.commute.endPlace).toBe("HITEC City");
+    const gemini = fakeGemini({
+      swaps: [{ actionId: "purifier-bedroom", reason: "Cleaner bedroom air at night." }],
+      familySummary: "A plan for this family.",
+    });
+    expect((await postPlan(appWith(gemini))).status).toBe(200);
+    expect(gemini.calls).toHaveLength(1);
+    const sent = JSON.stringify(gemini.calls[0]);
+    expect(sent).not.toContain("Kukatpally");
+    expect(sent).not.toContain("HITEC City");
+    expect(sent).not.toContain("startPlace");
+    expect(sent).not.toContain("endPlace");
+    // The commute itself (mode and distance) still goes, so Gemini can judge travel swaps.
+    expect(gemini.calls[0].contents).toContain('"mode":"petrol_car"');
+  });
+
+  it("13. never sends place names to Gemini in refine, and keeps them in the answer", async () => {
+    const gemini = fakeGemini({
+      ...reddysProfile,
+      commute: { ...reddysProfile.commute, startPlace: undefined, endPlace: undefined },
+    });
+    const res = await postRefine(appWith(gemini), "We now run in the evening.");
+    expect(res.status).toBe(200);
+    const sent = JSON.stringify(gemini.calls[0]);
+    expect(sent).not.toContain("Kukatpally");
+    expect(sent).not.toContain("HITEC City");
+    expect(sent).not.toContain("startPlace");
+    expect(sent).not.toContain("endPlace");
+    const json = await res.json();
+    expect(json.source).toBe("gemini");
+    expect(json.profile.commute.startPlace).toBe("Kukatpally");
+    expect(json.profile.commute.endPlace).toBe("HITEC City");
+  });
+
   it("11. rejects a nickname field in POST /api/plan and POST /api/refine", async () => {
     const app = appWith(null);
     const withNickname = {

@@ -206,7 +206,8 @@
     "perWeek": "kg a week",
     "co2Short": "CO₂",
     "details": "Details",
-    "hideDetails": "Hide details"
+    "hideDetails": "Hide details",
+    "indoorNote": "Indoor smoke changes (coil, incense, cooking) are shown with their sourced figures, not as a dose percentage."
   },
   "setup": {
     "title": "Set up your household",

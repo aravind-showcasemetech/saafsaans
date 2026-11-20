@@ -79,3 +79,14 @@ export function anonymiseMembersForGemini(members: HouseholdProfile["members"]) 
     outdoorExerciseTime: m.outdoorExerciseTime,
   }));
 }
+
+/** The commute without place names: Gemini needs the mode and distance, never where people go. */
+export function commuteForGemini(commute: HouseholdProfile["commute"]) {
+  const { startPlace: _start, endPlace: _end, ...rest } = commute;
+  return rest;
+}
+
+/** The profile Gemini may see in refine: the same fields, with the commute's place names removed. */
+export function profileForGemini(profile: HouseholdProfile): HouseholdProfile {
+  return { ...profile, commute: commuteForGemini(profile.commute) };
+}

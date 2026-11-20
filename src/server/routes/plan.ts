@@ -10,7 +10,12 @@ import { getAirFor } from "../air.js";
 import { airCache, planCache } from "../cache.js";
 import type { Config } from "../config.js";
 import type { GeminiDeps } from "../gemini/client.js";
-import { anonymiseMembersForGemini, containsDigit, sanitizeModelText } from "../gemini/common.js";
+import {
+  anonymiseMembersForGemini,
+  commuteForGemini,
+  containsDigit,
+  sanitizeModelText,
+} from "../gemini/common.js";
 import { callGeminiChoosePlan } from "../gemini/plan.js";
 import { logEvent } from "../log.js";
 import {
@@ -98,7 +103,7 @@ export function createPlanRoute(gemini: GeminiDeps | null, config: Config): Hono
         gemini,
         anonymisedProfile: {
           members: anonymiseMembersForGemini(profile.members),
-          commute: profile.commute,
+          commute: commuteForGemini(profile.commute),
           home: profile.home,
         },
         applicableActions: applicable.map((a) => ({
