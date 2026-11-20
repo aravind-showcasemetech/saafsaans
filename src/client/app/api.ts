@@ -1,6 +1,13 @@
 // api.ts: Client API helper calling server endpoints.
 
+import { z } from "zod";
 import type { NormalisedAirData } from "../../shared/air-types.js";
+import {
+  type PlaceCoordinates,
+  PlaceCoordinatesSchema,
+  type PlaceSuggestion,
+  PlaceSuggestionSchema,
+} from "../../shared/place-types.js";
 import {
   type PlanResponse,
   PlanResponseSchema,
@@ -9,29 +16,13 @@ import {
 import type { HouseholdProfile } from "../../shared/schemas.js";
 import type { StoredLocation } from "./storage.js";
 
-export type { PlanSwapItem, PlanResponse };
+export type { PlanSwapItem, PlanResponse, PlaceSuggestion, PlaceCoordinates };
 
 export interface DemoHouseholdItem {
   id: string;
   location: StoredLocation;
   profile: HouseholdProfile;
   nicknames: Record<string, string>;
-}
-
-export interface PlaceSuggestion {
-  placeId: string;
-  primaryText: string;
-  secondaryText?: string;
-}
-
-export interface PlaceDetails {
-  placeId: string;
-  formattedAddress: string;
-  displayName: string;
-  location: {
-    lat: number;
-    lng: number;
-  };
 }
 
 export async function fetchDemoHouseholds(): Promise<DemoHouseholdItem[]> {
@@ -48,16 +39,19 @@ export async function fetchPlaceSuggestions(
   if (session) params.set("session", session);
   const res = await fetch(`/api/places?${params.toString()}`);
   if (!res.ok) throw new Error(`Places query failed: ${res.status}`);
-  return res.json() as Promise<PlaceSuggestion[]>;
+  return z.array(PlaceSuggestionSchema).parse(await res.json());
 }
 
-export async function fetchPlaceDetails(placeId: string, session?: string): Promise<PlaceDetails> {
+export async function fetchPlaceDetails(
+  placeId: string,
+  session?: string,
+): Promise<PlaceCoordinates> {
   const params = new URLSearchParams();
   if (session) params.set("session", session);
   const qs = params.toString() ? `?${params.toString()}` : "";
-  const res = await fetch(`/api/places/${placeId}${qs}`);
+  const res = await fetch(`/api/places/${encodeURIComponent(placeId)}${qs}`);
   if (!res.ok) throw new Error(`Place details failed: ${res.status}`);
-  return res.json() as Promise<PlaceDetails>;
+  return PlaceCoordinatesSchema.parse(await res.json());
 }
 
 export async function fetchAirData(

@@ -1,19 +1,10 @@
+import type { PlaceCoordinates, PlaceSuggestion } from "../shared/place-types.js";
 import { config } from "./config.js";
+
+export type { PlaceCoordinates, PlaceSuggestion };
 
 const PLACES_BASE_URL = "https://places.googleapis.com/v1";
 const TIMEOUT_MS = 8000;
-
-export interface PlaceSuggestion {
-  placeId: string;
-  text: string;
-}
-
-export interface PlaceCoordinates {
-  placeId: string;
-  latitude: number;
-  longitude: number;
-  displayName?: string;
-}
 
 // Sample demo places for Hyderabad
 const demoSuggestions: PlaceSuggestion[] = [

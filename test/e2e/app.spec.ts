@@ -67,29 +67,29 @@ test.describe("SaafSaans App Screens E2E Tests (DEMO=1)", () => {
     await expect(calBtn).toBeVisible();
   });
 
-  test("setup flow with place search and household forms", async ({ page }) => {
+  test("setup flow: choose a place by keyboard, save, and see it on Today", async ({ page }) => {
     await page.goto("/#/setup");
-    await page.waitForSelector("#place-search-input");
-
-    // Step 1: Location
     const input = page.locator("#place-search-input");
-    await input.fill("Kukatpally");
-    await page.waitForTimeout(400); // debounce wait
+    await input.fill("gachi");
+    await expect(page.locator("#place-suggestions-listbox [role=option]").first()).toBeVisible();
+    await input.press("ArrowDown");
+    await expect(input).toHaveAttribute("aria-activedescendant", "opt-0");
+    await input.press("Enter");
+    await expect(input).toHaveValue("Gachibowli, Hyderabad, Telangana, India");
+    await expect
+      .poll(() => page.evaluate(() => localStorage.getItem("saafsaans_location")))
+      .toContain('"lat":17.44');
 
-    // Advance to Step 2
-    const nextBtn = page.locator("#btn-to-step-2");
-    await nextBtn.click();
-
-    // Step 2: Household members and presets
+    await page.locator("#btn-to-step-2").click();
     await page.waitForSelector("#members-list");
     await expect(page.locator("#btn-add-member")).toBeVisible();
+    await page.locator("#btn-save-setup").click();
 
-    // Click finish setup
-    const saveBtn = page.locator("#btn-save-setup");
-    await saveBtn.click();
-
-    // Should route to Today view
     await expect(page).toHaveURL(/#\/today/);
+    await page.waitForSelector(".today-layout");
+    await expect(page.locator(".header-actions-wrap .section-label")).toHaveText(
+      "Gachibowli, Hyderabad",
+    );
   });
 
   test("verifies zero axe violations on all screens with motion on and off", async ({ page }) => {
