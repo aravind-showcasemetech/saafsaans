@@ -1,4 +1,4 @@
-import { type Plugin, defineConfig } from "vite";
+import { type Plugin, defineConfig, loadEnv } from "vite";
 
 /** Preloads only the hero heading face (Anek Latin 700); every other face loads when it is used. */
 function preloadBodyFont(): Plugin {
@@ -29,7 +29,7 @@ function preloadBodyFont(): Plugin {
   };
 }
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [preloadBodyFont()],
   build: {
     outDir: "dist/client",
@@ -38,9 +38,11 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/api": {
-        target: "http://localhost:3000",
+        // The API server's port from .env (PORT), so npm run dev works whatever it is set to.
+        // Only PORT is read here; nothing from .env reaches the browser bundle.
+        target: `http://localhost:${loadEnv(mode, process.cwd(), "").PORT || 3000}`,
         changeOrigin: true,
       },
     },
   },
-});
+}));

@@ -7,7 +7,7 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "dev": "concurrently -k -p \"[{name}]\" -n \"server,client\" -c \"cyan.bold,magenta.bold\" \"tsx watch --env-file=.env src/server/server.ts\" \"vite\"",
+    "dev": "concurrently -k -p \"[{name}]\" -n \"server,client\" -c \"cyan.bold,magenta.bold\" \"node --watch --env-file=.env --import tsx src/server/server.ts\" \"vite\"",
     "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && vite build && tsc -p tsconfig.server.json",
     "start": "node dist/server/server/server.js",
     "smoke": "node scripts/smoke-test.js",
