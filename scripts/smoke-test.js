@@ -8,9 +8,10 @@ async function check(base) {
     throw new Error(msg);
   };
 
-  const health = await fetch(`${base}/healthz`);
-  if (!health.ok) fail(`/healthz returned ${health.status}`);
-  if ((await health.json()).status !== "ok") fail("/healthz did not say ok");
+  // /api/healthz works everywhere; Cloud Run reserves /healthz for itself.
+  const health = await fetch(`${base}/api/healthz`);
+  if (!health.ok) fail(`/api/healthz returned ${health.status}`);
+  if ((await health.json()).status !== "ok") fail("/api/healthz did not say ok");
 
   for (const header of [
     "content-security-policy",
