@@ -34,12 +34,6 @@ export interface PlaceDetails {
   };
 }
 
-export interface CommuteResult {
-  distanceKm: number;
-  durationMinutes: number;
-  mode: string;
-}
-
 export async function fetchDemoHouseholds(): Promise<DemoHouseholdItem[]> {
   const res = await fetch("/api/demo/households");
   if (!res.ok) throw new Error(`Demo households failed: ${res.status}`);
@@ -64,19 +58,6 @@ export async function fetchPlaceDetails(placeId: string, session?: string): Prom
   const res = await fetch(`/api/places/${placeId}${qs}`);
   if (!res.ok) throw new Error(`Place details failed: ${res.status}`);
   return res.json() as Promise<PlaceDetails>;
-}
-
-export async function fetchCommuteDistance(
-  origin: { lat: number; lng: number },
-  destination: { lat: number; lng: number },
-): Promise<CommuteResult> {
-  const res = await fetch("/api/commute", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ origin, destination }),
-  });
-  if (!res.ok) throw new Error(`Commute failed: ${res.status}`);
-  return res.json() as Promise<CommuteResult>;
 }
 
 export async function fetchAirData(

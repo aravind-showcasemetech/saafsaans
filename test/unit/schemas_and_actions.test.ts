@@ -12,7 +12,6 @@ import {
   HomeProfileSchema,
   HouseholdProfileSchema,
   MemberProfileSchema,
-  PlanOutputSchema,
 } from "../../src/shared/schemas";
 
 describe("src/shared/factors", () => {
@@ -111,66 +110,6 @@ describe("src/shared/schemas", () => {
       distanceKm: -10,
     };
     expect(CommuteProfileSchema.safeParse(badCommute).success).toBe(false);
-  });
-
-  it("validates plan output schema", () => {
-    const mockPlan = {
-      currentAqi: 150,
-      aqiBand: "Moderately polluted",
-      cpcbHealthStatement: "May cause breathing discomfort...",
-      cleanestWindow: {
-        startHour: 14,
-        endHour: 17,
-        averagePm25: 45,
-      },
-      dirtiestWindow: {
-        startHour: 7,
-        endHour: 10,
-        averagePm25: 110,
-      },
-      swaps: [
-        {
-          actionId: "metro-not-car",
-          lens: "polluteLess",
-          kind: "computed",
-          title: "Take metro",
-          explanation: "Saves 4.3 kg CO2",
-          isEstimate: true,
-          factorSections: ["9"],
-          savingNumber: 4.35,
-          savingUnit: "kg CO2",
-        },
-      ],
-      memberDoses: [
-        {
-          memberId: "m1",
-          name: "Grandmother",
-          baseDoseUg: 93.6,
-          withSwapsDoseUg: 46.8,
-          doseCutPercentage: 50,
-          baseAvgExposureUgM3: 65,
-          withSwapsAvgExposureUgM3: 50,
-          cigarettesAvoided: 0.68,
-          isEstimate: true,
-          factorSections: ["2", "3"],
-        },
-      ],
-      householdEmissions: {
-        co2SavedKgPerDay: 4.35,
-        co2SavedKgPerWeek: 21.73,
-        co2SavedKgPerWinter: 369.38,
-        vehicleKmAvoidedPerDay: 32,
-        isEstimate: true,
-        factorSections: ["9"],
-      },
-      communitySummary: {
-        homesParticipating: 10,
-        weeklyCo2SavedKg: 217.3,
-      },
-    };
-
-    const parsed = PlanOutputSchema.safeParse(mockPlan);
-    expect(parsed.success).toBe(true);
   });
 
   it("escapes HTML in nicknames and user inputs (XSS safety)", () => {

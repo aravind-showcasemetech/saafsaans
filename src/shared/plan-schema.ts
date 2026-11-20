@@ -59,5 +59,4 @@ export const PlanResponseSchema = z.object({
 });
 
 export type PlanSwapItem = z.infer<typeof PlanSwapItemSchema>;
-export type MemberDoseComparison = z.infer<typeof MemberDoseComparisonSchema>;
 export type PlanResponse = z.infer<typeof PlanResponseSchema>;

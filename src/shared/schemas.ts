@@ -1,4 +1,4 @@
-// schemas.ts: Zod schemas for household profile and plan.
+// schemas.ts: Zod schemas for the household profile. The plan reply is in plan-schema.ts.
 import { z } from "zod";
 
 export const AgeBandSchema = z.enum([
@@ -109,93 +109,13 @@ export const AqiBandNameSchema = z.enum([
   "Severe",
 ]);
 
-export const HourlyAirRecordSchema = z.object({
-  hour: z.number().int().min(0).max(23),
-  dateTime: z.string().datetime().optional(),
-  pm25: z.number().min(0),
-  aqi: z.number().min(0).optional(),
-});
-
-export const PlanSwapSchema = z.object({
-  actionId: z.string(),
-  lens: z.enum(["protect", "polluteLess"]),
-  kind: z.enum(["computed", "sourcedFact", "adviceOnly"]),
-  title: z.string(),
-  explanation: z.string(),
-  appliesToMemberIds: z.array(z.string()).optional(),
-  savingNumber: z.number().optional(),
-  savingUnit: z.string().optional(),
-  savingRange: z
-    .object({
-      min: z.number(),
-      max: z.number(),
-      unit: z.string(),
-    })
-    .optional(),
-  factText: z.string().optional(),
-  isEstimate: z.boolean(),
-  factorSections: z.array(z.string()),
-});
-
-export const MemberDoseSummarySchema = z.object({
-  memberId: z.string(),
-  name: z.string(),
-  baseDoseUg: z.number(),
-  withSwapsDoseUg: z.number(),
-  doseCutPercentage: z.number(),
-  baseAvgExposureUgM3: z.number(),
-  withSwapsAvgExposureUgM3: z.number(),
-  cigarettesAvoided: z.number(),
-  isEstimate: z.boolean(),
-  factorSections: z.array(z.string()),
-});
-
-export const HouseholdEmissionsSummarySchema = z.object({
-  co2SavedKgPerDay: z.number(),
-  co2SavedKgPerWeek: z.number(),
-  co2SavedKgPerWinter: z.number(),
-  vehicleKmAvoidedPerDay: z.number(),
-  isEstimate: z.boolean(),
-  factorSections: z.array(z.string()),
-});
-
-export const PlanOutputSchema = z.object({
-  currentAqi: z.number(),
-  aqiBand: AqiBandNameSchema,
-  cpcbHealthStatement: z.string(),
-  cleanestWindow: z.object({
-    startHour: z.number(),
-    endHour: z.number(),
-    averagePm25: z.number(),
-  }),
-  dirtiestWindow: z.object({
-    startHour: z.number(),
-    endHour: z.number(),
-    averagePm25: z.number(),
-  }),
-  swaps: z.array(PlanSwapSchema),
-  memberDoses: z.array(MemberDoseSummarySchema),
-  householdEmissions: HouseholdEmissionsSummarySchema,
-  communitySummary: z.object({
-    homesParticipating: z.number(),
-    weeklyCo2SavedKg: z.number(),
-  }),
-});
-
 export type AgeBand = z.infer<typeof AgeBandSchema>;
 export type HealthSensitivity = z.infer<typeof HealthSensitivitySchema>;
 export type RoutinePreset = z.infer<typeof RoutinePresetSchema>;
 export type ActivityLevel = z.infer<typeof ActivityLevelSchema>;
 export type MemberProfile = z.infer<typeof MemberProfileSchema>;
 export type TravelMode = z.infer<typeof TravelModeSchema>;
-export type CommuteProfile = z.infer<typeof CommuteProfileSchema>;
 export type WindowHabit = z.infer<typeof WindowHabitSchema>;
 export type CookingMethod = z.infer<typeof CookingMethodSchema>;
 export type RoutineBlock = z.infer<typeof RoutineBlockSchema>;
-export type HomeProfile = z.infer<typeof HomeProfileSchema>;
 export type HouseholdProfile = z.infer<typeof HouseholdProfileSchema>;
-export type HourlyAirRecord = z.infer<typeof HourlyAirRecordSchema>;
-export type PlanSwap = z.infer<typeof PlanSwapSchema>;
-export type MemberDoseSummary = z.infer<typeof MemberDoseSummarySchema>;
-export type HouseholdEmissionsSummary = z.infer<typeof HouseholdEmissionsSummarySchema>;
-export type PlanOutput = z.infer<typeof PlanOutputSchema>;

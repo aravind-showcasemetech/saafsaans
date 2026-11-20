@@ -4,7 +4,7 @@ import { config } from "./config.js";
 const ROUTES_BASE_URL = "https://routes.googleapis.com/directions/v2:computeRoutes";
 const TIMEOUT_MS = 8000;
 
-export interface CommuteRequestCoords {
+interface CommuteRequestCoords {
   origin: {
     lat: number;
     lng: number;

@@ -1,6 +1,7 @@
 // format.ts: Formatting helpers for SaafSaans numbers, hours, bands and places.
 // Every word comes from the i18n dictionaries; numbers use Indian grouping.
 
+import { escapeHtml } from "../../shared/escape.js";
 import { getLanguage, t } from "../home/i18n.js";
 
 /** Format a number using Indian grouping ("en-IN"). */
@@ -69,4 +70,9 @@ export function timeOfDay(date: Date): string {
     minute: "2-digit",
     timeZone: "Asia/Kolkata",
   }).format(date);
+}
+
+/** A nickname, marked so tests can tell user data from interface text. */
+export function nicknameHtml(name: string): string {
+  return `<span class="nickname">${escapeHtml(name)}</span>`;
 }
