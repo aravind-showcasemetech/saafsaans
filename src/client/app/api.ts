@@ -2,7 +2,7 @@
 // The server validates every reply with the shared Zod schemas before sending it, so the browser
 // uses the inferred types only and does not ship Zod (smaller bundle, no eval probe under CSP).
 
-import type { NormalisedAirData } from "../../shared/air-types.js";
+import type { CommuteModesResponse, NormalisedAirData } from "../../shared/air-types.js";
 import type { PlaceCoordinates, PlaceSuggestion } from "../../shared/place-types.js";
 import type { PlanResponse, PlanSwapItem } from "../../shared/plan-schema.js";
 import type { HouseholdProfile } from "../../shared/schemas.js";
@@ -47,6 +47,20 @@ export async function fetchPlaceDetails(
   const res = await fetch(`/api/places/${encodeURIComponent(placeId)}${qs}`);
   if (!res.ok) throw new Error(`Place details failed: ${res.status}`);
   return (await res.json()) as PlaceCoordinates;
+}
+
+/** Distance and time by mode from the Routes API, between two points rounded to about 1 km. */
+export async function fetchCommuteRoutes(
+  origin: { lat: number; lng: number },
+  destination: { lat: number; lng: number },
+): Promise<CommuteModesResponse> {
+  const res = await fetch("/api/commute", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ origin, destination }),
+  });
+  if (!res.ok) throw new Error(`Commute failed: ${res.status}`);
+  return (await res.json()) as CommuteModesResponse;
 }
 
 export async function fetchAirData(

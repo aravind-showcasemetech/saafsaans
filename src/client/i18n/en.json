@@ -306,7 +306,8 @@
       "purifier": "So we do not suggest one you already have.",
       "cadr": "With it we can check your purifier is big enough. Leave empty if you do not know.",
       "incense": "Incense raises the smoke indoors a lot.",
-      "coils": "One coil gives off as much smoke as many cigarettes."
+      "coils": "One coil gives off as much smoke as many cigarettes.",
+      "destination": "So Google Maps can measure your trip; we only use it to fill in the distance."
     },
     "review": {
       "place": "You live in {place}.",
@@ -318,7 +319,8 @@
       "purifier": "Air purifier at home: {answer}.",
       "sources": "Incense indoors: {incense}. Mosquito coils: {coils}.",
       "yes": "yes",
-      "no": "no"
+      "no": "no",
+      "destination": "You go to {place}."
     },
     "reviewAge": {
       "under-6": "under six",
@@ -361,6 +363,22 @@
       "mostly_shut": "mostly shut",
       "open_day_shut_night": "open in the day, shut at night",
       "mostly_open": "mostly open"
+    },
+    "destination": "Where do you go? (optional)",
+    "destPlaceholder": "For example HITEC City or your school",
+    "routesNote": "Choose a place and Google Maps works out the distance for you. You can always type it yourself.",
+    "route": {
+      "loading": "Measuring your trip with Google Maps",
+      "filled": "Distance by {mode} from Google Maps: {km} km each way.",
+      "beta": "Google lists two-wheeler and walking routes as beta. They may miss some paths, so check the distance.",
+      "roadFallback": "No public transport route was found, so this is the road distance.",
+      "error": "Could not measure the trip. Please type the distance yourself.",
+      "mode": {
+        "DRIVE": "car",
+        "TWO_WHEELER": "two-wheeler",
+        "TRANSIT": "public transport",
+        "WALK": "walking"
+      }
     }
   },
   "share": {

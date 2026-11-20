@@ -1,6 +1,7 @@
 // steps.ts: The content of each setup step, and the review in plain sentences.
 import { escapeHtml } from "../../../shared/escape.js";
 import { t } from "../../home/i18n.js";
+import { placeComboboxHtml } from "../../ui/combobox.js";
 import { formatIndianNumber, placeLabel } from "../format.js";
 import { field, memberCardHtml, numberInput, options, selectInput } from "./fields.js";
 import { type StepId, draft } from "./state.js";
@@ -9,16 +10,13 @@ const e = escapeHtml;
 
 function locationHtml(): string {
   return `
-    <div class="field">
-      <label for="place-search-input" class="field-label">${e(t("setup.searchLabel"))}</label>
-      <div class="combobox">
-        <input id="place-search-input" type="text" class="input" role="combobox" aria-autocomplete="list" aria-expanded="false"
-          aria-controls="place-suggestions-listbox" aria-describedby="place-search-input-why"
-          placeholder="${e(t("setup.searchPlaceholder"))}" value="${e(placeLabel(draft.selectedLocation.name))}" />
-        <ul id="place-suggestions-listbox" class="combobox-list hidden" role="listbox" aria-label="${e(t("setup.searchLabel"))}"></ul>
-      </div>
-      <p class="field-why" id="place-search-input-why"><span class="why-label">${e(t("setup.whyLabel"))}</span> ${e(t("setup.why.location"))}</p>
-    </div>
+    ${placeComboboxHtml({
+      id: "place-search-input",
+      label: t("setup.searchLabel"),
+      placeholder: t("setup.searchPlaceholder"),
+      whyKey: "setup.why.location",
+      value: placeLabel(draft.selectedLocation.name),
+    })}
     <p><button id="btn-use-location" class="btn btn-secondary" type="button">${e(t("setup.useLocation"))}</button> <span class="muted small">${e(t("setup.roundedNote"))}</span></p>
     <p id="location-status" class="error-text" role="status"></p>
     <p class="muted small">${e(t("setup.googleNote"))}</p>`;
@@ -47,10 +45,19 @@ function travelHtml(): string {
   return `
     <div class="field-grid">
       ${field("commute-mode-select", t("setup.travelMode"), "setup.why.mode", selectInput("commute-mode-select", "", options(modes, draft.commuteMode)))}
-      ${field("commute-dist-input", t("setup.distance"), "setup.why.distance", numberInput("commute-dist-input", draft.commuteDistanceKm, 0, 200, 0.5))}
+      ${placeComboboxHtml({
+        id: "commute-dest-input",
+        label: t("setup.destination"),
+        placeholder: t("setup.destPlaceholder"),
+        whyKey: "setup.why.destination",
+        value: draft.destination?.name ?? "",
+      })}
+      ${field("commute-dist-input", t("setup.distance"), "setup.why.distance", numberInput("commute-dist-input", draft.commuteDistanceKm, 0, 200, 0.1))}
       ${field("commute-days-input", t("setup.days"), "setup.why.days", numberInput("commute-days-input", draft.workingDaysPerWeek, 1, 7))}
       ${field("commute-people-input", t("setup.sharing"), "setup.why.sharing", numberInput("commute-people-input", draft.peopleSharing, 1, 10))}
-    </div>`;
+    </div>
+    <div id="route-status" class="route-status" role="status" aria-live="polite"></div>
+    <p class="muted small">${e(t("setup.routesNote"))}</p>`;
 }
 
 function homeHtml(): string {
@@ -123,7 +130,19 @@ function reviewHtml(): string {
     <div class="review stack">
       ${reviewGroup("location", "setup.stepLocation", [e(t("setup.review.place", { place: placeLabel(draft.selectedLocation.name) }))])}
       ${reviewGroup("people", "setup.stepHousehold", people)}
-      ${reviewGroup("travel", "setup.stepTravel", [e(t("setup.review.travel", { mode: t(`setup.reviewMode.${draft.commuteMode}`), km: formatIndianNumber(draft.commuteDistanceKm, 1), days: draft.workingDaysPerWeek, people: draft.peopleSharing }))])}
+      ${reviewGroup("travel", "setup.stepTravel", [
+        e(
+          t("setup.review.travel", {
+            mode: t(`setup.reviewMode.${draft.commuteMode}`),
+            km: formatIndianNumber(draft.commuteDistanceKm, 1),
+            days: draft.workingDaysPerWeek,
+            people: draft.peopleSharing,
+          }),
+        ),
+        ...(draft.destination
+          ? [e(t("setup.review.destination", { place: draft.destination.name }))]
+          : []),
+      ])}
       ${reviewGroup("home", "setup.stepHome", [
         e(
           t("setup.review.room", {

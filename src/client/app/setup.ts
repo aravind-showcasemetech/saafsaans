@@ -10,6 +10,7 @@ import { attachLocation } from "./setup/location.js";
 import { attachPeople } from "./setup/people.js";
 import { STEPS, type StepId, initFromStored, saveAll } from "./setup/state.js";
 import { stepContent } from "./setup/steps.js";
+import { attachTravel } from "./setup/travel.js";
 
 const ICONS: Record<StepId, IconName> = {
   location: "map-pin",
@@ -58,6 +59,7 @@ export function renderSetupView(container: HTMLElement): void {
 
   if (step === "location") attachLocation(container);
   if (step === "people") attachPeople(container, () => renderSetupView(container));
+  if (step === "travel") attachTravel(container);
 
   const error = container.querySelector<HTMLElement>("#setup-error");
   const leave = (target: () => void) => {

@@ -1,5 +1,6 @@
 // state.ts: What the person has entered so far, kept across the five setup steps, and the profile
 // built from it. Nicknames stay in the browser; members are sent as m1, m2...
+import type { CommuteModesResponse } from "../../../shared/air-types.js";
 import type {
   AgeBand,
   CookingMethod,
@@ -45,6 +46,10 @@ export const draft = {
   selectedLocation: DEFAULT_LOCATION,
   householdMembers: [] as MemberDraft[],
   commuteMode: "petrol_car",
+  /** Where the commute goes, if the person chose it in the travel step. */
+  destination: null as { name: string; lat: number; lng: number } | null,
+  /** The Routes API result for the current home and destination (not saved). */
+  routes: null as CommuteModesResponse | null,
   commuteDistanceKm: 12,
   workingDaysPerWeek: 5,
   peopleSharing: 1,
@@ -104,6 +109,8 @@ export function initFromStored(): void {
     outdoorExerciseTime: m.outdoorExerciseTime || "06:00",
   }));
   const c = stored.commute;
+  draft.destination = c.endPlace ? { name: c.endPlace, lat: Number.NaN, lng: Number.NaN } : null;
+  draft.routes = null;
   Object.assign(draft, {
     commuteMode: c.mode,
     commuteDistanceKm: c.distanceKm,
@@ -154,6 +161,12 @@ export function buildProfile(): HouseholdProfile {
       tripsPerDay: 2,
       peopleSharing: draft.peopleSharing,
       workingDaysPerWeek: draft.workingDaysPerWeek,
+      ...(draft.destination
+        ? {
+            startPlace: draft.selectedLocation.name.slice(0, 100),
+            endPlace: draft.destination.name.slice(0, 100),
+          }
+        : {}),
     },
     home: {
       bedroomAreaSqFt: draft.bedroomSqFt,

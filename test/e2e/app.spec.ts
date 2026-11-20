@@ -44,7 +44,7 @@ test.describe("Flows (DEMO=1)", () => {
     await page.goto("/#/setup");
     const input = page.locator("#place-search-input");
     await input.fill("gachi");
-    await expect(page.locator("#place-suggestions-listbox [role=option]").first()).toBeVisible();
+    await expect(page.locator("#place-search-input-listbox [role=option]").first()).toBeVisible();
     await input.press("ArrowDown");
     await input.press("Enter");
     await expect

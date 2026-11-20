@@ -514,3 +514,14 @@ textarea.input {
 .society .big-number {
   color: var(--accent);
 }
+
+.route-status p {
+  margin: var(--space-4) 0;
+  font-size: var(--text-xs);
+  color: var(--ink-2);
+}
+
+.route-status p:first-child {
+  color: var(--accent);
+  font-weight: 500;
+}
