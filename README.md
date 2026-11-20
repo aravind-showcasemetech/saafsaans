@@ -57,6 +57,12 @@ SaafSaans ("clean breath") looks at today's air where you live and who is at hom
 
 ## How the solution works
 
+![How a plan is made, in six steps: 1, you tell us your area and who lives with you; 2, live air for your area from the Google Air Quality API; 3, your family's day hour by hour, with indoor air from a room model; 4, every swap computed, dose cut and cigarettes' worth for each person and car km and CO2 for the household; 5, Gemini picks and explains the swaps in English, Hindi or Telugu and is never allowed to write a number; 6, you decide, ticking swaps to update the family totals, adding clean hours to your calendar or sharing on WhatsApp](docs/images/saafsaans-plan-flow.webp)
+
+![SaafSaans under the hood, in three columns: in your browser, the guided Home, Setup, Today and Share screens in English, Hindi and Telugu, the shared impact model that updates family totals when you tick a swap, and the household profile and nicknames that stay on your device; on Google Cloud Run in Mumbai, a Node 22 and Hono container with a security layer (strict CSP and headers, rate limits of 60 and 10 a minute, Zod validation, an 8 KB body cap), the API routes, the plan engine and caches; and the Google APIs, with keys only on the server in Secret Manager: Gemini, Air Quality, Places (New) and Routes](docs/images/saafsaans-architecture.webp)
+
+The full diagrams, the code map and the security layers are in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
 **The user journey.** Every section of the home page and of Today follows the same shape: a step label, a heading that says what you get, "What this shows" and "What you can do", the content, and one primary action.
 
 1. **Home: today's air and what you will get.** The live AQI for Kukatpally with its band in words and CPCB's statement. (Screenshot above.)
