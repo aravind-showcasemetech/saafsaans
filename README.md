@@ -2,6 +2,8 @@
 
 **Live:** https://saafsaans-382086946715.asia-south1.run.app
 
+**Blog:** https://dev.to/aravind_nethi_44bcf041842/saafsaans-a-family-smog-plan-where-every-number-is-worked-out-not-guessed-kim
+
 Open it and press **Try a Hyderabad family** to see a full plan in one click, or **Set up my household** to make your own. English, हिन्दी and తెలుగు are one tap away in the header.
 
 SaafSaans ("clean breath") looks at today's air where you live and who is at home, then tells you when to go out, how to keep the air inside cleaner, and what each change saves, in numbers, for each person and for the city.
