@@ -27,9 +27,14 @@ Quality Assistant). Before any change, read `docs/SPEC.md` (what to build) and `
    zoom. Anything that moves for more than five seconds has a pause control.
 7. **Translations.** All user-facing text lives in `src/client/i18n/en.json`, `hi.json` and
    `te.json`. No hard-coded text in UI code.
-7a. **Design.** Every screen follows `docs/DESIGN.md`: no icons, no em dashes or en dashes in any
-   text a user can read (Gemini output included), minimal motion, nothing from its "never use"
-   list. No icon, animation or scroll library.
+7a. **Design.** Every screen follows `docs/DESIGN.md`: the dark black and green theme, the guided
+   full-height section pattern, no em dashes or en dashes in any text a user can read (Gemini
+   output included), minimal motion, nothing from its "never use" list. Icons: at most 15 Lucide
+   SVGs copied into `src/client/assets/icons/` (ISC, see `THIRD_PARTY_NOTICES.md`), 20 px,
+   `aria-hidden`, always beside a text label; no icon library or icon font. Illustrations are
+   original SVG diagrams that explain something, with translated titles or `aria-hidden`, and
+   numbers from `src/shared`. Fonts are self-hosted (Anek for headings, Noto Sans for body). No
+   animation or scroll library.
 8. **Health wording.** No medical advice and no medicines. Health text comes only from CPCB's band
    statements, the Air Quality API's health recommendations (labelled as Google's), and the fixed
    "see a doctor if" text from `docs/SPEC.md` §7. Gemini never writes health advice.

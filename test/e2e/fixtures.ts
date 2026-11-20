@@ -27,3 +27,11 @@ export const test = base.extend<{ cspGuard: undefined }>({
 });
 
 export { expect };
+
+/** Opens the home page, then the demo family's Today, as a visitor would. */
+export async function openDemoFamily(page: import("@playwright/test").Page): Promise<void> {
+  await page.goto("/");
+  await page.waitForSelector("#start .g-title");
+  await page.locator("a[href='#/demo']").first().click();
+  await page.waitForSelector(".swap-card");
+}

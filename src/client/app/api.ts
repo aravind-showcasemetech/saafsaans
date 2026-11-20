@@ -15,6 +15,9 @@ export interface DemoHouseholdItem {
   location: StoredLocation;
   profile: HouseholdProfile;
   nicknames: Record<string, string>;
+  /** m1 to its role ("father", "grandmother"), to name demo members in the current language. */
+  roles: Record<string, string>;
+  homes?: number;
 }
 
 export async function fetchDemoHouseholds(): Promise<DemoHouseholdItem[]> {

@@ -1,68 +1,21 @@
-/* motion.css: Smooth scrolling, marquee animations, and view reveals */
-
+/* motion.css: Native smooth scrolling and the one fade per section (DESIGN.md section 6).
+   The first section (the largest paint) never fades; reduced motion turns everything off. */
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
   }
 
-  /* Section transition: fade in once and 12px upward move */
-  .reveal-on-scroll {
+  .reveal-on-scroll:not(.is-visible):not(.hero) {
     opacity: 0;
     transform: translateY(12px);
+  }
+
+  .reveal-on-scroll {
     transition: opacity 320ms cubic-bezier(0.2, 0, 0, 1), transform 320ms cubic-bezier(0.2, 0, 0, 1);
   }
 
-  .reveal-on-scroll.is-visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  /* Stagger up to 4 children by 60ms */
-  .reveal-on-scroll.is-visible .stagger-1 {
-    transition-delay: 60ms;
-  }
-  .reveal-on-scroll.is-visible .stagger-2 {
-    transition-delay: 120ms;
-  }
-  .reveal-on-scroll.is-visible .stagger-3 {
-    transition-delay: 180ms;
-  }
-  .reveal-on-scroll.is-visible .stagger-4 {
-    transition-delay: 240ms;
-  }
-
-  @keyframes marquee-scroll {
-    0% {
-      transform: translateX(0);
-    }
-    100% {
-      transform: translateX(-50%);
-    }
-  }
-}
-
-/* Reduced motion preference */
-@media (prefers-reduced-motion: reduce) {
-  .reveal-on-scroll {
-    opacity: 1 !important;
-    transform: none !important;
-  }
-
-  .marquee-track {
-    animation: none !important;
-    transform: none !important;
-  }
-
-  .marquee-viewport {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .marquee-viewport::-webkit-scrollbar {
-    height: 4px;
-  }
-
-  .marquee-viewport::-webkit-scrollbar-thumb {
-    background: var(--rule);
+  #today-totals,
+  .calc-result {
+    transition: opacity 150ms ease;
   }
 }

@@ -1,85 +1,90 @@
-// home.ts: Main home page controller assembling the modules.
-// Plain TypeScript, follows docs/DESIGN.md sections 1 to 8.
-// The insight windows and the Reddys' examples come from the Kukatpally forecast and src/shared.
-
+// home.ts: The home page: guided full-height sections named after the challenge brief
+// (DESIGN.md section 7). The hero renders at once; the rest follows when the demo data arrives.
 import type { NormalisedAirData } from "../../shared/air-types.js";
-import { cleanestAndDirtiestWindows } from "../../shared/impact.js";
-import { fetchAirData } from "../app/api.js";
+import { type DemoHouseholdItem, fetchAirData, fetchDemoHouseholds } from "../app/api.js";
 import { capturedLabel, timeOfDay } from "../app/format.js";
 import { setPageMeta } from "../app/meta.js";
-import { type AreaAirItem, computeReddysExamples, fetchAreasAir } from "./data.js";
-import { type SupportedLang, getLanguage, setLanguage } from "./i18n.js";
-import { setupHeaderScroll, setupMarquees, setupScrollReveal, setupStickyPanel } from "./motion.js";
+import { attachCalculator } from "../ui/calculator.js";
+import { downloadCleanWindowIcs } from "../ui/calendar.js";
+import { attachGuideNav, guideNavHtml } from "../ui/nav.js";
+import { attachChrome, renderFooter, renderHeader } from "./chrome.js";
+import { t } from "./i18n.js";
+import { type HomeModel, buildHomeModel } from "./model.js";
+import { setupScrollReveal } from "./motion.js";
+import { airSection, heroSection, indoorSection, routineSection } from "./sections-a.js";
 import {
-  renderAirMarquee,
-  renderCommunity,
-  renderFinalCta,
-  renderFooter,
-  renderFormulas,
-  renderHeader,
-  renderHero,
-  renderHowItWorks,
-  renderMorningInsight,
-  renderSourcesMarqueeAndList,
-  renderTwoLenses,
-} from "./render.js";
+  alternativesSection,
+  communitySection,
+  finalSection,
+  impactSection,
+  impactTableHtml,
+  methodSection,
+} from "./sections-b.js";
 
 const KUKATPALLY = { lat: 17.48, lng: 78.41 };
+
+function sectionsHtml(m: HomeModel): string {
+  const airLabel = m.air.isDemo
+    ? (capturedLabel(m.air.capturedAt) ?? "")
+    : t("hero.updatedAt", { time: timeOfDay(new Date()) });
+  return [
+    heroSection(m, airLabel),
+    airSection(m),
+    routineSection(m),
+    indoorSection(m),
+    alternativesSection(m),
+    impactSection(m),
+    communitySection(m, window.location.origin),
+    methodSection(),
+    finalSection(),
+  ].join("");
+}
+
+function navFromSections(main: HTMLElement): string {
+  const items = Array.from(main.querySelectorAll<HTMLElement>(".g-section")).map((s) => ({
+    id: s.id,
+    title: s.dataset.navTitle ?? "",
+    stepLabel: s.dataset.stepLabel ?? "",
+  }));
+  return guideNavHtml(items);
+}
+
+function attachSections(root: HTMLElement, m: HomeModel): void {
+  attachCalculator(root, "home");
+  root.querySelector("#home-ics")?.addEventListener("click", () => {
+    if (m.cleanest) downloadCleanWindowIcs(m.cleanest, t("places.Kukatpally, Hyderabad"));
+  });
+  const toggle = root.querySelector<HTMLInputElement>("#home-impact-toggle");
+  const table = root.querySelector<HTMLElement>("#home-impact-table");
+  toggle?.addEventListener("change", () => {
+    if (table) table.innerHTML = impactTableHtml(m, toggle.checked);
+  });
+}
 
 export async function initHomePage(): Promise<void> {
   const appRoot = document.getElementById("app");
   if (!appRoot) return;
+  setPageMeta("home");
 
-  const [areas, forecastAir] = await Promise.all([
-    fetchAreasAir(),
+  const shell = (main: string) => {
+    appRoot.innerHTML = `${renderHeader()}<div class="guide"><div class="guide-rail"></div><main id="main" class="guide-main" tabindex="-1">${main}</main></div>${renderFooter()}`;
+    attachChrome(() => void initHomePage());
+  };
+  shell(heroSection(null, ""));
+
+  const [air, households] = await Promise.all([
     fetchAirData(KUKATPALLY.lat, KUKATPALLY.lng).catch((): NormalisedAirData | null => null),
+    fetchDemoHouseholds().catch((): DemoHouseholdItem[] => []),
   ]);
-  const kukatpally: AreaAirItem | undefined = areas.find((a) => a.name === "Kukatpally");
-  const hourly = forecastAir?.hourlyForecast ?? [];
-  const windows = cleanestAndDirtiestWindows(hourly);
-  const reddys = computeReddysExamples(hourly, forecastAir?.pm25 ?? kukatpally?.pm25 ?? 0);
-  const loadedAt = new Date();
+  const model = air ? buildHomeModel(air, households) : null;
+  if (!model) return;
 
-  function renderFullPage(): void {
-    if (!appRoot) return;
-    setPageMeta("home");
-    // One clear label: sample data shows when it was captured, live data shows when it loaded.
-    const airLabel = kukatpally?.isDemo
-      ? (capturedLabel(kukatpally.capturedAt) ?? "")
-      : timeOfDay(loadedAt);
-    appRoot.innerHTML = `
-      ${renderHeader()}
-      <main id="main-content">
-        ${renderHero(kukatpally ?? null, airLabel)}
-        ${renderAirMarquee(areas)}
-        ${renderMorningInsight(windows.cleanest, windows.dirtiest)}
-        ${renderHowItWorks()}
-        ${renderTwoLenses(reddys.protectDoseCut, reddys.polluteLessWeeklyCo2)}
-        ${renderFormulas()}
-        ${renderCommunity(reddys.communityHomes, reddys.communityTotalWeeklyKg)}
-        ${renderSourcesMarqueeAndList()}
-        ${renderFinalCta()}
-      </main>
-      ${renderFooter()}`;
-
-    const current = getLanguage();
-    for (const btn of document.querySelectorAll<HTMLButtonElement>(".lang-btn")) {
-      const lang = btn.getAttribute("data-lang") as SupportedLang;
-      if (lang === current) {
-        btn.classList.add("active");
-        btn.setAttribute("aria-current", "true");
-      }
-      btn.addEventListener("click", async () => {
-        await setLanguage(lang);
-        renderFullPage();
-      });
-    }
-
-    setupHeaderScroll();
-    setupScrollReveal();
-    setupMarquees();
-    setupStickyPanel({ windows, reddys });
-  }
-
-  renderFullPage();
+  shell(sectionsHtml(model));
+  const main = appRoot.querySelector<HTMLElement>("#main");
+  const rail = appRoot.querySelector<HTMLElement>(".guide-rail");
+  if (!main || !rail) return;
+  rail.innerHTML = navFromSections(main);
+  attachGuideNav(appRoot);
+  attachSections(appRoot, model);
+  setupScrollReveal(appRoot);
 }

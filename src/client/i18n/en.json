@@ -15,68 +15,8 @@
     "loadingAir": "Loading live Hyderabad air...",
     "updatedAt": "Updated at {time}"
   },
-  "marquee": {
-    "airTitle": "Live air quality across areas",
-    "airScrollRegion": "Live air quality ticker across city areas",
-    "sourcesTitle": "Scientific and government sources",
-    "sourcesScrollRegion": "Scientific and institutional data sources ticker"
-  },
   "insight": {
-    "label": "Morning insight",
-    "title": "Morning is often the worst time for a walk in winter",
-    "desc": "Winter temperature inversions trap surface particles overnight. Sunlight breaks the inversion by afternoon, making late afternoon significantly cleaner.",
-    "explanation": "Cold air stays close to the ground overnight, holding smoke and dust near street level. As the sun warms the earth, the mixing layer rises, giving Hyderabad its cleanest air between {cleanestStart} and {cleanestEnd}.",
-    "cleanestTitle": "Cleanest window today",
-    "cleanestNote": "Best time for walks, outdoor workouts and opening windows",
-    "dirtiestTitle": "Dirtiest window today",
-    "dirtiestNote": "Keep windows closed and shift vigorous outdoor exercise",
     "sourceRef": "Singh, Singh and Biswal (2020), Science of The Total Environment; Latha and Badarinath (2005)"
-  },
-  "howItWorks": {
-    "label": "How it works",
-    "title": "Three simple steps to clean air",
-    "desc": "No generic tips. Real routines mapped against live local forecasts.",
-    "exampleLabel": "Real household example",
-    "step1Title": "Tell us who is at home",
-    "step1Body": "Age, health conditions like asthma, routine presets, and bedroom room sizes. Presets let you tap rather than type.",
-    "step2Title": "See the cleanest hours",
-    "step2Body": "Hourly forecast on India's CPCB scale shows exactly when outdoor air is safest for exercise, errands, or airing your rooms.",
-    "step3Title": "Choose swaps and see the numbers",
-    "step3Body": "Gemini chooses and explains the swaps. Every number comes from tested code. Toggling any swap updates your family totals live."
-  },
-  "lenses": {
-    "label": "The impact model",
-    "title": "Two lenses: protect and pollute less",
-    "desc": "Every single action shows you what it changes in clear numbers.",
-    "protectTitle": "Protect: what your family breathes",
-    "protectDesc": "Calculates inhaled particle dose for each family member based on activity, room volume and air exchange.",
-    "protectExample": "Example: Bedroom purifier overnight cuts Reddy family bedtime particle dose by {percent}%",
-    "polluteTitle": "Pollute less: what your household puts out",
-    "polluteDesc": "Measures vehicle kilometers taken off the road and kilograms of carbon dioxide avoided from transport swaps.",
-    "polluteExample": "Example: Taking the metro saves the Reddy household {amount} kg of carbon dioxide every week"
-  },
-  "formulas": {
-    "label": "Full transparency",
-    "title": "How we work out the numbers",
-    "desc": "Open formulas and sourced factors. No black-box computations.",
-    "massBalanceTitle": "Indoor air mass balance",
-    "massBalanceDesc": "Single-room steady-state model using outdoor fine particles, ventilation rate, surface deposition, and air cleaner CADR.",
-    "doseTitle": "Inhaled particle dose",
-    "doseDesc": "Sum of concentration times age-specific inhalation rate times duration across hourly blocks.",
-    "purifierTitle": "Purifier CADR sizing",
-    "purifierDesc": "AHAM and US EPA rule: minimum CADR equals two-thirds of room area, scaled for room ceiling height.",
-    "cigsTitle": "Cigarette equivalence",
-    "cigsDesc": "Berkeley Earth equivalence: daily exposure to fine particles equals cigarette equivalence factor.",
-    "aiPlainLine": "Gemini chooses and explains the swaps. Every number comes from tested code."
-  },
-  "community": {
-    "label": "Collective action",
-    "title": "Community impact adds up quickly",
-    "desc": "Small routine changes across a society multiply into tons of avoided street pollution.",
-    "societyName": "Green Meadows society (Kondapur)",
-    "societyStory": "When participating households coordinate carpools, switch short errands to walking during clean hours, and avoid leaf burning, the local reduction is measurable.",
-    "societyResult": "Avoided road emissions per week across participating families",
-    "homesWord": "homes"
   },
   "sources": {
     "label": "References",
@@ -179,17 +119,6 @@
     "Near Charminar, Hyderabad": "Near Charminar, Hyderabad",
     "Kondapur, Hyderabad": "Kondapur, Hyderabad"
   },
-  "sticky": {
-    "familyTitle": "The Reddys of Kukatpally",
-    "familyBody": "A father who drives to work, a mother who works from home, a son with asthma and a grandmother who walks in the park at dawn. A mosquito coil burns at night.",
-    "familyDetail": "One child with asthma and one older person with a daily morning walk",
-    "windowTitle": "Cleanest air today: {window}",
-    "windowBody": "Outdoor {pm} falls in the afternoon as the air mixes higher. The dirtiest hours today are {dirtiest}.",
-    "windowDetail": "That is the opposite of the grandmother's dawn walk",
-    "numbersTitle": "Bedroom purifier: {percent}% less dose",
-    "numbersBody": "A purifier of at least {cfm} cfm fits their bedroom. Taking the metro instead of the car avoids {kg} kg of CO₂ a week.",
-    "numbersDetail": "Every number is worked out by tested code"
-  },
   "actions": {
     "shift-outdoor-exercise": "Move outdoor exercise to the cleanest hours",
     "exercise-indoors": "Exercise indoors on Poor or worse days",
@@ -265,7 +194,8 @@
     "refineError": "Could not update the plan. Please try again.",
     "loadErrorTitle": "Could not load your plan",
     "loadErrorDesc": "The air data or the plan could not be loaded. Please check your setup and try again.",
-    "reviewSetup": "Review setup"
+    "reviewSetup": "Review setup",
+    "loading": "Making your plan for today"
   },
   "totals": {
     "label": "Family totals today",
@@ -343,7 +273,94 @@
     "incense": "We light incense indoors",
     "coils": "We burn mosquito coils at night",
     "back": "Back",
-    "save": "Save and see my plan"
+    "save": "Save and see my plan",
+    "next": "Next",
+    "seePlan": "See today's plan",
+    "edit": "Edit",
+    "editGroup": "Edit {group}",
+    "whyLabel": "Why we ask:",
+    "stepTravel": "How you travel",
+    "stepHome": "Your home",
+    "days": "Days a week you travel",
+    "sharing": "People in the vehicle",
+    "modeCngCar": "CNG car",
+    "purifierCadr": "Purifier CADR in cfm, if you know it",
+    "errorRange": "Enter a number from {min} to {max}.",
+    "why": {
+      "location": "The forecast and clean hours are for this place. We round it to about one km.",
+      "nickname": "So the plan can name each person. It stays in this browser.",
+      "age": "People of different ages breathe in different amounts of air.",
+      "sensitivity": "Asthma, heart conditions and pregnancy make dirty air harder on the body.",
+      "routine": "Where someone spends the day decides the air they breathe.",
+      "exercise": "Breathing hard outdoors takes in the most air.",
+      "exerciseTime": "So we can compare it with the cleanest hours.",
+      "mode": "Each way of travelling puts out a different amount of CO₂.",
+      "distance": "Longer trips save more when you switch.",
+      "days": "How many days a week the trip happens.",
+      "sharing": "Sharing a vehicle splits its CO₂ between people.",
+      "area": "A bigger room needs a bigger purifier.",
+      "height": "High ceilings mean more air to clean.",
+      "windows": "Open windows let more outdoor air in.",
+      "cooking": "Frying without a hood fills the kitchen with smoke.",
+      "purifier": "So we do not suggest one you already have.",
+      "cadr": "With it we can check your purifier is big enough. Leave empty if you do not know.",
+      "incense": "Incense raises the smoke indoors a lot.",
+      "coils": "One coil gives off as much smoke as many cigarettes."
+    },
+    "review": {
+      "place": "You live in {place}.",
+      "person": "{age}, {routine}, {health}.",
+      "exercise": "Exercises outdoors for {minutes} minutes at {time}.",
+      "travel": "You travel by {mode}, {km} km each way, {days} days a week, with {people} in the vehicle.",
+      "room": "Your bedroom is {area} sq ft with a {height} ft ceiling.",
+      "windows": "Windows: {habit}.",
+      "purifier": "Air purifier at home: {answer}.",
+      "sources": "Incense indoors: {incense}. Mosquito coils: {coils}.",
+      "yes": "yes",
+      "no": "no"
+    },
+    "reviewAge": {
+      "under-6": "under six",
+      "6-10": "six to ten years",
+      "11-15": "eleven to fifteen years",
+      "16-30": "sixteen to thirty years",
+      "31-40": "thirty one to forty years",
+      "41-60": "forty one to sixty years",
+      "61-70": "sixty one to seventy years",
+      "71-plus": "over seventy"
+    },
+    "reviewRoutine": {
+      "school_child": "goes to school",
+      "office_worker": "goes to an office",
+      "work_from_home": "works from home",
+      "outdoor_worker": "works outdoors",
+      "retired": "retired"
+    },
+    "reviewHealth": {
+      "none": "no health condition",
+      "asthma_copd": "asthma or COPD",
+      "heart_condition": "a heart condition",
+      "pregnancy": "pregnant"
+    },
+    "reviewMode": {
+      "petrol_car": "petrol car",
+      "petrol_car_small": "small petrol car",
+      "petrol_sedan": "petrol sedan",
+      "diesel_car": "diesel car",
+      "diesel_sedan": "diesel sedan",
+      "cng_car": "CNG car",
+      "scooter": "scooter",
+      "motorcycle": "motorcycle",
+      "auto": "auto rickshaw",
+      "bus": "city bus",
+      "metro": "metro",
+      "walk_cycle": "walking or cycling"
+    },
+    "reviewWindows": {
+      "mostly_shut": "mostly shut",
+      "open_day_shut_night": "open in the day, shut at night",
+      "mostly_open": "mostly open"
+    }
   },
   "share": {
     "back": "Back to today",
@@ -372,13 +389,18 @@
     "icsDescription": "Best time for walks, errands or airing the house, from the live air forecast.",
     "print": "Print this plan",
     "noPlan": "Make a plan first to share it.",
-    "makePlan": "Plan my day"
+    "makePlan": "Plan my day",
+    "label": "Share",
+    "shows": "Your message, what your society could save together, and your clean hours.",
+    "can": "Send the message, add the clean hours to your calendar, or print your plan."
   },
   "demo": {
     "title": "Try a demo family",
     "lead": "Pick a family to see their smog plan straight away.",
     "load": "Open plan for {name}",
-    "error": "Could not load the demo families. Please try again."
+    "error": "Could not load the demo families. Please try again.",
+    "label": "Demo families",
+    "shows": "Ready made households from Hyderabad and Delhi, each with a different story."
   },
   "demoHouseholds": {
     "the-reddys": {
@@ -416,5 +438,262 @@
   },
   "a11y": {
     "skip": "Skip to main content"
+  },
+  "guide": {
+    "stepOf": "Step {n} of {total}",
+    "shows": "What this shows",
+    "can": "What you can do",
+    "navLabel": "Sections on this page"
+  },
+  "explain": {
+    "summary": "What is {term}?",
+    "aqi": {
+      "term": "AQI",
+      "body": "The Air Quality Index turns the main pollutants into one number on India's CPCB scale, from zero to five hundred. Higher is worse. Each range has a name, from Good to Severe."
+    },
+    "pm25": {
+      "body": "Tiny particles in the air, thinner than a hair, that reach deep into the lungs. They come from vehicles, dust, smoke and cooking. We measure them in micrograms in each cubic metre of air (µg/m³)."
+    },
+    "dose": {
+      "term": "dose",
+      "body": "How much {pm} a person breathes in over the day: how dirty the air is where they are, how fast they breathe for their age and activity, and for how long. Breathing harder outdoors adds up fastest."
+    },
+    "cigarettes": {
+      "term": "cigarettes' worth",
+      "body": "A rough comparison from Berkeley Earth: breathing air with a day's average of twenty two µg/m³ of {pm} is about as harmful as smoking one cigarette. It compares health risk, not smoke."
+    },
+    "cadr": {
+      "term": "CADR",
+      "body": "Clean Air Delivery Rate: how much clean air a purifier gives out, in cubic feet a minute (cfm). The bigger the room, the higher the CADR it needs. Look for it on the box."
+    },
+    "estimate": {
+      "term": "an estimate",
+      "body": "Some values are picked from inside a published range, such as how fast particles settle indoors, or come from an operator's own claim, such as the metro saving. We label those numbers Estimate."
+    }
+  },
+  "people": {
+    "father": "Father",
+    "mother": "Mother",
+    "son": "Son",
+    "grandmother": "Grandmother",
+    "adult": "Adult",
+    "elderChild": "Elder child",
+    "youngerChild": "Younger child",
+    "teenager": "Teenager",
+    "grandparent": "Grandparent"
+  },
+  "bandScale": {
+    "title": "India's air quality bands (CPCB)",
+    "today": "Today"
+  },
+  "forecast": {
+    "title": "{pm} for the next {hours} hours, one bar an hour"
+  },
+  "dayHours": {
+    "title": "{name}'s walk, moved to the cleanest hours",
+    "before": "Walk at {time}",
+    "after": "Walk at {time}",
+    "dose": "{ug} µg breathed in today",
+    "cut": "Less dose today",
+    "cutValue": "{percent}% less"
+  },
+  "room": {
+    "title": "How outdoor air gets into a room",
+    "legendIn": "Outdoor air comes in through open windows and small leaks",
+    "legendClean": "A purifier cleans the air inside the room",
+    "open": "Windows open",
+    "shut": "Windows shut",
+    "purifier": "Windows shut, with a purifier",
+    "share": "{percent}% of outdoor {pm}"
+  },
+  "trip": {
+    "title": "The same trip, two ways: {from} to {to}",
+    "byCar": "By car",
+    "byMetro": "By metro",
+    "kgDay": "{kg} kg CO₂ a day",
+    "kmOff": "Car km taken off the road",
+    "km": "{km} km a day",
+    "perDay": "CO₂ avoided a day",
+    "perWeek": "A week",
+    "perWinter": "This winter",
+    "estimate": "The metro figure is an estimate from Hyderabad Metro's own claim."
+  },
+  "calc": {
+    "legend": "Your room in feet",
+    "length": "Length (ft)",
+    "width": "Width (ft)",
+    "height": "Ceiling height (ft)",
+    "button": "Work out my purifier size",
+    "unitCfm": "cfm CADR at least",
+    "stepArea": "Floor area: {length} ft by {width} ft is {area} sq ft.",
+    "stepTwoThirds": "AHAM rule: two thirds of {area} sq ft is {cfm} cfm for a standard eight foot ceiling.",
+    "stepHeight": "Scaled for your {height} ft ceiling: {cfm} cfm, that is {cubic} m³ an hour.",
+    "error": {
+      "length": "Enter a length from {min} to {max} ft.",
+      "width": "Enter a width from {min} to {max} ft.",
+      "height": "Enter a ceiling height from {min} to {max} ft."
+    }
+  },
+  "impact": {
+    "cut": "{percent}% less"
+  },
+  "swap": {
+    "sentenceProtect": "{name} breathes {percent}% less {pm} today",
+    "sentenceMask": "{name} breathes {min}% to {max}% less {pm} while outdoors, depending on the fit",
+    "sentenceCo2": "Avoids {day} kg of CO₂ a day, {week} kg a week",
+    "sentenceWeek": "Avoids {kg} kg of CO₂ a week"
+  },
+  "home": {
+    "hero": {
+      "label": "Start here",
+      "title": "Plan your family's day around the smog",
+      "lead": "SaafSaans looks at today's air where you live and who is at home, then tells you when to go out, how to keep the air inside cleaner, and what each change saves, in numbers.",
+      "shows": "Today's air in Hyderabad and what you will get from this app.",
+      "can": "Try a ready made Hyderabad family, or set up your own household in a few minutes.",
+      "getTitle": "What you will get",
+      "get1": "The cleanest and dirtiest hours today, so you can move walks and errands.",
+      "get2": "Simple changes for indoor air and travel, picked for your family.",
+      "get3": "The number behind every change, for each person and for the city.",
+      "airTitle": "Air in Kukatpally now"
+    },
+    "air": {
+      "title": "The air where you live, right now",
+      "shows": "What the air quality number means and where today sits on India's scale.",
+      "can": "Check the air for your own area.",
+      "aqiLine": "one number for how polluted the air is, from Good to Severe.",
+      "pmLine": "the tiny particles that do most of the harm; lower is better.",
+      "action": "Check my area"
+    },
+    "routine": {
+      "title": "A low-emission daily routine",
+      "shows": "The next two days of air, hour by hour, and what moving one walk changes.",
+      "can": "Put today's cleanest hours in your calendar.",
+      "whyTitle": "Why mornings are often worse",
+      "why": "On winter nights cold air stays close to the ground and holds smoke and dust near the street. As the sun warms the ground the air mixes higher, so the afternoon is usually the cleanest part of the day.",
+      "walkLine": "{name} usually walks at {before}. Walking in the cleanest hours ({after}) cuts the day's dose.",
+      "action": "Add today's cleanest hours to my calendar"
+    },
+    "indoor": {
+      "title": "Indoor air hacks",
+      "shows": "How outdoor air gets into a room, and how much a purifier and closed windows keep out.",
+      "can": "Work out the purifier size your room needs.",
+      "roomLine": "Shutting windows helps a little. A purifier of the right size makes the biggest difference.",
+      "factsTitle": "Smoke you make indoors",
+      "calcTitle": "The Reddys' bedroom: {length} by {width} ft, {height} ft high",
+      "actionHint": "Change the room size above and press the button to work it out."
+    },
+    "alt": {
+      "title": "Sustainable alternatives",
+      "shows": "One commute by car and by metro, and the CO₂ it saves.",
+      "can": "Compare your own commute.",
+      "action": "Compare my commute"
+    },
+    "impact": {
+      "title": "The direct impact of your choices",
+      "shows": "What one change does for each person in the Reddy family today.",
+      "can": "Turn the change on and off, then see your own family's numbers.",
+      "intro": "Tick the box to run a purifier in the bedroom at night and watch each person's numbers change.",
+      "toggle": "Bedroom purifier at night",
+      "person": "Person",
+      "captionOff": "The Reddys today, without the purifier",
+      "captionOn": "The Reddys today, with the bedroom purifier",
+      "action": "See my family's numbers"
+    },
+    "community": {
+      "title": "Share it with your community",
+      "shows": "What a housing society saves when many homes make the same change.",
+      "can": "Send this to your society group, or set up your own home.",
+      "line": "{homes} homes sharing car rides, each avoiding {perHome} kg of CO₂ a week.",
+      "burning": "And no one burns leaves or rubbish: report burning to the city.",
+      "waTitle": "{society} on SaafSaans",
+      "waLine": "{homes} homes sharing car rides avoid {kg} kg of CO₂ a week."
+    },
+    "method": {
+      "title": "How we work out every number",
+      "shows": "Where our figures come from and which ones are estimates.",
+      "can": "Read every source and formula.",
+      "ai": "Gemini decides, code computes.",
+      "code": "Gemini only picks which changes fit your family and explains them in plain words. Every number comes from tested code, using values from published sources.",
+      "estimates": "When a value is picked from inside a published range, we say so and label the number Estimate.",
+      "action": "Read the sources"
+    },
+    "final": {
+      "label": "Your turn",
+      "shows": "Your own plan, for your area and your family.",
+      "can": "Start with a ready made family, or set up your own."
+    }
+  },
+  "todayG": {
+    "air": {
+      "title": "Your air today",
+      "shows": "Today's air where you live, what it means, and Google's advice for each person.",
+      "can": "Change the place the plan is for.",
+      "action": "Change location"
+    },
+    "routine": {
+      "title": "Your low-emission routine",
+      "shows": "The cleanest and dirtiest hours, and changes to your day's timing.",
+      "can": "Tick the changes you will make and add the cleanest hours to your calendar.",
+      "action": "Add cleanest hours to calendar"
+    },
+    "indoor": {
+      "title": "Indoor air hacks",
+      "shows": "Changes at home that cut what your family breathes indoors.",
+      "can": "Tick the ones you will do and work out the purifier size for your bedroom.",
+      "calcTitle": "Purifier size for your bedroom"
+    },
+    "alt": {
+      "title": "Sustainable alternatives",
+      "shows": "Ways to travel that put less into the air.",
+      "can": "Tick the ones you will try, or change how you travel.",
+      "action": "Change how I travel"
+    },
+    "impact": {
+      "title": "The impact of your choices",
+      "shows": "Each person's numbers with the changes you ticked.",
+      "can": "Tick and untick changes above, or tell us about a change in your routine.",
+      "ticked": "Changes ticked: {count}",
+      "action": "Refine my routine"
+    },
+    "share": {
+      "title": "Share with your community",
+      "shows": "A message with today's cleanest hours and what your household saves.",
+      "can": "Send it on WhatsApp or print your plan.",
+      "line": "Your plan for {area}, ready to send to your family or your society group.",
+      "more": "More sharing options: homes taking part and the calendar",
+      "print": "Print my plan"
+    },
+    "none": {
+      "routine": "No timing changes for your household today.",
+      "indoor": "No indoor changes for your household today.",
+      "alternative": "No travel changes for your household today."
+    }
+  },
+  "setupG": {
+    "location": {
+      "title": "Where do you live?",
+      "shows": "The forecast and the clean hours are worked out for this place.",
+      "can": "Search your area, or use your location."
+    },
+    "people": {
+      "title": "Who lives here?",
+      "shows": "Each person's age, health and day decides how much air they breathe in.",
+      "can": "Add each person and pick their routine."
+    },
+    "travel": {
+      "title": "How you travel",
+      "shows": "Your commute decides the CO₂ your household can save.",
+      "can": "Pick how you usually travel and how far."
+    },
+    "home": {
+      "title": "Your home",
+      "shows": "Your bedroom, windows and habits decide the air indoors.",
+      "can": "Tell us about your bedroom and what burns at home."
+    },
+    "review": {
+      "title": "Check your household",
+      "shows": "Everything you told us, in plain sentences.",
+      "can": "Edit anything, then see today's plan."
+    }
   }
 }

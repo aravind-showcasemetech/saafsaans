@@ -1,107 +1,159 @@
-// steps.ts: The stepper and the HTML for step 1 (location) and step 2 (household).
+// steps.ts: The content of each setup step, and the review in plain sentences.
 import { escapeHtml } from "../../../shared/escape.js";
 import { t } from "../../home/i18n.js";
-import { placeLabel } from "../format.js";
-import { field, memberCardHtml, options } from "./fields.js";
-import { draft } from "./state.js";
+import { formatIndianNumber, placeLabel } from "../format.js";
+import { field, memberCardHtml, numberInput, options, selectInput } from "./fields.js";
+import { type StepId, draft } from "./state.js";
 
-export function step1Html(): string {
+const e = escapeHtml;
+
+function locationHtml(): string {
   return `
-    <h2 class="step-title" tabindex="-1">${t("setup.whereTitle")}</h2>
-    <p class="step-subtext">${t("setup.whereHelp")}</p>
-    <div class="form-group">
-      <label for="place-search-input" class="form-label">${t("setup.searchLabel")}</label>
-      <div class="combobox-wrapper">
-        <input id="place-search-input" type="text" class="form-input" role="combobox" aria-autocomplete="list"
-          aria-expanded="false" aria-controls="place-suggestions-listbox"
-          placeholder="${escapeHtml(t("setup.searchPlaceholder"))}" value="${escapeHtml(placeLabel(draft.selectedLocation.name))}" />
-        <ul id="place-suggestions-listbox" class="combobox-listbox hidden" role="listbox" aria-label="${escapeHtml(t("setup.searchLabel"))}"></ul>
+    <div class="field">
+      <label for="place-search-input" class="field-label">${e(t("setup.searchLabel"))}</label>
+      <div class="combobox">
+        <input id="place-search-input" type="text" class="input" role="combobox" aria-autocomplete="list" aria-expanded="false"
+          aria-controls="place-suggestions-listbox" aria-describedby="place-search-input-why"
+          placeholder="${e(t("setup.searchPlaceholder"))}" value="${e(placeLabel(draft.selectedLocation.name))}" />
+        <ul id="place-suggestions-listbox" class="combobox-list hidden" role="listbox" aria-label="${e(t("setup.searchLabel"))}"></ul>
       </div>
-      <div class="combobox-meta-row">
-        <button id="btn-use-location" class="btn-text" type="button">${t("setup.useLocation")}</button>
-        <span class="combobox-meta-text">${t("setup.roundedNote")}</span>
-      </div>
-      <p id="location-status" class="error-msg" role="status"></p>
+      <p class="field-why" id="place-search-input-why"><span class="why-label">${e(t("setup.whyLabel"))}</span> ${e(t("setup.why.location"))}</p>
     </div>
-    <div class="privacy-notice-box">${t("setup.googleNote")}</div>
-    <div class="flex-justify-end">
-      <button id="btn-to-step-2" class="btn btn-primary" type="button">${t("setup.nextHousehold")}</button>
+    <p><button id="btn-use-location" class="btn btn-secondary" type="button">${e(t("setup.useLocation"))}</button> <span class="muted small">${e(t("setup.roundedNote"))}</span></p>
+    <p id="location-status" class="error-text" role="status"></p>
+    <p class="muted small">${e(t("setup.googleNote"))}</p>`;
+}
+
+function peopleHtml(): string {
+  const canRemove = draft.householdMembers.length > 1;
+  return `
+    <div id="members-list" class="stack">${draft.householdMembers.map((m, i) => memberCardHtml(m, i, canRemove)).join("")}</div>
+    <p><button id="btn-add-member" class="btn btn-secondary" type="button">${e(t("setup.addMember"))}</button></p>`;
+}
+
+function travelHtml(): string {
+  const modes: Array<[string, string]> = [
+    ["petrol_car", t("setup.modePetrolCar")],
+    ["petrol_car_small", t("setup.modeSmallCar")],
+    ["diesel_car", t("setup.modeDieselCar")],
+    ["cng_car", t("setup.modeCngCar")],
+    ["scooter", t("setup.modeScooter")],
+    ["motorcycle", t("setup.modeMotorcycle")],
+    ["auto", t("setup.modeAuto")],
+    ["bus", t("setup.modeBus")],
+    ["metro", t("setup.modeMetro")],
+    ["walk_cycle", t("setup.modeWalk")],
+  ];
+  return `
+    <div class="field-grid">
+      ${field("commute-mode-select", t("setup.travelMode"), "setup.why.mode", selectInput("commute-mode-select", "", options(modes, draft.commuteMode)))}
+      ${field("commute-dist-input", t("setup.distance"), "setup.why.distance", numberInput("commute-dist-input", draft.commuteDistanceKm, 0, 200, 0.5))}
+      ${field("commute-days-input", t("setup.days"), "setup.why.days", numberInput("commute-days-input", draft.workingDaysPerWeek, 1, 7))}
+      ${field("commute-people-input", t("setup.sharing"), "setup.why.sharing", numberInput("commute-people-input", draft.peopleSharing, 1, 10))}
     </div>`;
 }
 
-export function step2Html(): string {
-  const canRemove = draft.householdMembers.length > 1;
+function homeHtml(): string {
+  const check = (id: string, on: boolean, labelKey: string, whyKey: string) => `
+    <div class="field">
+      <label class="toggle"><input type="checkbox" id="${id}" ${on ? "checked" : ""} aria-describedby="${id}-why" /><span>${e(t(labelKey))}</span></label>
+      <p class="field-why" id="${id}-why"><span class="why-label">${e(t("setup.whyLabel"))}</span> ${e(t(whyKey))}</p>
+    </div>`;
   return `
-    <h2 class="step-title" tabindex="-1">${t("setup.whoTitle")}</h2>
-    <p class="step-subtext">${t("setup.whoHelp")}</p>
-    <div id="members-list">${draft.householdMembers.map((m, i) => memberCardHtml(m, i, canRemove)).join("")}</div>
-    <div class="section-spacer-24">
-      <button id="btn-add-member" class="btn btn-secondary" type="button">${t("setup.addMember")}</button>
-    </div>
-    <h3 class="section-heading-spaced">${t("setup.travelTitle")}</h3>
-    <div class="grid-12 grid-gap-12 section-spacer-24">
-      ${field(
-        "commute-mode-select",
-        t("setup.travelMode"),
-        `<select id="commute-mode-select" class="form-select">${options(
-          [
-            ["petrol_car", t("setup.modePetrolCar")],
-            ["petrol_car_small", t("setup.modeSmallCar")],
-            ["diesel_car", t("setup.modeDieselCar")],
-            ["scooter", t("setup.modeScooter")],
-            ["motorcycle", t("setup.modeMotorcycle")],
-            ["auto", t("setup.modeAuto")],
-            ["bus", t("setup.modeBus")],
-            ["metro", t("setup.modeMetro")],
-            ["walk_cycle", t("setup.modeWalk")],
-          ],
-          draft.commuteMode,
-        )}</select>`,
-      )}
-      ${field("commute-dist-input", t("setup.distance"), `<input id="commute-dist-input" type="number" min="0" max="100" class="form-input" value="${draft.commuteDistanceKm}" />`)}
-    </div>
-    <h3 class="section-heading-spaced">${t("setup.homeTitle")}</h3>
-    <div class="grid-12 grid-gap-12 section-spacer-24">
-      ${field("bedroom-sqft-input", t("setup.bedroomArea"), `<input id="bedroom-sqft-input" type="number" min="50" max="1000" class="form-input" value="${draft.bedroomSqFt}" />`)}
-      ${field("ceiling-height-input", t("setup.ceilingHeight"), `<input id="ceiling-height-input" type="number" min="7" max="20" class="form-input" value="${draft.ceilingHeightFt}" />`)}
+    <div class="field-grid">
+      ${field("bedroom-sqft-input", t("setup.bedroomArea"), "setup.why.area", numberInput("bedroom-sqft-input", draft.bedroomSqFt, 20, 2000))}
+      ${field("ceiling-height-input", t("setup.ceilingHeight"), "setup.why.height", numberInput("ceiling-height-input", draft.ceilingHeightFt, 6, 25, 0.5))}
       ${field(
         "window-habit-select",
         t("setup.windowHabit"),
-        `<select id="window-habit-select" class="form-select">${options(
-          [
-            ["mostly_shut", t("setup.windowShut")],
-            ["open_day_shut_night", t("setup.windowDay")],
-            ["mostly_open", t("setup.windowOpen")],
-          ],
-          draft.windowHabit,
-        )}</select>`,
+        "setup.why.windows",
+        selectInput(
+          "window-habit-select",
+          "",
+          options(
+            [
+              ["mostly_shut", t("setup.windowShut")],
+              ["open_day_shut_night", t("setup.windowDay")],
+              ["mostly_open", t("setup.windowOpen")],
+            ],
+            draft.windowHabit,
+          ),
+        ),
       )}
       ${field(
         "cooking-method-select",
         t("setup.cooking"),
-        `<select id="cooking-method-select" class="form-select">${options(
-          [
-            ["gas", t("setup.cookGas")],
-            ["induction", t("setup.cookInduction")],
-            ["lots_of_frying", t("setup.cookFrying")],
-          ],
-          draft.cookingMethod,
-        )}</select>`,
+        "setup.why.cooking",
+        selectInput(
+          "cooking-method-select",
+          "",
+          options(
+            [
+              ["gas", t("setup.cookGas")],
+              ["induction", t("setup.cookInduction")],
+              ["lots_of_frying", t("setup.cookFrying")],
+            ],
+            draft.cookingMethod,
+          ),
+        ),
       )}
     </div>
-    <div class="checkbox-group-vertical">
-      <label class="checkbox-label-sm"><input type="checkbox" id="check-has-purifier" ${draft.hasPurifier ? "checked" : ""} /><span>${t("setup.hasPurifier")}</span></label>
-      <label class="checkbox-label-sm"><input type="checkbox" id="check-uses-incense" ${draft.usesIncense ? "checked" : ""} /><span>${t("setup.incense")}</span></label>
-      <label class="checkbox-label-sm"><input type="checkbox" id="check-uses-coils" ${draft.usesMosquitoCoils ? "checked" : ""} /><span>${t("setup.coils")}</span></label>
-    </div>
-    <div class="stepper-nav-footer">
-      <button id="btn-back-step-1" class="btn btn-secondary" type="button">${t("setup.back")}</button>
-      <button id="btn-save-setup" class="btn btn-primary" type="button">${t("setup.save")}</button>
+    ${check("check-has-purifier", draft.hasPurifier, "setup.hasPurifier", "setup.why.purifier")}
+    ${field("purifier-cadr-input", t("setup.purifierCadr"), "setup.why.cadr", numberInput("purifier-cadr-input", draft.purifierCadrCfm ?? "", 0, 2000))}
+    ${check("check-uses-incense", draft.usesIncense, "setup.incense", "setup.why.incense")}
+    ${check("check-uses-coils", draft.usesMosquitoCoils, "setup.coils", "setup.why.coils")}`;
+}
+
+function reviewGroup(step: StepId, titleKey: string, lines: string[]): string {
+  return `
+    <div class="review-group panel">
+      <h2 class="list-title">${e(t(titleKey))}</h2>
+      <ul class="review-lines">${lines.map((l) => `<li>${l}</li>`).join("")}</ul>
+      <a class="btn btn-secondary" href="#/setup?step=${step}" aria-label="${e(t("setup.editGroup", { group: t(titleKey) }))}">${e(t("setup.edit"))}</a>
     </div>`;
 }
 
-export function stepperHtml(): string {
-  const step = (n: number, label: string) =>
-    `<li class="step-indicator ${draft.currentStep === n ? "active" : ""}" ${draft.currentStep === n ? 'aria-current="step"' : ""}><span class="step-number">${n}</span><span>${label}</span></li>`;
-  return `<ol class="stepper-header" aria-label="${escapeHtml(t("setup.stepsLabel"))}">${step(1, t("setup.stepLocation"))}${step(2, t("setup.stepHousehold"))}</ol>`;
+function reviewHtml(): string {
+  const yes = (v: boolean) => t(v ? "setup.review.yes" : "setup.review.no");
+  const people = draft.householdMembers.map(
+    (m) =>
+      `<span class="nickname">${e(m.nickname)}</span>: ${e(t("setup.review.person", { age: t(`setup.reviewAge.${m.ageBand}`), routine: t(`setup.reviewRoutine.${m.routinePreset}`), health: t(`setup.reviewHealth.${m.sensitivity}`) }))}${m.outdoorExerciseMinutes > 0 ? ` ${e(t("setup.review.exercise", { minutes: formatIndianNumber(m.outdoorExerciseMinutes), time: m.outdoorExerciseTime }))}` : ""}`,
+  );
+  return `
+    <div class="review stack">
+      ${reviewGroup("location", "setup.stepLocation", [e(t("setup.review.place", { place: placeLabel(draft.selectedLocation.name) }))])}
+      ${reviewGroup("people", "setup.stepHousehold", people)}
+      ${reviewGroup("travel", "setup.stepTravel", [e(t("setup.review.travel", { mode: t(`setup.reviewMode.${draft.commuteMode}`), km: formatIndianNumber(draft.commuteDistanceKm, 1), days: draft.workingDaysPerWeek, people: draft.peopleSharing }))])}
+      ${reviewGroup("home", "setup.stepHome", [
+        e(
+          t("setup.review.room", {
+            area: formatIndianNumber(draft.bedroomSqFt),
+            height: formatIndianNumber(draft.ceilingHeightFt, 1),
+          }),
+        ),
+        e(t("setup.review.windows", { habit: t(`setup.reviewWindows.${draft.windowHabit}`) })),
+        e(t("setup.review.purifier", { answer: yes(draft.hasPurifier) })),
+        e(
+          t("setup.review.sources", {
+            incense: yes(draft.usesIncense),
+            coils: yes(draft.usesMosquitoCoils),
+          }),
+        ),
+      ])}
+    </div>`;
+}
+
+export function stepContent(step: StepId): string {
+  switch (step) {
+    case "location":
+      return locationHtml();
+    case "people":
+      return peopleHtml();
+    case "travel":
+      return travelHtml();
+    case "home":
+      return homeHtml();
+    default:
+      return reviewHtml();
+  }
 }

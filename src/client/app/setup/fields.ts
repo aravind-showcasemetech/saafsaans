@@ -1,13 +1,16 @@
-// fields.ts: Form building blocks for setup: options, labelled fields and a member card.
+// fields.ts: Form building blocks for setup. Every field has a label and a one-line "Why we ask"
+// note, tied to the control with aria-describedby.
 import { escapeHtml } from "../../../shared/escape.js";
 import { t } from "../../home/i18n.js";
 import type { MemberDraft } from "./state.js";
 
+const e = escapeHtml;
+
 export function options(pairs: Array<[string, string]>, selected: string): string {
   return pairs
     .map(
-      ([value, label]) =>
-        `<option value="${value}" ${value === selected ? "selected" : ""}>${escapeHtml(label)}</option>`,
+      ([v, label]) =>
+        `<option value="${v}" ${v === selected ? "selected" : ""}>${e(label)}</option>`,
     )
     .join("");
 }
@@ -28,50 +31,81 @@ function ageOptions(selected: string): string {
   );
 }
 
-export function field(id: string, label: string, control: string): string {
-  return `<div class="col-span-6"><label class="form-label" for="${id}">${label}</label>${control}</div>`;
+/**
+ * A labelled field with its "Why we ask" note. `control` must carry id="{id}" and
+ * aria-describedby="{id}-why".
+ */
+export function field(id: string, label: string, whyKey: string, control: string): string {
+  return `
+    <div class="field">
+      <label class="field-label" for="${id}">${e(label)}</label>
+      ${control}
+      <p class="field-why" id="${id}-why"><span class="why-label">${e(t("setup.whyLabel"))}</span> ${e(t(whyKey))}</p>
+    </div>`;
+}
+
+export function numberInput(
+  id: string,
+  value: number | string,
+  min: number,
+  max: number,
+  step = 1,
+): string {
+  return `<input class="input" id="${id}" type="number" inputmode="decimal" min="${min}" max="${max}" step="${step}" value="${value}" aria-describedby="${id}-why" />`;
+}
+
+export function selectInput(id: string, cls: string, html: string): string {
+  return `<select class="input ${cls}" id="${id}" aria-describedby="${id}-why">${html}</select>`;
 }
 
 export function memberCardHtml(m: MemberDraft, idx: number, canRemove: boolean): string {
   const p = `member-${idx}`;
   return `
-    <div class="member-entry-card" data-index="${idx}">
-      <div class="member-card-header">
-        <h3 class="member-header-title">${t("setup.member", { n: idx + 1 })}</h3>
-        ${canRemove ? `<button class="btn-text btn-remove-member" data-index="${idx}" type="button" aria-label="${escapeHtml(t("setup.removeMember", { n: idx + 1 }))}">${t("setup.remove")}</button>` : ""}
-      </div>
-      <div class="grid-12 grid-gap-12">
-        ${field(`${p}-nickname`, t("setup.nickname"), `<input id="${p}-nickname" type="text" class="form-input member-nickname" value="${escapeHtml(m.nickname)}" />`)}
-        ${field(`${p}-age`, t("setup.ageGroup"), `<select id="${p}-age" class="form-select member-age">${ageOptions(m.ageBand)}</select>`)}
+    <fieldset class="member-card panel" data-index="${idx}">
+      <legend class="member-legend">${e(t("setup.member", { n: idx + 1 }))}</legend>
+      <div class="field-grid">
+        ${field(`${p}-nickname`, t("setup.nickname"), "setup.why.nickname", `<input class="input member-nickname" id="${p}-nickname" type="text" maxlength="50" value="${e(m.nickname)}" aria-describedby="${p}-nickname-why" />`)}
+        ${field(`${p}-age`, t("setup.ageGroup"), "setup.why.age", selectInput(`${p}-age`, "member-age", ageOptions(m.ageBand)))}
         ${field(
           `${p}-sens`,
           t("setup.sensitivity"),
-          `<select id="${p}-sens" class="form-select member-sensitivity">${options(
-            [
-              ["none", t("setup.sensNone")],
-              ["asthma_copd", t("setup.sensAsthma")],
-              ["heart_condition", t("setup.sensHeart")],
-              ["pregnancy", t("setup.sensPregnancy")],
-            ],
-            m.sensitivity,
-          )}</select>`,
+          "setup.why.sensitivity",
+          selectInput(
+            `${p}-sens`,
+            "member-sensitivity",
+            options(
+              [
+                ["none", t("setup.sensNone")],
+                ["asthma_copd", t("setup.sensAsthma")],
+                ["heart_condition", t("setup.sensHeart")],
+                ["pregnancy", t("setup.sensPregnancy")],
+              ],
+              m.sensitivity,
+            ),
+          ),
         )}
         ${field(
           `${p}-routine`,
           t("setup.routine"),
-          `<select id="${p}-routine" class="form-select member-routine">${options(
-            [
-              ["school_child", t("setup.routineSchool")],
-              ["office_worker", t("setup.routineOffice")],
-              ["work_from_home", t("setup.routineWfh")],
-              ["outdoor_worker", t("setup.routineOutdoor")],
-              ["retired", t("setup.routineRetired")],
-            ],
-            m.routinePreset,
-          )}</select>`,
+          "setup.why.routine",
+          selectInput(
+            `${p}-routine`,
+            "member-routine",
+            options(
+              [
+                ["school_child", t("setup.routineSchool")],
+                ["office_worker", t("setup.routineOffice")],
+                ["work_from_home", t("setup.routineWfh")],
+                ["outdoor_worker", t("setup.routineOutdoor")],
+                ["retired", t("setup.routineRetired")],
+              ],
+              m.routinePreset,
+            ),
+          ),
         )}
-        ${field(`${p}-exmin`, t("setup.exerciseMinutes"), `<input id="${p}-exmin" type="number" min="0" max="240" class="form-input member-exercise-min" value="${m.outdoorExerciseMinutes}" />`)}
-        ${field(`${p}-extime`, t("setup.exerciseTime"), `<input id="${p}-extime" type="time" class="form-input member-exercise-time" value="${escapeHtml(m.outdoorExerciseTime)}" />`)}
+        ${field(`${p}-exmin`, t("setup.exerciseMinutes"), "setup.why.exercise", numberInput(`${p}-exmin`, m.outdoorExerciseMinutes, 0, 240).replace('class="input"', 'class="input member-exercise-min"'))}
+        ${field(`${p}-extime`, t("setup.exerciseTime"), "setup.why.exerciseTime", `<input class="input member-exercise-time" id="${p}-extime" type="time" value="${e(m.outdoorExerciseTime)}" aria-describedby="${p}-extime-why" />`)}
       </div>
-    </div>`;
+      ${canRemove ? `<button class="btn btn-secondary btn-remove-member" data-index="${idx}" type="button" aria-label="${e(t("setup.removeMember", { n: idx + 1 }))}">${e(t("setup.remove"))}</button>` : ""}
+    </fieldset>`;
 }

@@ -3,13 +3,14 @@
 // Self-hosted fonts: Latin, Devanagari and Telugu subsets only, woff2, loaded when used.
 import "./styles/fonts.css";
 
-// Import stylesheets in order
+// Stylesheets in order
 import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/layout.css";
 import "./styles/components.css";
+import "./styles/diagrams.css";
 import "./styles/motion.css";
-import "./styles/app.css";
+import "./styles/print.css";
 
 import { renderDemoSelect } from "./app/demo.js";
 import { setPageMeta } from "./app/meta.js";
@@ -17,39 +18,15 @@ import { router } from "./app/router.js";
 import { renderSetupView } from "./app/setup.js";
 import { renderShareView } from "./app/share.js";
 import { renderTodayView } from "./app/today.js";
+import { attachChrome, renderFooter, renderHeader } from "./home/chrome.js";
 import { initHomePage } from "./home/home.js";
-import { type SupportedLang, getLanguage, initLanguage, setLanguage } from "./home/i18n.js";
-import { setupHeaderScroll } from "./home/motion.js";
-import { renderFooter, renderHeader } from "./home/render.js";
+import { initLanguage } from "./home/i18n.js";
 
+/** Header, main and footer for the app screens; returns main. */
 function mountAppShell(appRoot: HTMLElement): HTMLElement {
-  const headerHtml = renderHeader();
-  const footerHtml = renderFooter();
-
-  appRoot.innerHTML = `
-    ${headerHtml}
-    <main id="app-content" role="main"></main>
-    ${footerHtml}
-  `;
-
-  // Attach language switcher events
-  const current = getLanguage();
-  for (const btn of document.querySelectorAll<HTMLButtonElement>(".lang-btn")) {
-    const lang = btn.getAttribute("data-lang") as SupportedLang;
-    if (lang === current) {
-      btn.classList.add("active");
-      btn.setAttribute("aria-current", "true");
-    }
-    btn.addEventListener("click", async () => {
-      await setLanguage(lang);
-      // Re-trigger current route to reload with new language
-      router.start();
-    });
-  }
-
-  setupHeaderScroll();
-
-  return document.getElementById("app-content") || appRoot;
+  appRoot.innerHTML = `${renderHeader()}<main id="main" class="app-main" tabindex="-1"></main>${renderFooter()}`;
+  attachChrome(() => router.start());
+  return document.getElementById("main") || appRoot;
 }
 
 async function startApp(): Promise<void> {

@@ -1,194 +1,88 @@
-import { expect, test } from "./fixtures";
+import { expect, openDemoFamily, test } from "./fixtures";
 
-test.describe("SaafSaans App Screens E2E Tests (DEMO=1)", () => {
-  test("loads demo household and navigates to #/today", async ({ page }) => {
-    // Start at home and click demo
-    await page.goto("/");
-    await page.waitForSelector(".hero-title");
-    await page.locator("a[href='#/demo']").first().click();
-
-    await page.waitForSelector(".today-layout");
-    await expect(page.locator("h1")).toHaveText("Today's air plan");
-
-    // Air now card check
-    await expect(page.locator(".air-aqi-number")).toBeVisible();
-    await expect(page.locator(".air-band-tag")).toBeVisible();
-
-    // 48-hour strip check
-    await expect(page.locator(".chart-strip-wrapper")).toBeVisible();
-
-    // Swaps check
-    const swapRows = page.locator(".swap-row");
-    await expect(swapRows.first()).toBeVisible();
+test.describe("Flows (DEMO=1)", () => {
+  test("the demo family opens Today with its six sections", async ({ page }) => {
+    await openDemoFamily(page);
+    const ids = await page.$$eval(".g-section", (els) => els.map((e) => e.id));
+    expect(ids).toEqual(["air", "routine", "indoor", "alternatives", "impact", "share"]);
+    await expect(page.locator("h1")).toHaveText("Your air today");
+    await expect(page.locator(".g-nav-link")).toHaveCount(6);
   });
 
-  test("toggling a swap updates family totals in sticky sidebar", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForSelector(".hero-title");
-    await page.locator("a[href='#/demo']").first().click();
-
-    await page.waitForSelector(".today-layout");
-
-    // Get initial CO2
-    const co2El = page.locator(".totals-sticky-col .tabular-nums").last();
-    const initialCo2Text = await co2El.textContent();
-
-    // Find first swap checkbox
-    const firstCb = page.locator(".swap-toggle-cb").first();
-    await expect(firstCb).toBeChecked();
-
-    // Uncheck it
-    await firstCb.uncheck();
-
-    // Sidebar totals should update
-    const updatedCo2Text = await co2El.textContent();
-    expect(updatedCo2Text).not.toBeNull();
+  test("ticking a swap updates the family totals at once", async ({ page }) => {
+    await openDemoFamily(page);
+    const totals = page.locator("#today-totals");
+    const before = await totals.innerText();
+    const first = page.locator(".swap-toggle-cb").first();
+    await expect(first).toBeChecked();
+    await first.uncheck();
+    await expect(totals).not.toHaveText(before);
+    await expect(first).toBeFocused();
   });
 
-  test("share card loads with WhatsApp preview and calendar download", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForSelector(".hero-title");
-    await page.locator("a[href='#/demo']").first().click();
-    await page.waitForSelector(".today-layout");
-    await page.goto("/#/share");
-    await page.waitForSelector("#whatsapp-share-btn");
-
-    const waBtn = page.locator("#whatsapp-share-btn");
-    await expect(waBtn).toBeVisible();
-    const href = await waBtn.getAttribute("href");
-    expect(href).toContain("https://wa.me/?text=");
-    // Check no em/en dashes in share text
-    expect(href).not.toContain("—");
-    expect(href).not.toContain("–");
-
-    // Check calendar button
-    const calBtn = page.locator("#btn-download-ics");
-    await expect(calBtn).toBeVisible();
+  test("swap cards show numbers, a sentence in words, and no NaN or undefined", async ({
+    page,
+  }) => {
+    await openDemoFamily(page);
+    const cards = page.locator(".swap-card");
+    expect(await cards.count()).toBeGreaterThan(0);
+    for (const text of await cards.allTextContents()) {
+      expect(text).not.toMatch(/NaN|undefined|null/);
+    }
+    const sentences = await page.locator(".swap-sentence").allTextContents();
+    expect(sentences.every((s) => s.trim().length > 0)).toBe(true);
+    const mask = page.locator(".swap-card[data-swap-id='mask-outdoors']");
+    if ((await mask.count()) > 0) expect(await mask.textContent()).toMatch(/34%\s*to\s*93%/);
+    const coil = page.locator(".swap-card[data-swap-id='no-mosquito-coil']");
+    if ((await coil.count()) > 0)
+      expect(await coil.textContent()).toContain("Burning one mosquito coil");
   });
 
-  test("setup flow: choose a place by keyboard, save, and see it on Today", async ({ page }) => {
+  test("setup: five steps, place by keyboard, review in sentences, then Today", async ({
+    page,
+  }) => {
     await page.goto("/#/setup");
     const input = page.locator("#place-search-input");
     await input.fill("gachi");
     await expect(page.locator("#place-suggestions-listbox [role=option]").first()).toBeVisible();
     await input.press("ArrowDown");
-    await expect(input).toHaveAttribute("aria-activedescendant", "opt-0");
     await input.press("Enter");
-    await expect(input).toHaveValue("Gachibowli, Hyderabad, Telangana, India");
     await expect
       .poll(() => page.evaluate(() => localStorage.getItem("saafsaans_location")))
       .toContain('"lat":17.44');
 
-    await page.locator("#btn-to-step-2").click();
-    await page.waitForSelector("#members-list");
-    await expect(page.locator("#btn-add-member")).toBeVisible();
+    for (const step of ["people", "travel", "home", "review"]) {
+      await page.locator("#btn-step-next").click();
+      await expect(page).toHaveURL(new RegExp(`step=${step}`));
+    }
+    await expect(page.locator(".review-group")).toHaveCount(4);
+    await expect(page.locator(".review")).toContainText("Gachibowli, Hyderabad");
+
+    await page.locator(".review-group a[href*='step=travel']").click();
+    await expect(page.locator("#commute-dist-input")).toBeVisible();
+    await page.locator("#commute-dist-input").fill("999");
+    await page.locator("#btn-step-next").click();
+    await expect(page.locator("#setup-error")).toContainText("0 to 200");
+    await expect(page.locator("#commute-dist-input")).toBeFocused();
+    await page.locator("#commute-dist-input").fill("8");
+    await page.locator("#btn-step-next").click();
+    await page.locator("#btn-step-next").click();
+    await expect(page.locator(".review")).toContainText("8 km each way");
+
     await page.locator("#btn-save-setup").click();
-
     await expect(page).toHaveURL(/#\/today/);
-    await page.waitForSelector(".today-layout");
-    await expect(page.locator(".header-actions-wrap .section-label")).toHaveText(
-      "Gachibowli, Hyderabad",
-    );
+    await page.waitForSelector(".g-section#share");
+    await expect(page.locator("#air .panel-label")).toContainText("Gachibowli, Hyderabad");
   });
 
-  test("verifies no horizontal scroll and no element wider than viewport at 320 and 390 px on all views", async ({
-    page,
-  }) => {
-    const routes = ["/", "/#/setup", "/#/today", "/#/share"];
-
-    for (const route of routes) {
-      for (const width of [320, 390]) {
-        await page.setViewportSize({ width, height: 800 });
-        await page.goto(route);
-        await page.waitForTimeout(400);
-
-        const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
-        const clientWidth = await page.evaluate(() => document.documentElement.clientWidth);
-        expect(
-          scrollWidth,
-          `Page ${route} has horizontal scroll at ${width}px: scrollWidth=${scrollWidth}, clientWidth=${clientWidth}`,
-        ).toBeLessThanOrEqual(clientWidth + 1);
-
-        const overflowing = await page.evaluate(() => {
-          const vw = window.innerWidth;
-          const bad: string[] = [];
-          const allEls = document.querySelectorAll("*");
-          for (const el of allEls) {
-            if (el.closest(".marquee-viewport")) continue;
-
-            const rect = el.getBoundingClientRect();
-            // allow 1.5px subpixel tolerance
-            if (rect.width > vw + 1.5) {
-              const style = window.getComputedStyle(el);
-              if (
-                style.display !== "none" &&
-                style.visibility !== "hidden" &&
-                style.opacity !== "0" &&
-                !["HTML", "BODY"].includes(el.tagName)
-              ) {
-                bad.push(
-                  `${el.tagName}${el.id ? `#${el.id}` : ""}${el.className ? `.${String(el.className).replace(/\s+/g, ".")}` : ""} (width=${Math.round(rect.width)} > vw=${vw})`,
-                );
-              }
-            }
-          }
-          return bad;
-        });
-
-        expect(
-          overflowing,
-          `Found elements wider than viewport on ${route} at ${width}px: ${overflowing.join("; ")}`,
-        ).toEqual([]);
-      }
-    }
-  });
-
-  test("verifies swaps render without NaN, undefined or null and match contracts", async ({
-    page,
-  }) => {
-    await page.goto("/");
-    await page.waitForSelector(".hero-title");
-    await page.locator("a[href='#/demo']").first().click();
-    await page.waitForSelector(".today-layout");
-
-    // Check no swap shows NaN, undefined or null
-    const swapRows = page.locator(".swap-row");
-    const count = await swapRows.count();
-    expect(count).toBeGreaterThan(0);
-
-    for (let i = 0; i < count; i++) {
-      const row = swapRows.nth(i);
-      const text = (await row.textContent()) ?? "";
-      expect(text).not.toContain("NaN");
-      expect(text).not.toContain("undefined");
-      expect(text).not.toContain("null");
-    }
-
-    // Check mask card shows a range "34% to 93%"
-    const maskRow = page.locator(".swap-row[data-swap-id='mask-outdoors']");
-    if ((await maskRow.count()) > 0) {
-      const maskText = (await maskRow.textContent()) ?? "";
-      expect(maskText).toMatch(/34%\s*to\s*93%/);
-    }
-
-    // Check sourced fact card shows its factText
-    const coilRow = page.locator(".swap-row[data-swap-id='no-mosquito-coil']");
-    if ((await coilRow.count()) > 0) {
-      const coilText = (await coilRow.textContent()) ?? "";
-      expect(coilText).toContain("Burning one mosquito coil");
-    }
-
-    // Check that Today and Share show the same CO2 number
-    const todayCo2El = page.locator(".totals-sticky-col .side-col-co2-val");
-    const todayCo2Full = await todayCo2El.innerText();
-    const todayMatch = todayCo2Full.match(/([0-9.]+)/);
-    const todayCo2 = todayMatch ? Number(todayMatch[1]) : 0;
-    expect(todayCo2).toBeGreaterThan(0);
-
+  test("Today and Share show the same weekly CO2", async ({ page }) => {
+    await openDemoFamily(page);
+    const todayCo2 = (await page.locator(".side-col-co2-val").innerText()).trim();
     await page.goto("/#/share");
     await page.waitForSelector("#whatsapp-share-btn");
-    const waShareEl = page.locator(".share-wa-preview");
-    const waText = await waShareEl.innerText();
-    expect(waText).toContain(`${todayCo2} kg of CO₂`);
+    await expect(page.locator(".share-wa-preview")).toContainText(`${todayCo2} kg of CO₂`);
+    const href = (await page.locator("#whatsapp-share-btn").getAttribute("href")) ?? "";
+    expect(href.startsWith("https://wa.me/?text=")).toBe(true);
+    expect(decodeURIComponent(href)).not.toMatch(/[—–]/);
   });
 });

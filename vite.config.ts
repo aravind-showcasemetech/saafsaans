@@ -1,6 +1,6 @@
 import { type Plugin, defineConfig } from "vite";
 
-/** Preloads only the Latin 400 font (the body text); every other face loads when it is used. */
+/** Preloads only the hero heading face (Anek Latin 700); every other face loads when it is used. */
 function preloadBodyFont(): Plugin {
   return {
     name: "preload-body-font",

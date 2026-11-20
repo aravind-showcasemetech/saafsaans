@@ -1,33 +1,84 @@
-// setup.ts: Numbered stepper (1 Location, 2 Household). Presets so most people tap, not type.
-// Saves to localStorage. Nicknames stay in localStorage and are mapped to m1, m2... before sending.
+// setup.ts: Five full-height steps: Location, Who lives here, How you travel, Your home, Review.
+// Each step is its own address (#/setup?step=travel), ends with Back and Next, and keeps what was
+// typed. The review lists everything in plain sentences with an Edit button per group.
 import { t } from "../home/i18n.js";
-import { attachStep2 } from "./setup/household.js";
-import { attachStep1 } from "./setup/location.js";
-import { draft, initFromStored } from "./setup/state.js";
-import { step1Html, step2Html, stepperHtml } from "./setup/steps.js";
+import type { IconName } from "../ui/icons.js";
+import { actionButton, guideSection, stepLabel } from "../ui/section.js";
+import { router } from "./router.js";
+import { collectStep } from "./setup/collect.js";
+import { attachLocation } from "./setup/location.js";
+import { attachPeople } from "./setup/people.js";
+import { STEPS, type StepId, initFromStored, saveAll } from "./setup/state.js";
+import { stepContent } from "./setup/steps.js";
+
+const ICONS: Record<StepId, IconName> = {
+  location: "map-pin",
+  people: "users",
+  travel: "train-front",
+  home: "house",
+  review: "arrow-right",
+};
+
+function currentStep(): StepId {
+  const hash = window.location.hash;
+  const q = new URLSearchParams(hash.includes("?") ? hash.slice(hash.indexOf("?") + 1) : "");
+  const step = q.get("step") as StepId | null;
+  return step && (STEPS as readonly string[]).includes(step) ? step : "location";
+}
+
+function goTo(step: StepId): void {
+  window.location.hash = `#/setup?step=${step}`;
+}
 
 export function renderSetupView(container: HTMLElement): void {
   initFromStored();
-  draft.currentStep = 1;
+  const step = currentStep();
+  const index = STEPS.indexOf(step);
+  const prev = STEPS[index - 1];
+  const next = STEPS[index + 1];
 
-  function render(): void {
-    container.innerHTML = `
-      <section class="section">
-        <div class="container container-setup">
-          <h1 class="setup-page-title">${t("setup.title")}</h1>
-          ${stepperHtml()}
-          <div id="setup-step-content">${draft.currentStep === 1 ? step1Html() : step2Html()}</div>
-        </div>
-      </section>`;
-    if (draft.currentStep === 1) attachStep1(container, () => goTo(2));
-    else attachStep2(container, render, () => goTo(1));
-  }
+  const actions =
+    (prev ? actionButton({ label: t("setup.back"), id: "btn-step-back", kind: "secondary" }) : "") +
+    (next
+      ? actionButton({ label: t("setup.next"), id: "btn-step-next", icon: "arrow-right" })
+      : actionButton({ label: t("setup.seePlan"), id: "btn-save-setup", icon: "arrow-right" }));
 
-  function goTo(step: number): void {
-    draft.currentStep = step;
-    render();
-    container.querySelector<HTMLElement>(".step-title")?.focus();
-  }
+  container.innerHTML = guideSection({
+    id: `setup-${step}`,
+    level: 1,
+    stepLabel: stepLabel(index + 1, STEPS.length),
+    icon: ICONS[step],
+    title: t(`setupG.${step}.title`),
+    shows: t(`setupG.${step}.shows`),
+    can: t(`setupG.${step}.can`),
+    content: `${stepContent(step)}<p id="setup-error" class="error-text" role="alert"></p>`,
+    actions,
+    className: "setup-step is-visible",
+  });
 
-  render();
+  if (step === "location") attachLocation(container);
+  if (step === "people") attachPeople(container, () => renderSetupView(container));
+
+  const error = container.querySelector<HTMLElement>("#setup-error");
+  const leave = (target: () => void) => {
+    const problem = collectStep(step, container);
+    if (problem) {
+      if (error) error.textContent = t(problem.messageKey, { min: problem.min, max: problem.max });
+      container.querySelector<HTMLElement>(`#${problem.fieldId}`)?.focus();
+      return;
+    }
+    target();
+  };
+
+  container
+    .querySelector("#btn-step-back")
+    ?.addEventListener("click", () => leave(() => prev && goTo(prev)));
+  container
+    .querySelector("#btn-step-next")
+    ?.addEventListener("click", () => leave(() => next && goTo(next)));
+  container.querySelector("#btn-save-setup")?.addEventListener("click", () => {
+    saveAll();
+    router.navigate("/today");
+  });
+  container.querySelector<HTMLElement>(".g-title")?.focus({ preventScroll: true });
 }

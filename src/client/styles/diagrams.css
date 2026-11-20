@@ -1,0 +1,233 @@
+/* diagrams.css: The explanatory SVG diagrams, in the theme palette (DESIGN.md section 4):
+   --ink-2 lines, --accent for the key element, band colours only where they carry meaning. */
+.diagram {
+  margin: 0 0 var(--space-24);
+}
+
+.diagram-title {
+  font-family: var(--font-head);
+  font-weight: 600;
+  font-size: var(--text-md);
+  margin-bottom: var(--space-12);
+}
+
+.diagram svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.d-axis,
+.d-wall {
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+  fill: none;
+}
+
+.d-bar {
+  opacity: 0.85;
+}
+
+.d-window-clean {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+  stroke-width: 1;
+}
+
+.d-window-dirty {
+  fill: transparent;
+  stroke: var(--band-poor);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+
+.forecast-svg {
+  height: 180px !important;
+}
+
+.forecast-ticks {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  color: var(--ink-2);
+  font-size: 12px;
+  margin-top: var(--space-4);
+}
+
+.forecast-legend {
+  list-style: none;
+  padding: 0;
+  margin-top: var(--space-12);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8) var(--space-32);
+}
+
+.legend-key {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: var(--space-8);
+  vertical-align: -2px;
+  border-radius: 3px;
+}
+
+.key-clean,
+.key-after {
+  background: var(--accent);
+}
+
+.key-dirty,
+.key-before {
+  background: var(--band-poor);
+}
+
+.d-before {
+  stroke: var(--band-poor);
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+}
+
+.d-before-dot {
+  fill: var(--band-poor);
+}
+
+.d-after {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.d-after-dot {
+  fill: var(--accent);
+}
+
+.facts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+  gap: var(--space-12) var(--space-24);
+  margin-top: var(--space-16);
+}
+
+.facts-grid dt {
+  color: var(--ink-2);
+  font-size: var(--text-xs);
+}
+
+.facts-grid dd {
+  margin: 0;
+  font-weight: 500;
+}
+
+.facts-grid .is-key dd {
+  color: var(--accent);
+}
+
+/* Room */
+.room-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-16);
+}
+
+.room-svg {
+  max-width: 360px;
+}
+
+.d-window {
+  fill: var(--surface-2);
+  stroke: var(--ink-2);
+}
+
+.d-flow-in,
+.d-leak {
+  stroke: var(--band-poor);
+  stroke-width: 2;
+  fill: none;
+}
+
+.d-leak {
+  stroke-dasharray: 3 3;
+}
+
+.d-purifier {
+  fill: var(--accent-soft);
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.d-clean {
+  stroke: var(--accent);
+  stroke-width: 2;
+  fill: none;
+}
+
+.room-legend {
+  color: var(--ink-2);
+  font-size: var(--text-xs);
+  margin-bottom: var(--space-8);
+}
+
+.share-rows {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-16) 0 0;
+}
+
+.share-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-4) var(--space-12);
+  align-items: center;
+  margin-bottom: var(--space-12);
+}
+
+.share-bar {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  height: 8px;
+}
+
+.share-track {
+  fill: var(--surface-2);
+}
+
+.share-fill {
+  fill: var(--ink-2);
+}
+
+.share-row.is-key .share-fill {
+  fill: var(--accent);
+}
+
+.share-row.is-key .share-value {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* Trip */
+.trip-svg {
+  max-width: 420px;
+}
+
+.d-stop {
+  fill: var(--surface-2);
+  stroke: var(--ink-2);
+  stroke-width: 2;
+}
+
+.d-car {
+  stroke: var(--band-poor);
+  stroke-width: 4;
+  fill: none;
+}
+
+.d-metro {
+  stroke: var(--accent);
+  stroke-width: 4;
+  fill: none;
+}
+
+.facts-grid.saved {
+  border-top: 1px solid var(--rule);
+  padding-top: var(--space-16);
+}

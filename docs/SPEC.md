@@ -70,10 +70,11 @@ ignored.
 
 ## 6. User flow
 
-1. **Start.** The home page described in `docs/DESIGN.md` §7: hero with live Hyderabad air,
-   two marquees, sticky "How it works", the two lenses, sources. Its two actions: "Try a
-   Hyderabad family" (demo, no setup) and "Set up my household". Language switch: English,
-   हिन्दी, తెలుగు. All look and motion rules are in `docs/DESIGN.md`.
+1. **Start.** The home page described in `docs/DESIGN.md` §7: guided full-height sections named
+   after the brief (the air now, a low-emission routine, indoor air hacks, sustainable
+   alternatives, the impact of your choices, sharing, how the numbers work). Its two main
+   actions: "Try a Hyderabad family" (demo, no setup) and "Set up my household". Language switch:
+   English, हिन्दी, తెలుగు. All look and motion rules are in `docs/DESIGN.md`.
 2. **Location.** Place search (Google Places Autocomplete) or "use my location". Coordinates are
    rounded to about 1 km before they leave the browser.
 3. **Household** (one short form, presets for common routines):

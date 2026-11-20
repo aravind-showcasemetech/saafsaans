@@ -9,6 +9,10 @@ export interface DemoHouseholdEntry {
     lng: number;
   };
   description: string;
+  /** Each member's role, in member order, so the browser can name them in any language. */
+  roles: string[];
+  /** Homes taking part, for a society. */
+  homes?: number;
   profile: HouseholdProfile;
 }
 
@@ -16,6 +20,7 @@ export const demoHouseholds: Record<string, DemoHouseholdEntry> = {
   "the-reddys": {
     id: "the-reddys",
     name: "The Reddys",
+    roles: ["father", "mother", "son", "grandmother"],
     location: {
       name: "Kukatpally, Hyderabad",
       lat: 17.48,
@@ -83,6 +88,7 @@ export const demoHouseholds: Record<string, DemoHouseholdEntry> = {
   "ayesha-and-karthik": {
     id: "ayesha-and-karthik",
     name: "Ayesha and Karthik",
+    roles: ["adult", "adult"],
     location: {
       name: "Gachibowli, Hyderabad",
       lat: 17.44,
@@ -134,6 +140,7 @@ export const demoHouseholds: Record<string, DemoHouseholdEntry> = {
   "the-khans": {
     id: "the-khans",
     name: "The Khans",
+    roles: ["father", "elderChild", "youngerChild"],
     location: {
       name: "Near Charminar, Hyderabad",
       lat: 17.36,
@@ -192,6 +199,8 @@ export const demoHouseholds: Record<string, DemoHouseholdEntry> = {
   "green-meadows": {
     id: "green-meadows",
     name: "Green Meadows society",
+    roles: ["adult"],
+    homes: 120,
     location: {
       name: "Kondapur, Hyderabad",
       lat: 17.46,
@@ -234,6 +243,7 @@ export const demoHouseholds: Record<string, DemoHouseholdEntry> = {
   "the-sharmas": {
     id: "the-sharmas",
     name: "The Sharmas",
+    roles: ["father", "mother", "teenager", "grandparent"],
     location: {
       name: "Dwarka, Delhi",
       lat: 28.58,

@@ -1,0 +1,49 @@
+/* print.css: The printed plan stays black text on white, without navigation or controls. */
+@media print {
+  :root {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #ffffff;
+    --rule: #bbbbbb;
+    --ink: #000000;
+    --ink-2: #333333;
+    --accent: #000000;
+    --accent-soft: #ffffff;
+  }
+
+  body {
+    background: #ffffff;
+    color: #000000;
+  }
+
+  .site-header,
+  .site-footer,
+  .guide-rail,
+  .g-actions,
+  .toggle,
+  .calc,
+  details.refine,
+  .skip-link {
+    display: none !important;
+  }
+
+  .guide {
+    display: block;
+  }
+
+  .g-section {
+    min-height: 0;
+    padding: 12pt 0;
+    break-inside: avoid-page;
+    content-visibility: visible !important;
+  }
+
+  .reveal-on-scroll {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  a {
+    color: #000000;
+  }
+}

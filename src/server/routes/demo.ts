@@ -22,6 +22,8 @@ demoRoute.get("/demo/households", (c) => {
       name: entry.name,
       location: entry.location,
       description: entry.description,
+      roles: Object.fromEntries(entry.roles.map((role, idx) => [`m${idx + 1}`, role])),
+      homes: entry.homes,
       profile: {
         ...entry.profile,
         members: anonymisedMembers,

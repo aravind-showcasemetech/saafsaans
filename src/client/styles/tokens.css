@@ -1,31 +1,43 @@
-/* tokens.css: SaafSaans design tokens matching docs/DESIGN.md section 5 */
+/* tokens.css: SaafSaans design tokens, dark black and green theme (docs/DESIGN.md section 5).
+   test/unit/contrast.test.ts reads this file and checks every text and band colour pair. */
 :root {
-  /* Colour tokens */
-  --paper: #fafaf7;
-  --surface: #ffffff;
-  --ink: #111418;
-  --ink-2: #4a5058;
-  --rule: #e3e3de;
-  --accent: #0e5e4e;
-  --accent-hover: #0a483c;
+  color-scheme: dark;
 
-  /* Band colours (CPCB order, muted) */
-  --band-good: #3b7d3a;
-  --band-satisfactory: #7fa83a;
-  --band-moderate: #c9a227;
-  --band-poor: #d9822b;
-  --band-very-poor: #c0392b;
-  --band-severe: #7b1e1e;
+  /* Surfaces: near-black, green only as an accent */
+  --bg: #0b0f0c;
+  --surface: #121a15;
+  --surface-2: #18231c;
+  --rule: #263a2d;
 
-  /* Typography scale */
-  --font-base: "Noto Sans", "Noto Sans Devanagari", "Noto Sans Telugu", sans-serif;
+  /* Text */
+  --ink: #e8f0ea;
+  --ink-2: #a8baae;
+
+  /* Accent: primary buttons (with --bg text), links, focus rings, the current step, better changes */
+  --accent: #3ddc84;
+  --accent-hover: #5be79a;
+  --accent-soft: #14301f;
+  --on-accent: #0b0f0c;
+
+  /* CPCB band colours, tuned for the dark background. Only beside the band name in words. */
+  --band-good: #4ade80;
+  --band-satisfactory: #a3e635;
+  --band-moderate: #facc15;
+  --band-poor: #fb923c;
+  --band-very-poor: #f87171;
+  --band-severe: #dc2626;
+
+  /* Typography */
+  --font-base: "Noto Sans", "Noto Sans Devanagari", "Noto Sans Telugu", system-ui, sans-serif;
+  --font-head: "Anek Latin", "Anek Devanagari", "Anek Telugu", "Noto Sans", "Noto Sans Devanagari",
+    "Noto Sans Telugu", system-ui, sans-serif;
   --text-xs: 14px;
   --text-sm: 16px;
   --text-md: 18px;
   --text-lg: 22px;
   --text-xl: 28px;
   --text-2xl: 40px;
-  --text-hero: clamp(32px, 6vw, 72px);
+  --text-hero: clamp(40px, 6vw, 72px);
 
   /* Spacing */
   --space-4: 4px;
@@ -39,13 +51,12 @@
   --space-96: 96px;
   --space-128: 128px;
 
-  /* Grid & layout */
+  /* Layout */
   --max-width: 1200px;
   --gutter: 24px;
   --radius: 6px;
-
-  /* Header shadow after scroll */
-  --header-shadow: 0 2px 8px rgba(17, 20, 24, 0.05);
+  --header-height: 64px;
+  --tap: 44px;
 }
 
 @media (max-width: 640px) {

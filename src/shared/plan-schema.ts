@@ -21,6 +21,11 @@ export const PlanSwapItemSchema = z.object({
   factorSections: z.array(z.string()).default([]),
   purifierCadrCfm: z.number().optional(),
   appliesToMemberIds: z.array(z.string()).optional(),
+  /** The member this swap helps most, and by how much (protect swaps), for the sentence in words. */
+  best: z.object({ memberId: z.string(), doseCutPercentage: z.number() }).optional(),
+  /** CO2 avoided a day and a week (pollute less swaps). */
+  co2SavedKgPerDay: z.number().optional(),
+  co2SavedKgPerWeek: z.number().optional(),
   reason: z.string().default(""),
   reasonSource: z.enum(["gemini", "template"]).default("template"),
   reasonLang: z.string().optional(),

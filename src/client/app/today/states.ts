@@ -1,32 +1,25 @@
 // states.ts: The Today screen while loading and when the plan cannot be loaded.
+import { escapeHtml } from "../../../shared/escape.js";
 import { t } from "../../home/i18n.js";
+import { actionButton } from "../../ui/section.js";
 
 export function loadingHtml(): string {
   return `
-    <section class="section">
-      <div class="container">
-        <div class="section-spacer-32">
-          <div class="loading-placeholder-line loading-box-title"></div>
-          <div class="loading-placeholder-line short"></div>
-        </div>
-        <div class="today-layout">
-          <div class="main-col">
-            <div class="loading-placeholder-line loading-box-140"></div>
-            <div class="loading-placeholder-line loading-box-120"></div>
-          </div>
-          <div class="side-col"><div class="loading-placeholder-line loading-box-200"></div></div>
-        </div>
+    <section class="g-section" aria-labelledby="today-loading-title">
+      <div class="g-inner">
+        <h1 id="today-loading-title" class="g-title">${escapeHtml(t("today.title"))}</h1>
+        <p class="muted" role="status">${escapeHtml(t("today.loading"))}</p>
       </div>
     </section>`;
 }
 
 export function errorHtml(): string {
   return `
-    <section class="section">
-      <div class="container container-error">
-        <h1 class="error-title">${t("today.loadErrorTitle")}</h1>
-        <p class="error-desc">${t("today.loadErrorDesc")}</p>
-        <a href="#/setup" class="btn btn-secondary">${t("today.reviewSetup")}</a>
+    <section class="g-section" aria-labelledby="today-error-title">
+      <div class="g-inner">
+        <h1 id="today-error-title" class="g-title">${escapeHtml(t("today.loadErrorTitle"))}</h1>
+        <p>${escapeHtml(t("today.loadErrorDesc"))}</p>
+        <div class="g-actions">${actionButton({ label: t("today.reviewSetup"), href: "#/setup" })}</div>
       </div>
     </section>`;
 }

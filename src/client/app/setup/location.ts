@@ -1,4 +1,4 @@
-// location.ts: Step 1 events: place search (mouse and keyboard), use my location, next.
+// location.ts: The location step: place search (mouse and keyboard) and use my location.
 // Coordinates are rounded to 2 decimal places (about 1 km) before they are kept or sent.
 import { escapeHtml } from "../../../shared/escape.js";
 import { t } from "../../home/i18n.js";
@@ -8,7 +8,7 @@ import { draft } from "./state.js";
 
 const round = (n: number) => Math.round(n * 100) / 100;
 
-export function attachStep1(container: HTMLElement, next: () => void): void {
+export function attachLocation(container: HTMLElement): void {
   const searchInput = container.querySelector<HTMLInputElement>("#place-search-input");
   const listbox = container.querySelector<HTMLUListElement>("#place-suggestions-listbox");
   const status = container.querySelector<HTMLElement>("#location-status");
@@ -108,10 +108,5 @@ export function attachStep1(container: HTMLElement, next: () => void): void {
         if (status) status.textContent = t("setup.locationError");
       },
     );
-  });
-
-  container.querySelector("#btn-to-step-2")?.addEventListener("click", () => {
-    saveLocation(draft.selectedLocation);
-    next();
   });
 }

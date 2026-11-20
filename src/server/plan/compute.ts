@@ -24,6 +24,8 @@ export interface ComputedSwapItem {
   factText?: string;
   purifierCadrCfm?: number;
   co2SavedKgPerWeek?: number;
+  co2SavedKgPerDay?: number;
+  best?: { memberId: string; doseCutPercentage: number };
 }
 
 export function computeActionNumbers(
@@ -59,6 +61,10 @@ export function computeActionNumbers(
       base.appliesToMemberIds = impact.memberImpacts.map((m) => m.memberId);
       base.appliesToMemberRefs = impact.memberImpacts.map((m) => m.memberRef);
       base.maxDoseCutPercentage = impact.maxDoseCutPercentage;
+      const best = [...impact.memberImpacts].sort(
+        (a, b) => b.doseCutPercentage - a.doseCutPercentage,
+      )[0];
+      base.best = { memberId: best.memberId, doseCutPercentage: best.doseCutPercentage };
       base.maxCigarettesAvoided = impact.maxCigarettesAvoided;
 
       if (action.id === "purifier-bedroom") {
@@ -87,6 +93,7 @@ export function computeActionNumbers(
       }
     }
   } else if (action.lens === "polluteLess") {
+    base.co2SavedKgPerDay = impact.co2SavedKgPerDay;
     if (action.id === "wfh-day" && impact.co2SavedKgPerWeek !== undefined) {
       base.savingNumber = impact.co2SavedKgPerWeek;
       base.savingUnit = "kg CO2 saved per week";

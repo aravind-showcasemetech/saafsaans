@@ -5,6 +5,7 @@
 
 import { escapeHtml } from "../../shared/escape.js";
 import { t } from "../home/i18n.js";
+import { actionButton, guideSection } from "../ui/section.js";
 import { type DemoHouseholdItem, fetchDemoHouseholds } from "./api.js";
 import { placeLabel } from "./format.js";
 import { router } from "./router.js";
@@ -25,17 +26,26 @@ function openHousehold(h: DemoHouseholdItem): void {
 }
 
 export async function renderDemoSelect(container: HTMLElement): Promise<void> {
-  container.innerHTML = `
-    <section class="section">
-      <div class="container container-narrow">
-        <h1 class="page-title">${t("demo.title")}</h1>
-        <p class="step-subtext">${t("demo.lead")}</p>
-        <div id="demo-households-list">
-          <div class="loading-placeholder-line loading-box-140"></div>
-          <div class="loading-placeholder-line loading-box-120"></div>
-        </div>
-      </div>
-    </section>`;
+  const page = (content: string) =>
+    guideSection({
+      id: "demo",
+      level: 1,
+      stepLabel: t("demo.label"),
+      icon: "users",
+      title: t("demo.title"),
+      shows: t("demo.shows"),
+      can: t("demo.lead"),
+      content,
+      actions: actionButton({
+        label: t("hero.setUpHousehold"),
+        href: "#/setup",
+        kind: "secondary",
+      }),
+      className: "is-visible",
+    });
+  container.innerHTML = page(
+    `<p class="muted" role="status">${escapeHtml(t("today.loading"))}</p>`,
+  );
 
   try {
     const list = await fetchDemoHouseholds();
@@ -43,35 +53,29 @@ export async function renderDemoSelect(container: HTMLElement): Promise<void> {
       const reddys = list.find((h) => h.id === "the-reddys") ?? list[0];
       if (reddys) return openHousehold(reddys);
     }
-
-    const listEl = container.querySelector("#demo-households-list");
-    if (!listEl) return;
-    listEl.innerHTML = list
+    const cards = list
       .map((h) => {
         const name = householdText(h.id, "name");
         return `
-          <div class="air-card section-spacer-16">
-            <div class="section-label">${escapeHtml(placeLabel(h.location.name))}</div>
-            <h2 class="card-heading">${escapeHtml(name)}</h2>
-            <p class="card-subtext">${escapeHtml(householdText(h.id, "description"))}</p>
-            <button class="btn btn-primary btn-select-demo" data-id="${escapeHtml(h.id)}" type="button">${escapeHtml(t("demo.load", { name }))}</button>
-          </div>`;
+          <article class="panel" aria-labelledby="demo-${escapeHtml(h.id)}">
+            <p class="muted small">${escapeHtml(placeLabel(h.location.name))}</p>
+            <h2 class="list-title" id="demo-${escapeHtml(h.id)}">${escapeHtml(name)}</h2>
+            <p>${escapeHtml(householdText(h.id, "description"))}</p>
+            ${actionButton({ label: t("demo.load", { name }), attrs: `data-id="${escapeHtml(h.id)}"`, kind: "primary" }).replace('class="btn btn-primary"', 'class="btn btn-primary btn-select-demo"')}
+          </article>`;
       })
       .join("");
-
+    container.innerHTML = page(`<div class="two-col">${cards}</div>`);
     for (const btn of container.querySelectorAll<HTMLButtonElement>(".btn-select-demo")) {
       btn.addEventListener("click", () => {
-        const selected = list.find((h) => h.id === btn.getAttribute("data-id"));
+        const selected = list.find((h) => h.id === btn.dataset.id);
         if (selected) openHousehold(selected);
       });
     }
   } catch (err) {
     console.error("Failed to load demo households", err);
-    container.innerHTML = `
-      <section class="section">
-        <div class="container container-narrow">
-          <p class="error-msg" role="alert">${t("demo.error")}</p>
-        </div>
-      </section>`;
+    container.innerHTML = page(
+      `<p class="error-text" role="alert">${escapeHtml(t("demo.error"))}</p>`,
+    );
   }
 }

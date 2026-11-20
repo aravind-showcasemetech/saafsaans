@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { expect, test } from "./fixtures";
+import { expect, openDemoFamily, test } from "./fixtures";
 
 // Words kept as written in every language (AGENTS.md rule 7 and the brand wordmark).
 const ALLOWLIST = [
@@ -17,13 +17,6 @@ const ALLOWLIST = [
 ];
 
 const SCRIPTS = { hi: "Devanagari", te: "Telugu" } as const;
-
-async function openDemoFamily(page: Page): Promise<void> {
-  await page.goto("/");
-  await page.waitForSelector(".hero-title");
-  await page.locator("a[href='#/demo']").first().click();
-  await page.waitForSelector(".today-layout");
-}
 
 /** Share of letters on screen in the target script, ignoring nicknames, numbers and the allowlist. */
 async function scriptShare(page: Page, script: string): Promise<{ share: number; sample: string }> {
@@ -55,9 +48,9 @@ async function scriptShare(page: Page, script: string): Promise<{ share: number;
 for (const lang of ["hi", "te"] as const) {
   test.describe(`Every screen reads in ${lang}`, () => {
     const screens = [
-      { name: "home", path: `/?lang=${lang}`, ready: ".hero-title" },
+      { name: "home", path: `/?lang=${lang}`, ready: "#air .g-title" },
       { name: "setup", path: `/#/setup?lang=${lang}`, ready: "#place-search-input" },
-      { name: "today", path: `/#/today?lang=${lang}`, ready: ".swap-row" },
+      { name: "today", path: `/#/today?lang=${lang}`, ready: ".swap-card" },
       { name: "share", path: `/#/share?lang=${lang}`, ready: "#whatsapp-share-btn" },
     ];
 

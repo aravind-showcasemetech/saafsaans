@@ -1,33 +1,32 @@
-// share.ts: Share card view
-// WhatsApp text preview and wa.me link, homes taking part slider with communityTotal,
-// clean air window calendar download (.ics, Asia/Kolkata), and print view.
-// The clean window and CO2 figure are computed from the same air data and swaps as Today.
-
+// share.ts: The share screen: the WhatsApp message, the "homes taking part" slider (communityTotal),
+// the clean air window as a calendar file, and a print view. The clean window and CO2 figure come
+// from the same air data and ticked swaps as Today.
 import { escapeHtml } from "../../shared/escape.js";
 import { cleanestAndDirtiestWindows, communityTotal } from "../../shared/impact.js";
 import { getLanguage, t } from "../home/i18n.js";
+import { downloadCleanWindowIcs } from "../ui/calendar.js";
+import { actionButton, guideSection } from "../ui/section.js";
 import { fetchAirData } from "./api.js";
-import { formatIndianNumber, hourLabel, placeLabel, windowText } from "./format.js";
+import { formatIndianNumber, placeLabel, windowText } from "./format.js";
 import { recomputeHouseholdTotals } from "./recompute.js";
-import { buildCalendarIcs, buildWhatsAppShareText } from "./share-utils.js";
+import { planShareText, whatsAppUrl } from "./share-text.js";
 import { loadHouseholdProfile, loadLocation, loadPlan, loadToggledSwaps } from "./storage.js";
 
 const DEFAULT_HOMES = 10;
+const e = escapeHtml;
 
 function noPlanHtml(): string {
-  return `
-    <section class="section">
-      <div class="container container-narrow">
-        <h1 class="page-title">${t("share.title")}</h1>
-        <p class="page-lead">${t("share.noPlan")}</p>
-        <a href="#/setup" class="btn btn-primary">${t("share.makePlan")}</a>
-      </div>
-    </section>`;
-}
-
-/** Today's date (YYYY-MM-DD) in Asia/Kolkata. */
-function kolkataDateIso(when: Date): string {
-  return new Date(when.getTime() + 5.5 * 3600 * 1000).toISOString().slice(0, 10);
+  return guideSection({
+    id: "share",
+    level: 1,
+    stepLabel: t("share.label"),
+    icon: "share",
+    title: t("share.title"),
+    shows: t("share.shows"),
+    can: t("share.can"),
+    content: `<p>${e(t("share.noPlan"))}</p>`,
+    actions: actionButton({ label: t("share.makePlan"), href: "#/setup" }),
+  });
 }
 
 export async function renderShareView(container: HTMLElement): Promise<void> {
@@ -44,105 +43,87 @@ export async function renderShareView(container: HTMLElement): Promise<void> {
   const cleanest = cleanestAndDirtiestWindows(hourly).cleanest;
   const swapIds = new Set(plan.swaps.map((s) => s.id));
   const stored = loadToggledSwaps()?.filter((id) => swapIds.has(id));
-  const activeSwapIds = new Set<string>(stored ?? swapIds);
-  const totals = recomputeHouseholdTotals({
+  const active = new Set<string>(stored ?? swapIds);
+  const weeklyCo2 = recomputeHouseholdTotals({
     profile,
     hourlyForecast: hourly,
     currentPm25: airData?.pm25 ?? 0,
-    activeSwapIds,
-  });
-  const weeklyCo2 = totals.householdCo2WeeklyKg;
-  const weeklyText = formatIndianNumber(weeklyCo2, 1);
+    activeSwapIds: active,
+  }).householdCo2WeeklyKg;
   const area = placeLabel(location.name);
   const cleanText = windowText(cleanest);
-  const origin = window.location.origin;
-
-  const waText = buildWhatsAppShareText([
-    t("share.waTitle", { area }),
-    cleanest
-      ? t("share.waClean", {
-          start: hourLabel(cleanest.startHour),
-          end: hourLabel(cleanest.endHour),
-        })
-      : t("share.waNoWindow"),
-    t("share.waChoice", { count: activeSwapIds.size, kg: weeklyText }),
-    origin ? t("share.waLink", { url: origin }) : t("share.waLinkPlain"),
-  ]);
-  const waUrl = `https://wa.me/?text=${encodeURIComponent(waText)}`;
-  const communityText = (homes: number) =>
+  const waText = planShareText({
+    area,
+    cleanest,
+    swapsChosen: active.size,
+    weeklyCo2Kg: weeklyCo2,
+    origin: window.location.origin,
+  });
+  const community = (homes: number) =>
     t("common.kgCo2", {
       value: formatIndianNumber(communityTotal(weeklyCo2, homes).totalWeeklySaving),
     });
 
-  container.innerHTML = `
-    <section class="section">
-      <div class="container container-narrow">
-        <div class="header-nav-wrap"><a href="#/today" class="btn-text">${t("share.back")}</a></div>
-        <h1 class="page-title">${t("share.title")}</h1>
-        <p class="page-lead">${t("share.lead")}</p>
-
-        <div class="air-card section-spacer-32">
-          <h2 class="section-label">${t("share.waLabel")}</h2>
-          <pre class="share-wa-preview">${escapeHtml(waText)}</pre>
-          <a id="whatsapp-share-btn" href="${escapeHtml(waUrl)}" target="_blank" rel="noopener" class="btn btn-primary">${t("share.waButton")}</a>
+  const content = `
+    <div class="two-col">
+      <div class="stack">
+        <h2 class="list-title">${e(t("share.waLabel"))}</h2>
+        <pre class="share-wa-preview">${e(waText)}</pre>
+      </div>
+      <div class="stack">
+        <div class="panel">
+          <h2 class="list-title">${e(t("share.communityTitle"))}</h2>
+          <p class="muted">${e(t("share.communityHelp"))}</p>
+          <label for="homes-slider" class="field-label">${e(t("share.homesLabel"))}</label>
+          <input id="homes-slider" class="range" type="range" min="1" max="250" value="${DEFAULT_HOMES}" />
+          <p><span id="homes-slider-val" class="tabular-nums">${e(t("share.homes", { count: DEFAULT_HOMES }))}</span></p>
+          <p aria-live="polite">${e(t("share.weekly"))}: <strong id="community-co2-val" class="tabular-nums">${e(community(DEFAULT_HOMES))}</strong></p>
         </div>
-
-        <div class="air-card section-spacer-32">
-          <div class="section-label">${t("share.communityLabel")}</div>
-          <h2 class="card-heading">${t("share.communityTitle")}</h2>
-          <p class="card-subtext">${t("share.communityHelp")}</p>
-          <div class="slider-control-row">
-            <label for="homes-slider" class="sr-only">${t("share.homesLabel")}</label>
-            <input id="homes-slider" type="range" min="1" max="250" value="${DEFAULT_HOMES}" class="slider-input-flex" />
-            <span id="homes-slider-val" class="tabular-nums slider-val-badge">${t("share.homes", { count: DEFAULT_HOMES })}</span>
-          </div>
-          <div class="slider-summary-row" aria-live="polite">
-            <span class="slider-summary-label">${t("share.weekly")}:</span>
-            <strong id="community-co2-val" class="tabular-nums slider-summary-val">${communityText(DEFAULT_HOMES)}</strong>
-          </div>
-        </div>
-
-        <div class="air-card section-spacer-32">
-          <div class="section-label">${t("share.calendarLabel")}</div>
-          <h2 class="card-heading">${t("share.calendarTitle")}</h2>
-          <p class="card-subtext">${cleanText ? t("share.calendarHelp", { window: escapeHtml(cleanText) }) : t("share.calendarNone")}</p>
-          <button id="btn-download-ics" class="btn btn-secondary" type="button" ${cleanest ? "" : "disabled"}>${t("share.calendarButton")}</button>
-        </div>
-
-        <div class="print-action-wrap">
-          <button id="btn-print-plan" class="btn btn-secondary" type="button">${t("share.print")}</button>
+        <div class="panel">
+          <h2 class="list-title">${e(t("share.calendarTitle"))}</h2>
+          <p class="muted">${cleanText ? e(t("share.calendarHelp", { window: cleanText })) : e(t("share.calendarNone"))}</p>
+          ${cleanest ? actionButton({ label: t("share.calendarButton"), id: "btn-download-ics", icon: "calendar", kind: "secondary" }) : ""}
         </div>
       </div>
-    </section>`;
+    </div>
+    <p><a href="#/today">${e(t("share.back"))}</a></p>`;
+
+  container.innerHTML = guideSection({
+    id: "share",
+    level: 1,
+    stepLabel: t("share.label"),
+    icon: "share",
+    title: t("share.title"),
+    shows: t("share.shows"),
+    can: t("share.can"),
+    content,
+    actions:
+      actionButton({
+        label: t("share.waButton"),
+        href: whatsAppUrl(waText),
+        id: "whatsapp-share-btn",
+        icon: "share",
+        attrs: 'target="_blank" rel="noopener"',
+      }) +
+      actionButton({
+        label: t("share.print"),
+        id: "btn-print-plan",
+        icon: "printer",
+        kind: "secondary",
+      }),
+    className: "is-visible",
+  });
 
   const slider = container.querySelector<HTMLInputElement>("#homes-slider");
-  const sliderVal = container.querySelector<HTMLElement>("#homes-slider-val");
-  const co2Val = container.querySelector<HTMLElement>("#community-co2-val");
   slider?.addEventListener("input", () => {
     const homes = Number(slider.value);
-    if (sliderVal) sliderVal.textContent = t("share.homes", { count: homes });
-    if (co2Val) co2Val.textContent = communityText(homes);
+    const val = container.querySelector("#homes-slider-val");
+    const co2 = container.querySelector("#community-co2-val");
+    if (val) val.textContent = t("share.homes", { count: homes });
+    if (co2) co2.textContent = community(homes);
   });
-
   container.querySelector("#btn-download-ics")?.addEventListener("click", () => {
-    if (!cleanest) return;
-    // The window can fall tomorrow, so date the event from the window itself.
-    const dateIso = kolkataDateIso(new Date(cleanest.startTime));
-    const ics = buildCalendarIcs({
-      dateIso,
-      cleanestWindow: cleanest,
-      summary: t("share.icsSummary", { area }),
-      description: t("share.icsDescription"),
-    });
-    const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar;charset=utf-8" }));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `saafsaans-clean-air-${dateIso}.ics`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+    if (cleanest) downloadCleanWindowIcs(cleanest, area);
   });
-
   container.querySelector("#btn-print-plan")?.addEventListener("click", () => window.print());
 }
