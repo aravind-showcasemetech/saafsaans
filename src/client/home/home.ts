@@ -6,6 +6,7 @@ import type { NormalisedAirData } from "../../shared/air-types.js";
 import { cleanestAndDirtiestWindows } from "../../shared/impact.js";
 import { fetchAirData } from "../app/api.js";
 import { capturedLabel, timeOfDay } from "../app/format.js";
+import { setPageMeta } from "../app/meta.js";
 import { type AreaAirItem, computeReddysExamples, fetchAreasAir } from "./data.js";
 import { type SupportedLang, getLanguage, setLanguage } from "./i18n.js";
 import { setupHeaderScroll, setupMarquees, setupScrollReveal, setupStickyPanel } from "./motion.js";
@@ -41,6 +42,7 @@ export async function initHomePage(): Promise<void> {
 
   function renderFullPage(): void {
     if (!appRoot) return;
+    setPageMeta("home");
     // One clear label: sample data shows when it was captured, live data shows when it loaded.
     const airLabel = kukatpally?.isDemo
       ? (capturedLabel(kukatpally.capturedAt) ?? "")

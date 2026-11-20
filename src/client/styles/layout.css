@@ -43,3 +43,25 @@
   border: none;
   width: 100%;
 }
+
+/* App screens fill content in after data loads; keeping main at least one screen tall stops the
+   footer jumping down (layout shift) when it arrives. */
+#app-content {
+  min-height: 100vh;
+}
+
+/* Home sections below the hero are laid out only when they come near the screen.
+   The hero is the largest paint, so it never fades in or waits. */
+#main-content > .section:not(.hero-section) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
+
+/* Today: swap rows and the boxes under them are laid out when they come near the screen. */
+#swaps-list > .swap-row,
+.main-col > .air-card ~ .air-card,
+.main-col > .health-warning-box,
+.main-col > .refine-container {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 260px;
+}

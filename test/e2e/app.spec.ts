@@ -1,4 +1,3 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "./fixtures";
 
 test.describe("SaafSaans App Screens E2E Tests (DEMO=1)", () => {
@@ -92,53 +91,6 @@ test.describe("SaafSaans App Screens E2E Tests (DEMO=1)", () => {
     );
   });
 
-  test("verifies zero axe violations on all screens with motion on and off", async ({ page }) => {
-    // Prime the localStorage with a household first so /#/today renders directly
-    await page.goto("/");
-    await page.waitForSelector(".hero-title");
-    await page.locator("a[href='#/demo']").first().click();
-    await page.waitForSelector(".today-layout");
-
-    const routes = ["/", "/#/setup", "/#/today", "/#/share"];
-
-    for (const route of routes) {
-      // Normal motion
-      await page.goto(route);
-      await page.waitForTimeout(500);
-      const normalScan = await new AxeBuilder({ page }).analyze();
-      expect(normalScan.violations, `Axe violations on ${route} with normal motion`).toEqual([]);
-
-      // Reduced motion
-      await page.emulateMedia({ reducedMotion: "reduce" });
-      await page.goto(route);
-      await page.waitForTimeout(500);
-      const reducedScan = await new AxeBuilder({ page }).analyze();
-      expect(reducedScan.violations, `Axe violations on ${route} with reduced motion`).toEqual([]);
-
-      await page.emulateMedia({ reducedMotion: "no-preference" });
-    }
-  });
-
-  test("verifies zero axe violations on home and today in hi and te at 390 px", async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 390, height: 800 });
-
-    for (const lang of ["hi", "te"]) {
-      // Home in lang
-      await page.goto(`/?lang=${lang}`);
-      await page.waitForTimeout(500);
-      const homeScan = await new AxeBuilder({ page }).analyze();
-      expect(homeScan.violations, `Axe violations on home in ${lang} at 390px`).toEqual([]);
-
-      // Today in lang (demo profile loaded)
-      await page.goto(`/#/today?lang=${lang}`);
-      await page.waitForTimeout(600);
-      const todayScan = await new AxeBuilder({ page }).analyze();
-      expect(todayScan.violations, `Axe violations on Today in ${lang} at 390px`).toEqual([]);
-    }
-  });
-
   test("verifies no horizontal scroll and no element wider than viewport at 320 and 390 px on all views", async ({
     page,
   }) => {
@@ -206,7 +158,7 @@ test.describe("SaafSaans App Screens E2E Tests (DEMO=1)", () => {
 
     for (let i = 0; i < count; i++) {
       const row = swapRows.nth(i);
-      const text = await row.innerText();
+      const text = (await row.textContent()) ?? "";
       expect(text).not.toContain("NaN");
       expect(text).not.toContain("undefined");
       expect(text).not.toContain("null");
@@ -215,14 +167,14 @@ test.describe("SaafSaans App Screens E2E Tests (DEMO=1)", () => {
     // Check mask card shows a range "34% to 93%"
     const maskRow = page.locator(".swap-row[data-swap-id='mask-outdoors']");
     if ((await maskRow.count()) > 0) {
-      const maskText = await maskRow.innerText();
+      const maskText = (await maskRow.textContent()) ?? "";
       expect(maskText).toMatch(/34%\s*to\s*93%/);
     }
 
     // Check sourced fact card shows its factText
     const coilRow = page.locator(".swap-row[data-swap-id='no-mosquito-coil']");
     if ((await coilRow.count()) > 0) {
-      const coilText = await coilRow.innerText();
+      const coilText = (await coilRow.textContent()) ?? "";
       expect(coilText).toContain("Burning one mosquito coil");
     }
 

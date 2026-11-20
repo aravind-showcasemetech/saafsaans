@@ -12,7 +12,7 @@ class HashRouter {
   private currentPath: RoutePath = "/";
 
   constructor() {
-    window.addEventListener("hashchange", () => this.handleHashChange());
+    window.addEventListener("hashchange", () => void this.handleHashChange());
   }
 
   public register(path: RoutePath, handler: RouteHandler): void {
@@ -28,7 +28,7 @@ class HashRouter {
   }
 
   public start(): void {
-    this.handleHashChange();
+    void this.handleHashChange();
   }
 
   private parseHash(): RoutePath {
@@ -45,9 +45,9 @@ class HashRouter {
     return "/";
   }
 
-  private handleHashChange(): void {
+  private async handleHashChange(): Promise<void> {
     // ?lang=hi or ?lang=te in the URL wins over the stored choice, before the screen renders.
-    syncLanguageFromUrl();
+    await syncLanguageFromUrl();
     const hash = window.location.hash;
     const path = this.parseHash();
     this.currentPath = path;

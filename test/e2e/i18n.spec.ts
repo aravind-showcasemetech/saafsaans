@@ -29,6 +29,11 @@ async function openDemoFamily(page: Page): Promise<void> {
 async function scriptShare(page: Page, script: string): Promise<{ share: number; sample: string }> {
   return page.evaluate(
     ({ script, allowlist }) => {
+      // Count every section, including those content-visibility skips until they are near the screen.
+      for (const el of document.querySelectorAll<HTMLElement>("*")) {
+        if (getComputedStyle(el).contentVisibility === "auto")
+          el.style.contentVisibility = "visible";
+      }
       const clone = document.body.cloneNode(true) as HTMLElement;
       for (const el of clone.querySelectorAll(".nickname, script, style")) el.remove();
       document.body.appendChild(clone);

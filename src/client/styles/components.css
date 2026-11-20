@@ -634,3 +634,10 @@
 .footer-disclaimer-title {
   color: var(--ink);
 }
+
+/* The other languages' names are shown in the system font, so an English page never downloads
+   the Devanagari or Telugu web fonts just for these two buttons. */
+.lang-btn:not(.active):lang(hi),
+.lang-btn:not(.active):lang(te) {
+  font-family: system-ui, sans-serif;
+}

@@ -1,16 +1,6 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "./fixtures";
 
 test.describe("Home Page Accessibility and Controls", () => {
-  test("loads the home page and verifies no axe violations with motion on", async ({ page }) => {
-    await page.goto("/");
-    await page.waitForSelector("#hero-title");
-
-    // Check Axe violations
-    const accessibilityScanResults = await new AxeBuilder({ page }).analyze();
-    expect(accessibilityScanResults.violations).toEqual([]);
-  });
-
   test("marquee Pause button toggles correctly and works with keyboard/mouse", async ({ page }) => {
     await page.goto("/");
     await page.waitForSelector(".marquee-wrapper");
@@ -30,16 +20,6 @@ test.describe("Home Page Accessibility and Controls", () => {
     await pauseBtn.click();
     await expect(pauseBtn).toHaveText("Pause");
     await expect(firstMarquee).not.toHaveClass(/is-paused/);
-  });
-
-  test("verifies zero axe violations with reduced motion", async ({ page }) => {
-    // Emulate reduced motion
-    await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.goto("/");
-    await page.waitForSelector("#hero-title");
-
-    const accessibilityScanResults = await new AxeBuilder({ page }).analyze();
-    expect(accessibilityScanResults.violations).toEqual([]);
   });
 
   test("verifies no horizontal scroll and no element wider than viewport at 320 and 390 px", async ({

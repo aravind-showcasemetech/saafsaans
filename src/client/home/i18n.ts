@@ -1,9 +1,7 @@
 // i18n.ts: Language state and dictionary lookup for SaafSaans.
-// Follows AGENTS.md rule 7.
+// Follows AGENTS.md rule 7. English ships with the page; Hindi and Telugu load when chosen.
 
 import enDict from "../i18n/en.json";
-import hiDict from "../i18n/hi.json";
-import teDict from "../i18n/te.json";
 
 export type SupportedLang = "en" | "hi" | "te";
 
@@ -45,18 +43,30 @@ function getInitialLanguage(): SupportedLang {
   return "en";
 }
 
-let currentLang: SupportedLang = getInitialLanguage();
-if (typeof document !== "undefined") {
-  document.documentElement.lang = currentLang;
-}
+type Dictionary = Record<string, unknown>;
 
-const dictionaries: Record<SupportedLang, Record<string, unknown>> = {
-  en: enDict as Record<string, unknown>,
-  hi: hiDict as Record<string, unknown>,
-  te: teDict as Record<string, unknown>,
+const dictionaries: Partial<Record<SupportedLang, Dictionary>> = { en: enDict as Dictionary };
+
+const loaders: Record<Exclude<SupportedLang, "en">, () => Promise<{ default: unknown }>> = {
+  hi: () => import("../i18n/hi.json"),
+  te: () => import("../i18n/te.json"),
 };
 
+async function loadDictionary(lang: SupportedLang): Promise<void> {
+  if (lang === "en" || dictionaries[lang]) return;
+  dictionaries[lang] = (await loaders[lang]()).default as Dictionary;
+}
+
+// Starts in English until initLanguage() has loaded the chosen dictionary.
+let currentLang: SupportedLang = "en";
+
+/** Loads and applies the language from the URL or the stored choice. Call before the first render. */
+export async function initLanguage(): Promise<void> {
+  await setLanguage(getInitialLanguage());
+}
+
 export async function setLanguage(lang: SupportedLang): Promise<void> {
+  await loadDictionary(lang);
   currentLang = lang;
   if (typeof document !== "undefined") {
     document.documentElement.lang = lang;
@@ -90,9 +100,9 @@ function rewriteUrlLang(lang: SupportedLang): void {
 }
 
 /** Applies ?lang= from the URL, if present, as the current language. */
-export function syncLanguageFromUrl(): void {
+export async function syncLanguageFromUrl(): Promise<void> {
   const lang = langFromUrl();
-  if (lang && lang !== currentLang) void setLanguage(lang);
+  if (lang && lang !== currentLang) await setLanguage(lang);
 }
 
 export function getLanguage(): SupportedLang {
@@ -100,7 +110,7 @@ export function getLanguage(): SupportedLang {
 }
 
 export function t(keyPath: string, params?: Record<string, string | number>): string {
-  const dict = dictionaries[currentLang] ?? dictionaries.en;
+  const dict = dictionaries[currentLang] ?? enDict;
   if (!dict) return keyPath;
 
   const parts = keyPath.split(".");

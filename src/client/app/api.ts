@@ -1,18 +1,10 @@
 // api.ts: Client API helper calling server endpoints.
+// The server validates every reply with the shared Zod schemas before sending it, so the browser
+// uses the inferred types only and does not ship Zod (smaller bundle, no eval probe under CSP).
 
-import { z } from "zod";
 import type { NormalisedAirData } from "../../shared/air-types.js";
-import {
-  type PlaceCoordinates,
-  PlaceCoordinatesSchema,
-  type PlaceSuggestion,
-  PlaceSuggestionSchema,
-} from "../../shared/place-types.js";
-import {
-  type PlanResponse,
-  PlanResponseSchema,
-  type PlanSwapItem,
-} from "../../shared/plan-schema.js";
+import type { PlaceCoordinates, PlaceSuggestion } from "../../shared/place-types.js";
+import type { PlanResponse, PlanSwapItem } from "../../shared/plan-schema.js";
 import type { HouseholdProfile } from "../../shared/schemas.js";
 import type { StoredLocation } from "./storage.js";
 
@@ -39,7 +31,7 @@ export async function fetchPlaceSuggestions(
   if (session) params.set("session", session);
   const res = await fetch(`/api/places?${params.toString()}`);
   if (!res.ok) throw new Error(`Places query failed: ${res.status}`);
-  return z.array(PlaceSuggestionSchema).parse(await res.json());
+  return (await res.json()) as PlaceSuggestion[];
 }
 
 export async function fetchPlaceDetails(
@@ -51,7 +43,7 @@ export async function fetchPlaceDetails(
   const qs = params.toString() ? `?${params.toString()}` : "";
   const res = await fetch(`/api/places/${encodeURIComponent(placeId)}${qs}`);
   if (!res.ok) throw new Error(`Place details failed: ${res.status}`);
-  return PlaceCoordinatesSchema.parse(await res.json());
+  return (await res.json()) as PlaceCoordinates;
 }
 
 export async function fetchAirData(
@@ -80,12 +72,10 @@ export async function fetchPlan(params: {
     throw new Error(errData.error || `Plan failed with status ${res.status}`);
   }
   const rawData = await res.json();
-  const parsed = PlanResponseSchema.safeParse(rawData);
-  if (!parsed.success) {
-    console.error("Plan response failed schema validation:", parsed.error);
+  if (!rawData || typeof rawData !== "object" || !Array.isArray((rawData as PlanResponse).swaps)) {
     throw new Error("Received an invalid plan response from server.");
   }
-  return parsed.data;
+  return rawData as PlanResponse;
 }
 
 export async function fetchRefine(params: {

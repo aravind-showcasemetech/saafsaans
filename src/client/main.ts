@@ -1,19 +1,7 @@
 // main.ts: SaafSaans client entry point
 
-import "./zod-csp.js";
-
-// Import self-hosted Noto Sans fonts (weights 400, 500, 600 only)
-import "@fontsource/noto-sans/400.css";
-import "@fontsource/noto-sans/500.css";
-import "@fontsource/noto-sans/600.css";
-
-import "@fontsource/noto-sans-devanagari/400.css";
-import "@fontsource/noto-sans-devanagari/500.css";
-import "@fontsource/noto-sans-devanagari/600.css";
-
-import "@fontsource/noto-sans-telugu/400.css";
-import "@fontsource/noto-sans-telugu/500.css";
-import "@fontsource/noto-sans-telugu/600.css";
+// Self-hosted fonts: Latin, Devanagari and Telugu subsets only, woff2, loaded when used.
+import "./styles/fonts.css";
 
 // Import stylesheets in order
 import "./styles/tokens.css";
@@ -24,12 +12,13 @@ import "./styles/motion.css";
 import "./styles/app.css";
 
 import { renderDemoSelect } from "./app/demo.js";
+import { setPageMeta } from "./app/meta.js";
 import { router } from "./app/router.js";
 import { renderSetupView } from "./app/setup.js";
 import { renderShareView } from "./app/share.js";
 import { renderTodayView } from "./app/today.js";
 import { initHomePage } from "./home/home.js";
-import { type SupportedLang, getLanguage, setLanguage } from "./home/i18n.js";
+import { type SupportedLang, getLanguage, initLanguage, setLanguage } from "./home/i18n.js";
 import { setupHeaderScroll } from "./home/motion.js";
 import { renderFooter, renderHeader } from "./home/render.js";
 
@@ -63,7 +52,7 @@ function mountAppShell(appRoot: HTMLElement): HTMLElement {
   return document.getElementById("app-content") || appRoot;
 }
 
-function startApp(): void {
+async function startApp(): Promise<void> {
   const appRoot = document.getElementById("app");
   if (!appRoot) return;
 
@@ -75,11 +64,13 @@ function startApp(): void {
   });
 
   router.register("/setup", () => {
+    setPageMeta("setup");
     const content = mountAppShell(appRoot);
     renderSetupView(content);
   });
 
   router.register("/today", () => {
+    setPageMeta("today");
     const content = mountAppShell(appRoot);
     renderTodayView(content).catch((err) => {
       console.error("Failed to render Today view", err);
@@ -87,6 +78,7 @@ function startApp(): void {
   });
 
   router.register("/share", () => {
+    setPageMeta("share");
     const content = mountAppShell(appRoot);
     renderShareView(content).catch((err) => {
       console.error("Failed to render Share view", err);
@@ -94,18 +86,20 @@ function startApp(): void {
   });
 
   router.register("/demo", () => {
+    setPageMeta("demo");
     const content = mountAppShell(appRoot);
     renderDemoSelect(content).catch((err) => {
       console.error("Failed to render Demo select", err);
     });
   });
 
-  // Start router
+  // Load the chosen language's dictionary before the first screen renders.
+  await initLanguage();
   router.start();
 }
 
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", startApp);
+  document.addEventListener("DOMContentLoaded", () => void startApp());
 } else {
-  startApp();
+  void startApp();
 }

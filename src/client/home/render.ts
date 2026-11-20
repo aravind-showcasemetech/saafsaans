@@ -60,7 +60,7 @@ export function renderHero(area: AreaAirItem | null, airLabel: string): string {
     `;
 
   return `
-    <section class="section hero-section reveal-on-scroll" aria-labelledby="hero-title">
+    <section class="section hero-section" aria-labelledby="hero-title">
       <div class="container grid-12">
         <div class="hero-content">
           <h1 id="hero-title" class="hero-title">${t("hero.title")}</h1>
