@@ -1,4 +1,5 @@
-// common.ts: Small helpers shared by the API routes.
+// request-context.ts: The request environment every route shares (an anonymous request id),
+// reading the JSON body, and the check that keeps nicknames in the browser.
 import type { Context } from "hono";
 
 /** Hono environment: every request carries an anonymous request id. */

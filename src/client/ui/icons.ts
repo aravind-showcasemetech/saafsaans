@@ -15,6 +15,7 @@ import trainFront from "../assets/icons/train-front.svg?raw";
 import users from "../assets/icons/users.svg?raw";
 import wind from "../assets/icons/wind.svg?raw";
 import x from "../assets/icons/x.svg?raw";
+import { type SafeHtml, raw } from "./html.js";
 
 const ICONS = {
   "arrow-right": arrowRight,
@@ -36,9 +37,9 @@ const ICONS = {
 
 export type IconName = keyof typeof ICONS;
 
-/** The icon's SVG markup, hidden from assistive technology. */
-export function icon(name: IconName): string {
-  return ICONS[name]
-    .trim()
-    .replace("<svg ", '<svg class="icon" aria-hidden="true" focusable="false" ');
+/** The icon's SVG markup, hidden from assistive technology. The files are ours, so raw() is safe. */
+export function icon(name: IconName): SafeHtml {
+  return raw(
+    ICONS[name].trim().replace("<svg ", '<svg class="icon" aria-hidden="true" focusable="false" '),
+  );
 }

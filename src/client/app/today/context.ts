@@ -1,6 +1,6 @@
 // context.ts: What every Today section needs: the household, its air, its plan and the ticked swaps.
 import type { NormalisedAirData } from "../../../shared/air-types.js";
-import type { WindowResult } from "../../../shared/impact.js";
+import type { WindowResult } from "../../../shared/impact/index.js";
 import type { HouseholdProfile } from "../../../shared/schemas.js";
 import type { PlanResponse } from "../api.js";
 import type { StoredLocation } from "../storage.js";

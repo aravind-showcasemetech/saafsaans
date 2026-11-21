@@ -1,16 +1,17 @@
-// setup.ts: Five full-height steps: Location, Who lives here, How you travel, Your home, Review.
+// view.ts: Five full-height steps: Location, Who lives here, How you travel, Your home, Review.
 // Each step is its own address (#/setup?step=travel), ends with Back and Next, and keeps what was
 // typed. The review lists everything in plain sentences with an Edit button per group.
-import { t } from "../home/i18n.js";
-import type { IconName } from "../ui/icons.js";
-import { actionButton, guideSection, stepLabel } from "../ui/section.js";
-import { router } from "./router.js";
-import { collectStep } from "./setup/collect.js";
-import { attachLocation } from "./setup/location.js";
-import { attachPeople } from "./setup/people.js";
-import { STEPS, type StepId, initFromStored, saveAll } from "./setup/state.js";
-import { stepContent } from "./setup/steps.js";
-import { attachTravel } from "./setup/travel.js";
+import { t } from "../../home/i18n.js";
+import { html, setHtml } from "../../ui/html.js";
+import type { IconName } from "../../ui/icons.js";
+import { actionButton, guideSection, stepLabel } from "../../ui/section.js";
+import { router } from "../router.js";
+import { collectStep } from "./collect.js";
+import { attachLocation } from "./location.js";
+import { attachPeople } from "./people.js";
+import { STEPS, type StepId, initFromStored, saveAll } from "./state.js";
+import { stepContent } from "./steps.js";
+import { attachTravel } from "./travel.js";
 
 const ICONS: Record<StepId, IconName> = {
   location: "map-pin",
@@ -38,13 +39,14 @@ export function renderSetupView(container: HTMLElement): void {
   const prev = STEPS[index - 1];
   const next = STEPS[index + 1];
 
-  const actions =
-    (prev ? actionButton({ label: t("setup.back"), id: "btn-step-back", kind: "secondary" }) : "") +
-    (next
-      ? actionButton({ label: t("setup.next"), id: "btn-step-next", icon: "arrow-right" })
-      : actionButton({ label: t("setup.seePlan"), id: "btn-save-setup", icon: "arrow-right" }));
+  const back = prev
+    ? actionButton({ label: t("setup.back"), id: "btn-step-back", kind: "secondary" })
+    : "";
+  const forward = next
+    ? actionButton({ label: t("setup.next"), id: "btn-step-next", icon: "arrow-right" })
+    : actionButton({ label: t("setup.seePlan"), id: "btn-save-setup", icon: "arrow-right" });
 
-  container.innerHTML = guideSection({
+  const section = guideSection({
     id: `setup-${step}`,
     level: 1,
     stepLabel: stepLabel(index + 1, STEPS.length),
@@ -52,10 +54,11 @@ export function renderSetupView(container: HTMLElement): void {
     title: t(`setupG.${step}.title`),
     shows: t(`setupG.${step}.shows`),
     can: t(`setupG.${step}.can`),
-    content: `${stepContent(step)}<p id="setup-error" class="error-text" role="alert"></p>`,
-    actions,
+    content: html`${stepContent(step)}<p id="setup-error" class="error-text" role="alert"></p>`,
+    actions: html`${back}${forward}`,
     className: "setup-step is-visible",
   });
+  setHtml(container, section);
 
   if (step === "location") attachLocation(container);
   if (step === "people") attachPeople(container, () => renderSetupView(container));

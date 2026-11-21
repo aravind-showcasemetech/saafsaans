@@ -1,6 +1,6 @@
 // swaps-facts.ts: Swaps shown as a sourced fact or as advice only (FACTORS.md section 6).
 import type { HouseholdProfile } from "../schemas.js";
-import type { SwapImpactResult } from "./types.js";
+import type { SwapImpactResult } from "./day-model-types.js";
 
 /** The fact or advice swap for this id, or null when the id is not one of them. */
 export function factOrAdviceImpact(

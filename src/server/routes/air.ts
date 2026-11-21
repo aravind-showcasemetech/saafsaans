@@ -5,7 +5,7 @@ import { getAirFor } from "../air.js";
 import { airCache } from "../cache.js";
 import type { Config } from "../config.js";
 import { logEvent } from "../log.js";
-import type { AppEnv } from "./common.js";
+import type { AppEnv } from "./request-context.js";
 
 // Helper to check coordinates within India roughly:
 // Lat: ~6.0 to ~38.0, Lng: ~68.0 to ~98.0

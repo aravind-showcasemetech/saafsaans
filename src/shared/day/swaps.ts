@@ -1,11 +1,11 @@
 // swaps.ts: The impact of one swap for this household, from the day model and FACTORS.md rules.
-import { cleanestAndDirtiestWindows } from "../impact.js";
+import { cleanestAndDirtiestWindows } from "../impact/index.js";
 import type { HouseholdProfile } from "../schemas.js";
+import type { SwapImpactResult } from "./day-model-types.js";
 import { createHourlyForecastLookup } from "./hourly.js";
 import { factOrAdviceImpact } from "./swaps-facts.js";
 import { protectImpact } from "./swaps-protect.js";
 import { transportImpact } from "./swaps-transport.js";
-import type { SwapImpactResult } from "./types.js";
 
 /**
  * Computes the impact of one swap:

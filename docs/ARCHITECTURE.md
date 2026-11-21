@@ -95,14 +95,16 @@ src/shared/     used by server and browser
   day/            24-hour schedules, swap effects, family totals
 src/server/
   app.ts          middleware order and static files
-  routes/         air, places, commute, plan, refine, demo
-  plan/           applicable, compute, rank
-  gemini/         the only code that calls Gemini
+  routes/         air, places, commute, plan, refine, demo; request-context.ts
+  plan/           applicable, compute, rank, template-text (index.ts re-exports)
+  gemini/         the only code that calls Gemini; guards.ts caps, minimises, checks
+  translations.ts the server's template text, from the same dictionaries
   air.ts, places.ts, commute.ts   Google API clients (8-second timeouts)
   security.ts, cache.ts, config.ts, log.ts
 src/client/
-  home/           the guided home page
-  app/            setup, today, share, router, local recalculation
+  home/           the guided home page; sections/ has one file per section
+  app/            setup/ and today/ (each with view.ts), share, router, local recalculation
+  ui/             html.ts (safe templates), guided sections, nav, calculator, SVG diagrams
   i18n/           en.json, hi.json, te.json
   styles/         dark black and green theme tokens
 test/             unit, server, end-to-end (Playwright with axe)
@@ -118,9 +120,12 @@ test/             unit, server, end-to-end (Playwright with axe)
    cap on Gemini calls, an 8 KB body limit and 500 characters for refine text.
 4. **Validated input:** Zod schemas at every route; coordinates limited to India and rounded to
    two decimals (about 1 km) before any call, cache key or log.
-5. **Model output is untrusted:** schema check, known action ids only, no digits, no HTML, and
+5. **Safe HTML by default:** every view builds markup with the `html` tag in
+   `src/client/ui/html.ts`, which escapes every value it is given; `setHtml` is the only place
+   that assigns `innerHTML`, and a unit test fails on any other use.
+6. **Model output is untrusted:** schema check, known action ids only, no digits, no HTML, and
    no health advice from the model. Health text comes only from CPCB and Google.
-6. **Privacy by design:** no accounts and no database; nicknames never leave the browser;
+7. **Privacy by design:** no accounts and no database; nicknames never leave the browser;
    place names and coordinates never go to Gemini (it sees members as m1, m2 and the commute's
    mode and distance only); logs carry a request id, route, status and duration only.
 

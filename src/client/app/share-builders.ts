@@ -1,4 +1,4 @@
-// share-utils.ts: Pure WhatsApp text and iCalendar builders with unit tests.
+// share-builders.ts: Pure WhatsApp text and iCalendar builders with unit tests.
 // Callers pass translated text; these functions only assemble it. No em or en dashes.
 
 const DASHES = new RegExp(`[${String.fromCharCode(0x2014, 0x2013)}]`, "g");

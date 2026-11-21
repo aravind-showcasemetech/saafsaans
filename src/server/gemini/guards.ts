@@ -1,3 +1,5 @@
+// guards.ts: Everything around a Gemini call: the global per-minute cap, the data minimisation of
+// what is sent (no nicknames, places or coordinates), and the checks on what comes back.
 import { HarmBlockThreshold, HarmCategory } from "@google/genai";
 import { z } from "zod";
 import type { HouseholdProfile } from "../../shared/schemas.js";

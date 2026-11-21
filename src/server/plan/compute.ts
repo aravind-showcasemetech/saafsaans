@@ -1,11 +1,11 @@
 // compute.ts: Computes numbers for applicable swaps according to docs/SPEC.md and docs/FACTORS.md.
-// Uses src/shared/day.ts for day-model computed actions and avoids invented values.
+// Uses src/shared/day/ for day-model computed actions and avoids invented values.
 
 import type { ActionDefinition } from "../../shared/actions.js";
 import type { NormalisedAirData } from "../../shared/air-types.js";
-import { computeDayModelSwapImpact } from "../../shared/day.js";
+import { computeDayModelSwapImpact } from "../../shared/day/index.js";
 import type { HouseholdProfile } from "../../shared/schemas.js";
-import { serverText } from "../text.js";
+import { serverText } from "../translations.js";
 
 export interface ComputedSwapItem {
   id: string;

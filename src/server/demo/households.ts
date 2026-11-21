@@ -27,7 +27,8 @@ export const demoHouseholds: Record<string, DemoHouseholdEntry> = {
       lng: 78.41,
     },
     description:
-      "Father drives petrol car to HITEC City; mother WFH; son (9) with asthma; grandmother (68) walks at 6 am. Incense daily, mosquito coil at night, no purifier.",
+      "Father drives petrol car to HITEC City; mother WFH; son (9) with asthma; grandmother (68) " +
+      "walks at 6 am. Incense daily, mosquito coil at night, no purifier.",
     profile: {
       members: [
         {
@@ -147,7 +148,8 @@ export const demoHouseholds: Record<string, DemoHouseholdEntry> = {
       lng: 78.47,
     },
     description:
-      "Father drives auto (outdoors all day); two children walk to school; lots of frying, small home, no purifier.",
+      "Father drives auto (outdoors all day); two children walk to school; lots of frying, " +
+      "small home, no purifier.",
     profile: {
       members: [
         {

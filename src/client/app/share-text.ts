@@ -1,8 +1,8 @@
 // share-text.ts: The household's WhatsApp message, in the current language, for Today and Share.
-import type { WindowResult } from "../../shared/impact.js";
+import type { WindowResult } from "../../shared/impact/index.js";
 import { t } from "../home/i18n.js";
 import { formatIndianNumber, hourLabel } from "./format.js";
-import { buildWhatsAppShareText } from "./share-utils.js";
+import { buildWhatsAppShareText } from "./share-builders.js";
 
 export function planShareText(params: {
   area: string;

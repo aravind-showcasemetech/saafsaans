@@ -7,10 +7,10 @@ import {
   computeActionNumbers,
   filterApplicableActions,
   rankApplicableActions,
-} from "../../src/server/plan.js";
-import { computeHouseholdDayComparison } from "../../src/shared/day.js";
+} from "../../src/server/plan/index.js";
+import { computeHouseholdDayComparison } from "../../src/shared/day/index.js";
 import { CPCB_AQI_BANDS } from "../../src/shared/factors.js";
-import { indoorPm25, minPurifierCadr } from "../../src/shared/impact.js";
+import { indoorPm25, minPurifierCadr } from "../../src/shared/impact/index.js";
 
 describe("Phase 4 Follow-up: Day Model, Precise Impact, Ranking & Sourced Text", () => {
   const reddysProfile = demoHouseholds["the-reddys"].profile;

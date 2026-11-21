@@ -6,10 +6,10 @@ import {
   computeHouseholdDayComparison,
   createHourlyForecastLookup,
   getIndoorPm25ForHour,
-} from "../../src/shared/day.js";
+} from "../../src/shared/day/index.js";
 import type { HouseholdProfile, MemberProfile } from "../../src/shared/schemas.js";
 
-describe("src/shared/day.ts comprehensive coverage", () => {
+describe("src/shared/day comprehensive coverage", () => {
   const reddys = demoHouseholds["the-reddys"].profile;
 
   it("covers hourly forecast lookup fallback and all routine presets", () => {

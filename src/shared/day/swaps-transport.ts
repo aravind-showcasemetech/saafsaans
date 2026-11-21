@@ -1,7 +1,7 @@
 // swaps-transport.ts: Pollute less swaps: CO2 avoided and vehicle-km off the road (FACTORS.md section 9).
 import { METRO_SAVING_FRACTION, TRANSPORT_CO2_FACTORS, type TravelMode } from "../factors.js";
 import type { HouseholdProfile } from "../schemas.js";
-import type { SwapImpactResult } from "./types.js";
+import type { SwapImpactResult } from "./day-model-types.js";
 
 const CAR_MODES = [
   "petrol_car_small",

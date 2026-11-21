@@ -5,7 +5,7 @@ import { fetchCommuteRoutes } from "../../src/server/commute.js";
 import { loadConfig } from "../../src/server/config.js";
 import { kukatpallyDemoAir } from "../../src/server/demo/air.js";
 import { geminiFromConfig } from "../../src/server/gemini/client.js";
-import { getTemplateReason, getTemplateSummary } from "../../src/server/plan.js";
+import { getTemplateReason, getTemplateSummary } from "../../src/server/plan/index.js";
 
 // No Maps key in tests, so every route answers from the saved captures and demo data.
 const app = createApp({ config: loadConfig({ DEMO: "1" }), gemini: null });

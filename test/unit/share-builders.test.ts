@@ -3,9 +3,9 @@ import {
   buildCalendarIcs,
   buildWhatsAppShareText,
   escapeIcsText,
-} from "../../src/client/app/share-utils.js";
+} from "../../src/client/app/share-builders.js";
 
-describe("share-utils: WhatsApp and iCalendar builders", () => {
+describe("share-builders: WhatsApp and iCalendar builders", () => {
   it("joins translated lines with blank lines, drops empty lines and replaces dashes", () => {
     const text = buildWhatsAppShareText([
       "SaafSaans air plan for Kukatpally, Hyderabad",

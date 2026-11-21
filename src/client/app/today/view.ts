@@ -1,18 +1,19 @@
-// today.ts: Today, the same guided pattern as the home page (DESIGN.md section 8): your air, your
+// view.ts: Today, the same guided pattern as the home page (DESIGN.md section 8): your air, your
 // routine, indoor air hacks, sustainable alternatives, the impact of your choices, sharing.
 // Every word comes from the i18n dictionaries; every number from src/shared.
-import { cleanestAndDirtiestWindows } from "../../shared/impact.js";
-import { getLanguage } from "../home/i18n.js";
-import { setupScrollReveal } from "../home/motion.js";
-import { reportError } from "../report-error.js";
-import { attachCalculator } from "../ui/calculator.js";
-import { downloadCleanWindowIcs } from "../ui/calendar.js";
-import { attachGuideNav, guideNavHtml } from "../ui/nav.js";
-import { fetchAirData, fetchPlan } from "./api.js";
-import { placeLabel } from "./format.js";
-import { recomputeHouseholdTotals } from "./recompute.js";
-import { router } from "./router.js";
-import { planShareText, whatsAppUrl } from "./share-text.js";
+import { cleanestAndDirtiestWindows } from "../../../shared/impact/index.js";
+import { getLanguage } from "../../home/i18n.js";
+import { setupScrollReveal } from "../../home/motion.js";
+import { reportError } from "../../report-error.js";
+import { attachCalculator } from "../../ui/calculator.js";
+import { downloadCleanWindowIcs } from "../../ui/calendar.js";
+import { html, setHtml } from "../../ui/html.js";
+import { attachGuideNav, guideNavHtml } from "../../ui/nav.js";
+import { fetchAirData, fetchPlan } from "../api.js";
+import { placeLabel } from "../format.js";
+import { recomputeHouseholdTotals } from "../recompute.js";
+import { router } from "../router.js";
+import { planShareText, whatsAppUrl } from "../share-text.js";
 import {
   loadHouseholdProfile,
   loadLocation,
@@ -20,19 +21,19 @@ import {
   loadToggledSwaps,
   savePlan,
   saveToggledSwaps,
-} from "./storage.js";
-import { airTodaySection } from "./today/air-now.js";
-import { type TodayContext, nameOf } from "./today/context.js";
-import { attachRefine } from "./today/refine.js";
+} from "../storage.js";
+import { airTodaySection } from "./air-now.js";
+import { type TodayContext, nameOf } from "./context.js";
+import { errorHtml, loadingHtml } from "./loading-error.js";
+import { attachRefine } from "./refine.js";
 import {
   alternativesSection,
   impactSection,
   indoorSection,
   routineSection,
   shareSection,
-} from "./today/sections.js";
-import { errorHtml, loadingHtml } from "./today/states.js";
-import { totalsHtml } from "./today/totals.js";
+} from "./sections.js";
+import { totalsHtml } from "./totals.js";
 
 export async function renderTodayView(container: HTMLElement): Promise<void> {
   const profile = loadHouseholdProfile();
@@ -42,7 +43,7 @@ export async function renderTodayView(container: HTMLElement): Promise<void> {
     router.navigate("/demo");
     return;
   }
-  container.innerHTML = loadingHtml();
+  setHtml(container, loadingHtml());
 
   try {
     const lang = getLanguage();
@@ -69,7 +70,7 @@ export async function renderTodayView(container: HTMLElement): Promise<void> {
     renderContent(container, ctx);
   } catch (err: unknown) {
     reportError("Failed to load Today view:", err);
-    container.innerHTML = errorHtml();
+    setHtml(container, errorHtml());
   }
 }
 
@@ -102,18 +103,21 @@ function renderContent(container: HTMLElement, ctx: TodayContext): void {
     alternativesSection(ctx),
     impactSection(),
     shareSection(ctx, shareUrl()),
-  ].join("");
-  container.innerHTML = `<div class="guide"><div class="guide-rail"></div><div class="guide-main today-layout">${sections}</div></div>`;
+  ];
+  setHtml(
+    container,
+    html`<div class="guide"><div class="guide-rail"></div><div
+      class="guide-main today-layout">${sections}</div></div>`,
+  );
 
   const rail = container.querySelector<HTMLElement>(".guide-rail");
   if (rail) {
-    rail.innerHTML = guideNavHtml(
-      Array.from(container.querySelectorAll<HTMLElement>(".g-section")).map((s) => ({
-        id: s.id,
-        title: s.dataset.navTitle ?? "",
-        stepLabel: s.dataset.stepLabel ?? "",
-      })),
-    );
+    const items = Array.from(container.querySelectorAll<HTMLElement>(".g-section")).map((s) => ({
+      id: s.id,
+      title: s.dataset.navTitle ?? "",
+      stepLabel: s.dataset.stepLabel ?? "",
+    }));
+    setHtml(rail, guideNavHtml(items));
   }
   attachGuideNav(container);
   setupScrollReveal(container);
@@ -123,7 +127,10 @@ function renderContent(container: HTMLElement, ctx: TodayContext): void {
   const wa = container.querySelector<HTMLAnchorElement>("#whatsapp-share-btn");
   const renderTotals = () => {
     if (totalsBox)
-      totalsBox.innerHTML = totalsHtml(totals, (id) => nameOf(ctx, id), ctx.active.size);
+      setHtml(
+        totalsBox,
+        totalsHtml(totals, (id) => nameOf(ctx, id), ctx.active.size),
+      );
     if (wa) wa.href = shareUrl();
   };
   renderTotals();

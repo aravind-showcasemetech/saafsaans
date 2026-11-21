@@ -1,7 +1,10 @@
 // recompute.ts: Pure helper to recompute family totals in the browser when swaps are toggled.
 // Follows AGENTS.md rule 1 and SPEC section 5.
 
-import { computeDayModelSwapImpact, computeHouseholdDayComparison } from "../../shared/day.js";
+import {
+  computeDayModelSwapImpact,
+  computeHouseholdDayComparison,
+} from "../../shared/day/index.js";
 import type { HouseholdProfile } from "../../shared/schemas.js";
 
 export interface RecomputedTotals {

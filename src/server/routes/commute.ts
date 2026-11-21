@@ -5,7 +5,7 @@ import { commuteCache } from "../cache.js";
 import { fetchCommuteRoutes } from "../commute.js";
 import { logEvent } from "../log.js";
 import { IndiaLatSchema, IndiaLngSchema } from "./air.js";
-import type { AppEnv } from "./common.js";
+import type { AppEnv } from "./request-context.js";
 
 export const commuteRoute = new Hono<AppEnv>();
 

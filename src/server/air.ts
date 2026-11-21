@@ -3,7 +3,7 @@ import type {
   NormalisedAirData,
   NormalisedHourlyForecastItem,
 } from "../shared/air-types.js";
-import { aqiBandFromPm25 } from "../shared/impact.js";
+import { aqiBandFromPm25 } from "../shared/impact/index.js";
 import { type Config, config } from "./config.js";
 import { dwarkaDemoAir, kukatpallyDemoAir } from "./demo/air.js";
 

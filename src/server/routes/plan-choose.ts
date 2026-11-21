@@ -9,8 +9,8 @@ import {
   commuteForGemini,
   containsDigit,
   sanitizeModelText,
-} from "../gemini/common.js";
-import type { GeminiPlanResponse } from "../gemini/common.js";
+} from "../gemini/guards.js";
+import type { GeminiPlanResponse } from "../gemini/guards.js";
 import { callGeminiChoosePlan } from "../gemini/plan.js";
 import { logEvent } from "../log.js";
 import {
@@ -18,8 +18,8 @@ import {
   getTemplateReason,
   getTemplateSummary,
   rankApplicableActions,
-} from "../plan.js";
-import type { Lang } from "../text.js";
+} from "../plan/index.js";
+import type { Lang } from "../translations.js";
 
 export const MAX_SWAPS = 6;
 

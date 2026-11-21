@@ -3,10 +3,10 @@
 // mode, with Google's beta notice for two-wheeler and walking routes and a note when transit had
 // no route. Typing the distance by hand always works.
 import { routeForMode } from "../../../shared/commute-mode.js";
-import { escapeHtml } from "../../../shared/escape.js";
 import type { TravelMode } from "../../../shared/schemas.js";
 import { t } from "../../home/i18n.js";
 import { attachPlaceCombobox } from "../../ui/combobox.js";
+import { html, setHtml } from "../../ui/html.js";
 import { fetchCommuteRoutes } from "../api.js";
 import { formatIndianNumber } from "../format.js";
 import { draft } from "./state.js";
@@ -31,19 +31,19 @@ export function attachTravel(container: HTMLElement): void {
     ];
     if (r.isBeta) lines.push(t("setup.route.beta"));
     if (r.roadDistanceFallback) lines.push(t("setup.route.roadFallback"));
-    status.innerHTML = lines.map((l) => `<p>${escapeHtml(l)}</p>`).join("");
+    setHtml(status, html`${lines.map((l) => html`<p>${l}</p>`)}`);
   };
 
   attachPlaceCombobox(container, "commute-dest-input", async (place) => {
     draft.destination = place;
-    status.innerHTML = `<p>${escapeHtml(t("setup.route.loading"))}</p>`;
+    setHtml(status, html`<p>${t("setup.route.loading")}</p>`);
     try {
       const origin = { lat: draft.selectedLocation.lat, lng: draft.selectedLocation.lng };
       draft.routes = await fetchCommuteRoutes(origin, { lat: place.lat, lng: place.lng });
       apply();
     } catch {
       draft.routes = null;
-      status.innerHTML = `<p class="error-text">${escapeHtml(t("setup.route.error"))}</p>`;
+      setHtml(status, html`<p class="error-text">${t("setup.route.error")}</p>`);
     }
   });
 

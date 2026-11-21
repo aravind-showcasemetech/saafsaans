@@ -2,16 +2,16 @@
 // Each swap compares a member's day without and with that one swap.
 
 import { MASK_PROTECTION } from "../factors.js";
-import { minPurifierCadr } from "../impact.js";
+import { minPurifierCadr } from "../impact/index.js";
 import type { HouseholdProfile, MemberProfile } from "../schemas.js";
-import { computeMemberDaySchedule } from "./schedule.js";
-import { calculateDoseCutPercentage } from "./totals.js";
 import type {
   DayModelSwapsActive,
   HourlyForecastLookup,
   SwapImpactResult,
   SwapMemberImpact,
-} from "./types.js";
+} from "./day-model-types.js";
+import { computeMemberDaySchedule } from "./schedule.js";
+import { calculateDoseCutPercentage } from "./totals.js";
 
 type HourWindow = { startHour: number; endHour: number } | null;
 

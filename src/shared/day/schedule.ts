@@ -7,16 +7,16 @@ import {
   indoorPm25,
   inhalationRate,
   minPurifierCadr,
-} from "../impact.js";
+} from "../impact/index.js";
 import { buildMemberBaselineRoutine, overlayExerciseOnBlocks } from "../presets.js";
 import type { HouseholdProfile, MemberProfile } from "../schemas.js";
-import { getIndoorPm25ForHour } from "./hourly.js";
 import type {
   DayHourBlock,
   DayModelSwapsActive,
   HourlyForecastLookup,
   MemberDaySchedule,
-} from "./types.js";
+} from "./day-model-types.js";
+import { getIndoorPm25ForHour } from "./hourly.js";
 
 type Window = { startHour: number; endHour: number } | null;
 type RoutineBlock = ReturnType<typeof buildMemberBaselineRoutine>[number];

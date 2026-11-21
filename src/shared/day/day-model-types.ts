@@ -1,4 +1,4 @@
-// types.ts: Shapes shared by the household day model.
+// day-model-types.ts: Shapes shared by the household day model.
 import type { ActivityLevel, AgeBand } from "../factors.js";
 import type { HouseholdProfile } from "../schemas.js";
 

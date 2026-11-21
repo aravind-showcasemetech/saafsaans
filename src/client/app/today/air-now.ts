@@ -1,10 +1,10 @@
 // air-now.ts: Today section 1, "Your air today": AQI, band in words, main pollutant, CPCB's
 // statement and Google's advice for each person (labelled as Google's).
 import type { HealthRecommendations } from "../../../shared/air-types.js";
-import { escapeHtml } from "../../../shared/escape.js";
 import type { MemberProfile } from "../../../shared/schemas.js";
 import { getLanguage, t } from "../../home/i18n.js";
 import { bandScaleHtml } from "../../ui/diagrams/bands.js";
+import { type SafeHtml, html } from "../../ui/html.js";
 import { actionButton, guideSection, stepLabel, whatIsThis } from "../../ui/section.js";
 import {
   bandClass,
@@ -29,46 +29,64 @@ function googleAdviceFor(member: MemberProfile, recs: HealthRecommendations | un
   return general;
 }
 
-export function airTodaySection(ctx: TodayContext): string {
+/** Google's advice for each person: in hi and te, saved English advice sits in a closed disclosure. */
+function googleAdviceHtml(ctx: TodayContext): SafeHtml {
   const { air } = ctx;
-  const lang = getLanguage();
-  const e = escapeHtml;
+  const items = ctx.profile.members.map(
+    (m) =>
+      html`<li><strong>${nicknameHtml(nameOf(ctx, m.id))}:</strong> ${googleAdviceFor(
+        m,
+        air.healthRecommendations,
+      )}</li>`,
+  );
+  // Saved demo data has Google's advice in English; in hi and te it is marked lang="en".
+  const english = /^[\x20-\x7E’]*$/.test(air.healthRecommendations?.generalPopulation ?? "");
+  return getLanguage() !== "en" && english
+    ? html`<details class="explain"><summary><span>${t("today.googleEnglishSummary")}</span></summary><ul
+        class="advice-list" lang="en">${items}</ul></details>`
+    : html`<h2 class="list-title">${t("today.googleHeading")}</h2><ul class="advice-list">${items}</ul>`;
+}
+
+/** The AQI, its band in words, the main pollutant and its concentration. */
+function airNowPanel(ctx: TodayContext): SafeHtml {
+  const { air } = ctx;
   const sample = air.isDemo ? capturedLabel(air.capturedAt) : null;
   const pollutant =
     (air.dominantPollutant || "pm25").toLowerCase() === "pm25"
       ? "PM2.5"
-      : e(air.dominantPollutant.toUpperCase());
-  const items = ctx.profile.members
-    .map(
-      (m) =>
-        `<li><strong>${nicknameHtml(nameOf(ctx, m.id))}:</strong> ${e(googleAdviceFor(m, air.healthRecommendations))}</li>`,
-    )
-    .join("");
-  // Saved demo data has Google's advice in English; in hi and te it sits in a closed disclosure marked lang="en".
-  const english = /^[\x20-\x7E’]*$/.test(air.healthRecommendations?.generalPopulation ?? "");
-  const google =
-    lang !== "en" && english
-      ? `<details class="explain"><summary><span>${e(t("today.googleEnglishSummary"))}</span></summary><ul class="advice-list" lang="en">${items}</ul></details>`
-      : `<h2 class="list-title">${e(t("today.googleHeading"))}</h2><ul class="advice-list">${items}</ul>`;
-  const content = `
+      : air.dominantPollutant.toUpperCase();
+  const place = `${placeLabel(ctx.location.name)}${sample ? ` · ${sample}` : ""}`;
+  const pm25 = formatIndianNumber(air.pm25, 1);
+  return html`
+        <div class="panel air-now">
+          <p class="panel-label">${place}</p>
+          <p class="air-now-row"><span class="big-number tabular-nums">${formatIndianNumber(
+            air.currentAqi,
+          )}</span><span class="aqi-word">AQI</span></p>
+          <p class="band-name"><span class="band-swatch ${bandClass(air.aqiBand)}"
+            aria-hidden="true"></span>${bandLabel(air.aqiBand)}</p>
+          <p class="muted small">${t("today.mainPollutant")}: <strong>${pollutant}</strong>
+            (${pm25} µg/m³)</p>
+        </div>`;
+}
+
+export function airTodaySection(ctx: TodayContext): SafeHtml {
+  const { air } = ctx;
+  const translated = getLanguage() === "en" ? "" : `, ${t("cpcb.translatedNote")}`;
+  const content = html`
     <div class="two-col">
       <div class="stack">
-        <div class="panel air-now">
-          <p class="panel-label">${e(placeLabel(ctx.location.name))}${sample ? ` · ${e(sample)}` : ""}</p>
-          <p class="air-now-row"><span class="big-number tabular-nums">${formatIndianNumber(air.currentAqi)}</span><span class="aqi-word">AQI</span></p>
-          <p class="band-name"><span class="band-swatch ${bandClass(air.aqiBand)}" aria-hidden="true"></span>${e(bandLabel(air.aqiBand))}</p>
-          <p class="muted small">${e(t("today.mainPollutant"))}: <strong>${pollutant}</strong> (${formatIndianNumber(air.pm25, 1)} µg/m³)</p>
-        </div>
+        ${airNowPanel(ctx)}
         <blockquote class="quote">
-          <p>${e(t(`cpcb.${air.aqiBand}`))}</p>
-          <footer>${e(t("cpcb.label"))}${lang === "en" ? "" : `, ${e(t("cpcb.translatedNote"))}`}</footer>
+          <p>${t(`cpcb.${air.aqiBand}`)}</p>
+          <footer>${t("cpcb.label")}${translated}</footer>
         </blockquote>
         ${whatIsThis("aqi")}
         ${whatIsThis("pm25")}
       </div>
       <div class="stack">
-        ${google}
-        <p class="muted small">${e(t("today.googleDisclaimer"))}</p>
+        ${googleAdviceHtml(ctx)}
+        <p class="muted small">${t("today.googleDisclaimer")}</p>
         ${bandScaleHtml(air.aqiBand)}
       </div>
     </div>`;

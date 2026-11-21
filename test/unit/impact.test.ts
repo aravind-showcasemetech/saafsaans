@@ -14,7 +14,7 @@ import {
   maskSavingRange,
   minPurifierCadr,
   vehicleKmAvoided,
-} from "../../src/shared/impact";
+} from "../../src/shared/impact/index";
 
 describe("src/shared/impact", () => {
   describe("Hand-worked reference values from user prompt", () => {

@@ -3,9 +3,9 @@
 // browser) and routes to #/today. "Try a Hyderabad family" opens the Reddys straight away;
 // #/demo?select shows the list.
 
-import { escapeHtml } from "../../shared/escape.js";
 import { t } from "../home/i18n.js";
 import { reportError } from "../report-error.js";
+import { type SafeHtml, html, setHtml } from "../ui/html.js";
 import { actionButton, guideSection } from "../ui/section.js";
 import { type DemoHouseholdItem, fetchDemoHouseholds } from "./api.js";
 import { placeLabel } from "./format.js";
@@ -26,8 +26,24 @@ function openHousehold(h: DemoHouseholdItem): void {
   router.navigate("/today");
 }
 
+function householdCard(h: DemoHouseholdItem): SafeHtml {
+  const name = householdText(h.id, "name");
+  return html`
+          <article class="panel" aria-labelledby="demo-${h.id}">
+            <p class="muted small">${placeLabel(h.location.name)}</p>
+            <h2 class="list-title" id="demo-${h.id}">${name}</h2>
+            <p>${householdText(h.id, "description")}</p>
+            ${actionButton({
+              label: t("demo.load", { name }),
+              data: { id: h.id },
+              kind: "primary",
+              extraClass: "btn-select-demo",
+            })}
+          </article>`;
+}
+
 export async function renderDemoSelect(container: HTMLElement): Promise<void> {
-  const page = (content: string) =>
+  const page = (content: SafeHtml) =>
     guideSection({
       id: "demo",
       level: 1,
@@ -44,9 +60,7 @@ export async function renderDemoSelect(container: HTMLElement): Promise<void> {
       }),
       className: "is-visible",
     });
-  container.innerHTML = page(
-    `<p class="muted" role="status">${escapeHtml(t("today.loading"))}</p>`,
-  );
+  setHtml(container, page(html`<p class="muted" role="status">${t("today.loading")}</p>`));
 
   try {
     const list = await fetchDemoHouseholds();
@@ -54,19 +68,7 @@ export async function renderDemoSelect(container: HTMLElement): Promise<void> {
       const reddys = list.find((h) => h.id === "the-reddys") ?? list[0];
       if (reddys) return openHousehold(reddys);
     }
-    const cards = list
-      .map((h) => {
-        const name = householdText(h.id, "name");
-        return `
-          <article class="panel" aria-labelledby="demo-${escapeHtml(h.id)}">
-            <p class="muted small">${escapeHtml(placeLabel(h.location.name))}</p>
-            <h2 class="list-title" id="demo-${escapeHtml(h.id)}">${escapeHtml(name)}</h2>
-            <p>${escapeHtml(householdText(h.id, "description"))}</p>
-            ${actionButton({ label: t("demo.load", { name }), attrs: `data-id="${escapeHtml(h.id)}"`, kind: "primary" }).replace('class="btn btn-primary"', 'class="btn btn-primary btn-select-demo"')}
-          </article>`;
-      })
-      .join("");
-    container.innerHTML = page(`<div class="two-col">${cards}</div>`);
+    setHtml(container, page(html`<div class="two-col">${list.map(householdCard)}</div>`));
     for (const btn of container.querySelectorAll<HTMLButtonElement>(".btn-select-demo")) {
       btn.addEventListener("click", () => {
         const selected = list.find((h) => h.id === btn.dataset.id);
@@ -75,8 +77,6 @@ export async function renderDemoSelect(container: HTMLElement): Promise<void> {
     }
   } catch (err) {
     reportError("Failed to load demo households", err);
-    container.innerHTML = page(
-      `<p class="error-text" role="alert">${escapeHtml(t("demo.error"))}</p>`,
-    );
+    setHtml(container, page(html`<p class="error-text" role="alert">${t("demo.error")}</p>`));
   }
 }

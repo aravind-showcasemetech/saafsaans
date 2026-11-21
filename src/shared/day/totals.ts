@@ -1,8 +1,12 @@
 // totals.ts: The household day with and without swaps, compared for each member.
-import { cleanestAndDirtiestWindows } from "../impact.js";
+import { cleanestAndDirtiestWindows } from "../impact/index.js";
+import type {
+  HouseholdDayModelOptions,
+  MemberDayComparison,
+  MemberDaySchedule,
+} from "./day-model-types.js";
 import { createHourlyForecastLookup } from "./hourly.js";
 import { computeMemberDaySchedule } from "./schedule.js";
-import type { HouseholdDayModelOptions, MemberDayComparison, MemberDaySchedule } from "./types.js";
 
 /**
  * Computes percentage dose cut, avoiding division by zero and returning a non-negative number.

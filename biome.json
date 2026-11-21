@@ -38,6 +38,12 @@
       },
       "suspicious": {
         "noConsole": "error"
+      },
+      "style": {
+        "useFilenamingConvention": {
+          "level": "error",
+          "options": { "filenameCases": ["kebab-case"] }
+        }
       }
     }
   },

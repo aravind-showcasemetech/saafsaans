@@ -3,8 +3,8 @@ import { createApp } from "../../src/server/app.js";
 import { planCache } from "../../src/server/cache.js";
 import { loadConfig } from "../../src/server/config.js";
 import { demoHouseholds } from "../../src/server/demo/households.js";
-import * as geminiModule from "../../src/server/gemini.js";
 import type { GeminiDeps } from "../../src/server/gemini/client.js";
+import * as geminiModule from "../../src/server/gemini/index.js";
 import { fakeGemini } from "./fake-gemini.js";
 
 // Live mode with no Maps key: saved air captures, and only the injected Gemini fake (or none).

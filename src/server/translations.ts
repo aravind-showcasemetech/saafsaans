@@ -1,4 +1,4 @@
-// text.ts: Interface text the server sends (template reasons, summaries, sourced facts), read from
+// translations.ts: Interface text the server sends (template reasons, summaries, sourced facts), read from
 // the same dictionaries as the browser. Imported as JSON so they are part of the build.
 import en from "../client/i18n/en.json" with { type: "json" };
 import hi from "../client/i18n/hi.json" with { type: "json" };

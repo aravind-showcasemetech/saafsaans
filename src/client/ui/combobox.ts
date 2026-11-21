@@ -1,10 +1,10 @@
 // combobox.ts: An accessible place search (ARIA combobox and listbox): type to search Places, then
 // pick with the mouse or with ArrowUp, ArrowDown, Enter and Escape. Used for where you live and
 // where you go. Coordinates are rounded to 2 decimal places (about 1 km) before they are kept.
-import { escapeHtml } from "../../shared/escape.js";
 import { type PlaceSuggestion, fetchPlaceDetails, fetchPlaceSuggestions } from "../app/api.js";
 import { t } from "../home/i18n.js";
 import { reportError } from "../report-error.js";
+import { type SafeHtml, html, setHtml } from "./html.js";
 
 export interface ChosenPlace {
   name: string;
@@ -14,24 +14,30 @@ export interface ChosenPlace {
 
 const round = (n: number) => Math.round(n * 100) / 100;
 
+function optionHtml(id: string, s: PlaceSuggestion, i: number): SafeHtml {
+  return html`<li id="${id}-opt-${i}" class="combobox-option" role="option" aria-selected="false"
+    data-id="${s.placeId}" data-text="${s.text}">${s.text}</li>`;
+}
+
 export function placeComboboxHtml(o: {
   id: string;
   label: string;
   placeholder: string;
   whyKey: string;
   value: string;
-}): string {
-  const e = escapeHtml;
-  return `
+}): SafeHtml {
+  return html`
     <div class="field">
-      <label for="${o.id}" class="field-label">${e(o.label)}</label>
+      <label for="${o.id}" class="field-label">${o.label}</label>
       <div class="combobox">
-        <input id="${o.id}" type="text" class="input" role="combobox" aria-autocomplete="list" aria-expanded="false"
-          aria-controls="${o.id}-listbox" aria-describedby="${o.id}-why" autocomplete="off"
-          placeholder="${e(o.placeholder)}" value="${e(o.value)}" />
-        <ul id="${o.id}-listbox" class="combobox-list hidden" role="listbox" aria-label="${e(o.label)}"></ul>
+        <input id="${o.id}" type="text" class="input" role="combobox" aria-autocomplete="list"
+          aria-expanded="false" aria-controls="${o.id}-listbox" aria-describedby="${o.id}-why"
+          autocomplete="off" placeholder="${o.placeholder}" value="${o.value}" />
+        <ul id="${o.id}-listbox" class="combobox-list hidden" role="listbox" aria-label="${o.label}"></ul>
       </div>
-      <p class="field-why" id="${o.id}-why"><span class="why-label">${e(t("setup.whyLabel"))}</span> ${e(t(o.whyKey))}</p>
+      <p class="field-why" id="${o.id}-why"><span class="why-label">${t("setup.whyLabel")}</span> ${t(
+        o.whyKey,
+      )}</p>
     </div>`;
 }
 
@@ -82,12 +88,7 @@ export function attachPlaceCombobox(
     try {
       const suggestions = await fetchPlaceSuggestions(val, session);
       if (!suggestions.length) return hide();
-      listbox.innerHTML = suggestions
-        .map(
-          (s: PlaceSuggestion, i: number) =>
-            `<li id="${id}-opt-${i}" class="combobox-option" role="option" aria-selected="false" data-id="${escapeHtml(s.placeId)}" data-text="${escapeHtml(s.text)}">${escapeHtml(s.text)}</li>`,
-        )
-        .join("");
+      setHtml(listbox, html`${suggestions.map((s, i) => optionHtml(id, s, i))}`);
       active = -1;
       listbox.classList.remove("hidden");
       input.setAttribute("aria-expanded", "true");

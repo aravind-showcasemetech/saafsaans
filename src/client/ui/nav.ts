@@ -1,7 +1,7 @@
 // nav.ts: Where you are on a guided page (DESIGN.md section 7). On desktop a sticky, text-only
 // list of the section names, the current one in --accent; on phones a slim "Step 3 of 6: ..." line.
-import { escapeHtml } from "../../shared/escape.js";
 import { t } from "../home/i18n.js";
+import { type SafeHtml, html } from "./html.js";
 
 export interface NavItem {
   id: string;
@@ -10,19 +10,18 @@ export interface NavItem {
 }
 
 /** The two navigation elements; place them before the sections. */
-export function guideNavHtml(items: NavItem[]): string {
-  const links = items
-    .map(
-      (it) =>
-        `<li><a class="g-nav-link" href="#${it.id}" data-target="${it.id}"><span class="g-nav-step">${escapeHtml(it.stepLabel)}</span><span>${escapeHtml(it.title)}</span></a></li>`,
-    )
-    .join("");
+export function guideNavHtml(items: NavItem[]): SafeHtml {
+  const links = items.map(
+    (it) =>
+      html`<li><a class="g-nav-link" href="#${it.id}" data-target="${it.id}"><span class="g-nav-step">${
+        it.stepLabel
+      }</span><span>${it.title}</span></a></li>`,
+  );
   const first = items[0];
-  return `
-    <nav class="g-nav" aria-label="${escapeHtml(t("guide.navLabel"))}"><ol>${links}</ol></nav>
-    <p class="g-progress" aria-hidden="true">${first ? escapeHtml(`${first.stepLabel}: ${first.title}`) : ""}</p>`;
+  return html`
+    <nav class="g-nav" aria-label="${t("guide.navLabel")}"><ol>${links}</ol></nav>
+    <p class="g-progress" aria-hidden="true">${first ? `${first.stepLabel}: ${first.title}` : ""}</p>`;
 }
-
 /**
  * Keeps the current section marked as the reader scrolls, and makes the links scroll within the
  * page without changing the hash route (#/today stays #/today).

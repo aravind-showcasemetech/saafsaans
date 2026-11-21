@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { logEvent } from "../log.js";
 import { fetchPlaceDetails, fetchPlaceSuggestions } from "../places.js";
-import type { AppEnv } from "./common.js";
+import type { AppEnv } from "./request-context.js";
 
 export const placesRoute = new Hono<AppEnv>();
 

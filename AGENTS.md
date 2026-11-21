@@ -7,7 +7,7 @@ Quality Assistant). Before any change, read `docs/SPEC.md` (what to build) and `
 ## Rules
 
 1. **Numbers come from code, never from the model.** Every figure a user sees is computed in
-   `src/shared/impact.ts` from constants in `src/shared/factors.ts`. Each constant has a comment
+   `src/shared/impact/` from constants in `src/shared/factors.ts`. Each constant has a comment
    naming its `docs/FACTORS.md` section. Ignore any number in a model reply. Never use a figure
    marked NOT VERIFIED in `FACTORS.md`.
 2. **Gemini only picks and explains.** It chooses actions from the catalogue in
@@ -18,7 +18,7 @@ Quality Assistant). Before any change, read `docs/SPEC.md` (what to build) and `
    log line or a test. `.env` is in `.gitignore`; `.env.example` lists the names only.
 4. **Validate every input** with Zod at the server boundary. Request bodies are capped at 8 KB and
    refine text at 500 characters. Round coordinates to 2 decimal places before any API call or log.
-5. **Tests.** Every function in `src/shared/impact.ts` has unit tests with hand-worked expected
+5. **Tests.** Every function in `src/shared/impact/` has unit tests with hand-worked expected
    values. Tests mock Gemini and every Google API; no test calls a real API. `npm run check` must
    pass before you say a task is done.
 6. **Accessibility: WCAG 2.2 AA at least.** Air quality is always shown as the number and the band
@@ -53,9 +53,9 @@ Quality Assistant). Before any change, read `docs/SPEC.md` (what to build) and `
 
 ```
 docs/            SPEC.md, FACTORS.md, DESIGN.md
-src/shared/      factors.ts, actions.ts, impact.ts, schemas.ts   (used by server and browser)
-src/server/      app.ts, api.ts, air.ts, places.ts, commute.ts, plan.ts, gemini.ts, cache.ts, security.ts
-src/client/      main.ts, views/, i18n/en.json, i18n/hi.json, i18n/te.json
+src/shared/      factors.ts, actions.ts, schemas.ts, impact/, day/   (used by server and browser)
+src/server/      app.ts, api.ts, air.ts, places.ts, commute.ts, cache.ts, security.ts, routes/, plan/, gemini/
+src/client/      main.ts, app/, home/, ui/, i18n/en.json, i18n/hi.json, i18n/te.json
 test/            unit/, server/, e2e/
 .github/         workflows/ci.yml
 ```

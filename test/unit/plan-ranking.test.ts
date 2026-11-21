@@ -5,7 +5,7 @@ import {
   computeActionNumbers,
   filterApplicableActions,
   rankApplicableActions,
-} from "../../src/server/plan.js";
+} from "../../src/server/plan/index.js";
 
 describe("Plan Action Filtering and Ranking", () => {
   it("deterministic ranker gives the Reddys shift-outdoor-exercise, purifier-bedroom, no-mosquito-coil and metro-not-car", () => {

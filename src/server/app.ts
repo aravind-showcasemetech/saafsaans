@@ -11,7 +11,7 @@ import { createApi } from "./api.js";
 import { type Config, config as defaultConfig } from "./config.js";
 import { type GeminiDeps, geminiFromConfig } from "./gemini/client.js";
 import { logEvent } from "./log.js";
-import type { AppEnv } from "./routes/common.js";
+import type { AppEnv } from "./routes/request-context.js";
 import { clientIp, securityHeaders } from "./security.js";
 
 const CLIENT_DIST = "./dist/client";

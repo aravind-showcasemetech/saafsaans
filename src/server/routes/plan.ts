@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import { Hono } from "hono";
 import { z } from "zod";
 import type { NormalisedAirData } from "../../shared/air-types.js";
-import { computeHouseholdDayComparison } from "../../shared/day.js";
+import { computeHouseholdDayComparison } from "../../shared/day/index.js";
 import { CPCB_AQI_BANDS } from "../../shared/factors.js";
 import { type PlanResponse, PlanResponseSchema } from "../../shared/plan-schema.js";
 import { type HouseholdProfile, HouseholdProfileSchema } from "../../shared/schemas.js";
@@ -11,11 +11,11 @@ import { airCache, planCache } from "../cache.js";
 import type { Config } from "../config.js";
 import type { GeminiDeps } from "../gemini/client.js";
 import { logEvent } from "../log.js";
-import { computeActionNumbers, filterApplicableActions } from "../plan.js";
-import type { Lang } from "../text.js";
+import { computeActionNumbers, filterApplicableActions } from "../plan/index.js";
+import type { Lang } from "../translations.js";
 import { IndiaLatSchema, IndiaLngSchema } from "./air.js";
-import { type AppEnv, hasNickname, readJson } from "./common.js";
 import { choosePlan, swapResponse } from "./plan-choose.js";
+import { type AppEnv, hasNickname, readJson } from "./request-context.js";
 
 const PlanBodySchema = z.object({
   profile: HouseholdProfileSchema,

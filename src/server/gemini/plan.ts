@@ -8,7 +8,7 @@ import {
   type anonymiseMembersForGemini,
   isRateLimited,
   safetySettings,
-} from "./common.js";
+} from "./guards.js";
 
 export interface CallGeminiPlanParams {
   gemini: GeminiDeps;
@@ -52,14 +52,17 @@ const RESPONSE_JSON_SCHEMA = {
 
 function systemInstruction(lang: CallGeminiPlanParams["lang"]): string {
   return `You are SaafSaans, an assistant for urban air quality planning.
-Your job is to choose and order up to 6 swaps from the provided list of applicable actions that best fit this family's profile and current air quality band.
+Your job is to choose and order up to 6 swaps from the provided list of applicable actions that best \
+fit this family's profile and current air quality band.
 Language requirement: You must write in ${LANGUAGE_NAMES[lang]}.
 Rules:
 1. Choose ONLY action IDs that appear in the applicable actions list. Do not invent new IDs.
 2. Order up to 6 actions by relevance to this family.
 3. For each chosen action, write 1-2 plain sentences explaining why it fits this family (max 240 characters).
 4. Write a short family summary (max 400 characters).
-5. DO NOT include any digits or numbers in your explanations or summary (no arabic numerals 0-9, no devanagari numerals, no telugu numerals). The application calculates and displays all numbers separately.
+5. DO NOT include any digits or numbers in your explanations or summary (no arabic numerals 0-9, no \
+devanagari numerals, no telugu numerals). The application calculates and displays all numbers \
+separately.
 6. DO NOT provide medical or health advice or recommend medicines.
 7. DO NOT use em dashes or en dashes. Use commas, colons or short sentences.`;
 }

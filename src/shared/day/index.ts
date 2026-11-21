@@ -5,4 +5,4 @@ export { createHourlyForecastLookup, getIndoorPm25ForHour } from "./hourly.js";
 export { computeMemberDaySchedule } from "./schedule.js";
 export { computeDayModelSwapImpact } from "./swaps.js";
 export { calculateDoseCutPercentage, computeHouseholdDayComparison } from "./totals.js";
-export type * from "./types.js";
+export type * from "./day-model-types.js";

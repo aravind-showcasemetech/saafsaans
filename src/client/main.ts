@@ -15,17 +15,21 @@ import "./styles/print.css";
 import { renderDemoSelect } from "./app/demo.js";
 import { setPageMeta } from "./app/meta.js";
 import { router } from "./app/router.js";
-import { renderSetupView } from "./app/setup.js";
+import { renderSetupView } from "./app/setup/view.js";
 import { renderShareView } from "./app/share.js";
-import { renderTodayView } from "./app/today.js";
+import { renderTodayView } from "./app/today/view.js";
 import { attachChrome, renderFooter, renderHeader } from "./home/chrome.js";
 import { initHomePage } from "./home/home.js";
 import { initLanguage } from "./home/i18n.js";
 import { reportError } from "./report-error.js";
+import { html, setHtml } from "./ui/html.js";
 
 /** Header, main and footer for the app screens; returns main. */
 function mountAppShell(appRoot: HTMLElement): HTMLElement {
-  appRoot.innerHTML = `${renderHeader()}<main id="main" class="app-main" tabindex="-1"></main>${renderFooter()}`;
+  setHtml(
+    appRoot,
+    html`${renderHeader()}<main id="main" class="app-main" tabindex="-1"></main>${renderFooter()}`,
+  );
   attachChrome(() => router.start());
   return document.getElementById("main") || appRoot;
 }

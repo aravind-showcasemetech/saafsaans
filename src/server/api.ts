@@ -5,12 +5,12 @@ import { bodyLimit } from "hono/body-limit";
 import type { Config } from "./config.js";
 import type { GeminiDeps } from "./gemini/client.js";
 import { createAirRoute } from "./routes/air.js";
-import type { AppEnv } from "./routes/common.js";
 import { commuteRoute } from "./routes/commute.js";
 import { demoRoute } from "./routes/demo.js";
 import { placesRoute } from "./routes/places.js";
 import { createPlanRoute } from "./routes/plan.js";
 import { createRefineRoute } from "./routes/refine.js";
+import type { AppEnv } from "./routes/request-context.js";
 import { createRateLimiter, rateLimit } from "./security.js";
 
 export interface ApiDeps {

@@ -1,4 +1,5 @@
-// dose.ts: Breathing rates, inhaled dose, 24-hour average and cigarettes' worth (FACTORS.md sections 2 and 3).
+// dose.ts: Breathing rates, inhaled dose, 24-hour average and cigarettes' worth (FACTORS.md sections 2
+// and 3).
 // Pure functions with no I/O. Results that use a CHOSEN value carry isEstimate: true.
 
 import {

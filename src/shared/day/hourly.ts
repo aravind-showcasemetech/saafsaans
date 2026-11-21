@@ -1,8 +1,8 @@
 // hourly.ts: Outdoor PM2.5 by local hour from the forecast, and indoor PM2.5 for an hour at home.
 import { WINDOWS_OPEN_DAY_END_HOUR, WINDOWS_OPEN_DAY_START_HOUR } from "../factors.js";
-import { indoorPm25 } from "../impact.js";
+import { indoorPm25 } from "../impact/index.js";
 import type { WindowHabit } from "../schemas.js";
-import type { HourlyForecastLookup } from "./types.js";
+import type { HourlyForecastLookup } from "./day-model-types.js";
 
 /**
  * Creates a function to look up outdoor PM2.5 for any local hour 0..23

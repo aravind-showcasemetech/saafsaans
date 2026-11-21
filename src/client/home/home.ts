@@ -6,24 +6,25 @@ import { capturedLabel, timeOfDay } from "../app/format.js";
 import { setPageMeta } from "../app/meta.js";
 import { attachCalculator } from "../ui/calculator.js";
 import { downloadCleanWindowIcs } from "../ui/calendar.js";
+import { type HtmlValue, type SafeHtml, html, setHtml } from "../ui/html.js";
 import { attachGuideNav, guideNavHtml } from "../ui/nav.js";
 import { attachChrome, renderFooter, renderHeader } from "./chrome.js";
 import { t } from "./i18n.js";
 import { type HomeModel, buildHomeModel } from "./model.js";
 import { setupScrollReveal } from "./motion.js";
-import { airSection, heroSection, indoorSection, routineSection } from "./sections-a.js";
-import {
-  alternativesSection,
-  communitySection,
-  finalSection,
-  impactSection,
-  impactTableHtml,
-  methodSection,
-} from "./sections-b.js";
+import { airSection } from "./sections/air-now.js";
+import { alternativesSection } from "./sections/alternatives.js";
+import { communitySection } from "./sections/community.js";
+import { heroSection } from "./sections/hero.js";
+import { impactSection, impactTableHtml } from "./sections/impact.js";
+import { indoorSection } from "./sections/indoor.js";
+import { methodSection } from "./sections/method.js";
+import { nextStepsSection } from "./sections/next-steps.js";
+import { routineSection } from "./sections/routine.js";
 
 const KUKATPALLY = { lat: 17.48, lng: 78.41 };
 
-function sectionsHtml(m: HomeModel): string {
+function sectionsHtml(m: HomeModel): SafeHtml[] {
   const airLabel = m.air.isDemo
     ? (capturedLabel(m.air.capturedAt) ?? "")
     : t("hero.updatedAt", { time: timeOfDay(new Date()) });
@@ -36,11 +37,11 @@ function sectionsHtml(m: HomeModel): string {
     impactSection(m),
     communitySection(m, window.location.origin),
     methodSection(),
-    finalSection(),
-  ].join("");
+    nextStepsSection(),
+  ];
 }
 
-function navFromSections(main: HTMLElement): string {
+function navFromSections(main: HTMLElement): SafeHtml {
   const items = Array.from(main.querySelectorAll<HTMLElement>(".g-section")).map((s) => ({
     id: s.id,
     title: s.dataset.navTitle ?? "",
@@ -57,7 +58,7 @@ function attachSections(root: HTMLElement, m: HomeModel): void {
   const toggle = root.querySelector<HTMLInputElement>("#home-impact-toggle");
   const table = root.querySelector<HTMLElement>("#home-impact-table");
   toggle?.addEventListener("change", () => {
-    if (table) table.innerHTML = impactTableHtml(m, toggle.checked);
+    if (table) setHtml(table, impactTableHtml(m, toggle.checked));
   });
 }
 
@@ -66,8 +67,10 @@ export async function initHomePage(): Promise<void> {
   if (!appRoot) return;
   setPageMeta("home");
 
-  const shell = (main: string) => {
-    appRoot.innerHTML = `${renderHeader()}<div class="guide"><div class="guide-rail"></div><main id="main" class="guide-main" tabindex="-1">${main}</main></div>${renderFooter()}`;
+  const shell = (main: HtmlValue) => {
+    const page = html`<div class="guide"><div class="guide-rail"></div><main id="main" class="guide-main"
+      tabindex="-1">${main}</main></div>`;
+    setHtml(appRoot, html`${renderHeader()}${page}${renderFooter()}`);
     attachChrome(() => void initHomePage());
   };
   shell(heroSection(null, ""));
@@ -83,7 +86,7 @@ export async function initHomePage(): Promise<void> {
   const main = appRoot.querySelector<HTMLElement>("#main");
   const rail = appRoot.querySelector<HTMLElement>(".guide-rail");
   if (!(main && rail)) return;
-  rail.innerHTML = navFromSections(main);
+  setHtml(rail, navFromSections(main));
   attachGuideNav(appRoot);
   attachSections(appRoot, model);
   setupScrollReveal(appRoot);

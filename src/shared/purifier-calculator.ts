@@ -2,7 +2,7 @@
 // ceiling height in feet, using minPurifierCadr (FACTORS.md section 5). No new formula: each step
 // below is the AHAM rule applied with the shared constants.
 import { STANDARD_CEILING_HEIGHT_FT } from "./factors.js";
-import { minPurifierCadr } from "./impact.js";
+import { minPurifierCadr } from "./impact/index.js";
 
 export const ROOM_LIMITS = {
   sideMinFt: 4,

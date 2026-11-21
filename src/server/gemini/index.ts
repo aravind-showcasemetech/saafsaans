@@ -1,4 +1,4 @@
-// gemini.ts: Facade re-exporting Gemini integration modules.
+// index.ts: The Gemini integration: the client, guards around it, and the plan and refine calls.
 export {
   resetRateLimiterForTesting,
   isRateLimited,
@@ -8,23 +8,23 @@ export {
   GeminiPlanResponseSchema,
   type GeminiPlanResponse,
   safetySettings,
-} from "./gemini/common.js";
+} from "./guards.js";
 
 export {
   type GeminiClient,
   type GeminiDeps,
   type GeminiReply,
   geminiFromConfig,
-} from "./gemini/client.js";
+} from "./client.js";
 
 export {
   callGeminiChoosePlan,
   type CallGeminiPlanParams,
   type GeminiPlanCallResult,
-} from "./gemini/plan.js";
+} from "./plan.js";
 
 export {
   callGeminiRefineProfile,
   type CallGeminiRefineParams,
   type GeminiRefineCallResult,
-} from "./gemini/refine.js";
+} from "./refine.js";

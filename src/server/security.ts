@@ -2,7 +2,7 @@
 // See SECURITY.md for the threat model and how each control is tested.
 
 import type { Context, MiddlewareHandler } from "hono";
-import type { AppEnv } from "./routes/common.js";
+import type { AppEnv } from "./routes/request-context.js";
 
 export const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",

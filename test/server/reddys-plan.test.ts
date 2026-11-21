@@ -3,7 +3,7 @@ import { createApp } from "../../src/server/app.js";
 import { loadConfig } from "../../src/server/config.js";
 import { kukatpallyDemoAir } from "../../src/server/demo/air.js";
 import { demoHouseholds } from "../../src/server/demo/households.js";
-import { computeHouseholdDayComparison } from "../../src/shared/day.js";
+import { computeHouseholdDayComparison } from "../../src/shared/day/index.js";
 import { PlanResponseSchema } from "../../src/shared/plan-schema.js";
 
 // The Reddys demo (docs/SPEC.md section 13) on the saved Kukatpally capture, with no model.

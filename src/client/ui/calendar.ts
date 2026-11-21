@@ -1,7 +1,7 @@
 // calendar.ts: Downloads today's cleanest window as an .ics event (Asia/Kolkata), in the current
 // language. Used by the home page, Today and the share screen.
-import type { WindowResult } from "../../shared/impact.js";
-import { buildCalendarIcs } from "../app/share-utils.js";
+import type { WindowResult } from "../../shared/impact/index.js";
+import { buildCalendarIcs } from "../app/share-builders.js";
 import { t } from "../home/i18n.js";
 
 /** The window's date (YYYY-MM-DD) in Asia/Kolkata; a window can fall on the next day. */

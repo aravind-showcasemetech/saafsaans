@@ -8,7 +8,7 @@ import {
   computeHouseholdDayComparison,
   computeMemberDaySchedule,
   createHourlyForecastLookup,
-} from "../../shared/day.js";
+} from "../../shared/day/index.js";
 import {
   type WindowResult,
   cleanestAndDirtiestWindows,
@@ -17,12 +17,15 @@ import {
   indoorRatio,
   minPurifierCadr,
   vehicleKmAvoided,
-} from "../../shared/impact.js";
+} from "../../shared/impact/index.js";
 import type { HouseholdProfile } from "../../shared/schemas.js";
 import type { DemoHouseholdItem } from "../app/api.js";
 import type { RoomShares } from "../ui/diagrams/room.js";
 
 const KOLKATA_OFFSET_MS = 5.5 * 3600 * 1000;
+
+/** The numbered home sections after the hero, for "Step 2 of 7". */
+export const HOME_STEPS = 7;
 
 export interface HomeModel {
   air: NormalisedAirData;
