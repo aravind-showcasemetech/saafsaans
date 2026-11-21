@@ -6,7 +6,6 @@ import {
   filterApplicableActions,
   rankApplicableActions,
 } from "../../src/server/plan.js";
-import { cleanestAndDirtiestWindows } from "../../src/shared/impact.js";
 
 describe("Plan Action Filtering and Ranking", () => {
   it("deterministic ranker gives the Reddys shift-outdoor-exercise, purifier-bedroom, no-mosquito-coil and metro-not-car", () => {

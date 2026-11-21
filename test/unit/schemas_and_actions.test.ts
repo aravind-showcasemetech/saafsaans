@@ -9,7 +9,6 @@ import {
 import { PlanResponseSchema } from "../../src/shared/plan-schema";
 import {
   CommuteProfileSchema,
-  HomeProfileSchema,
   HouseholdProfileSchema,
   MemberProfileSchema,
 } from "../../src/shared/schemas";

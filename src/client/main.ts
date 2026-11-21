@@ -21,6 +21,7 @@ import { renderTodayView } from "./app/today.js";
 import { attachChrome, renderFooter, renderHeader } from "./home/chrome.js";
 import { initHomePage } from "./home/home.js";
 import { initLanguage } from "./home/i18n.js";
+import { reportError } from "./report-error.js";
 
 /** Header, main and footer for the app screens; returns main. */
 function mountAppShell(appRoot: HTMLElement): HTMLElement {
@@ -36,7 +37,7 @@ async function startApp(): Promise<void> {
   // Register routes
   router.register("/", () => {
     initHomePage().catch((err) => {
-      console.error("Failed to initialize home page", err);
+      reportError("Failed to initialize home page", err);
     });
   });
 
@@ -50,7 +51,7 @@ async function startApp(): Promise<void> {
     setPageMeta("today");
     const content = mountAppShell(appRoot);
     renderTodayView(content).catch((err) => {
-      console.error("Failed to render Today view", err);
+      reportError("Failed to render Today view", err);
     });
   });
 
@@ -58,7 +59,7 @@ async function startApp(): Promise<void> {
     setPageMeta("share");
     const content = mountAppShell(appRoot);
     renderShareView(content).catch((err) => {
-      console.error("Failed to render Share view", err);
+      reportError("Failed to render Share view", err);
     });
   });
 
@@ -66,7 +67,7 @@ async function startApp(): Promise<void> {
     setPageMeta("demo");
     const content = mountAppShell(appRoot);
     renderDemoSelect(content).catch((err) => {
-      console.error("Failed to render Demo select", err);
+      reportError("Failed to render Demo select", err);
     });
   });
 

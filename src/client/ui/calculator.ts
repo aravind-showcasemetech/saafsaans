@@ -63,7 +63,7 @@ export function calculatorResultHtml(lengthFt: number, widthFt: number, heightFt
 export function attachCalculator(root: HTMLElement, prefix: string): void {
   const form = root.querySelector<HTMLFormElement>(`#${prefix}-calc`);
   const out = root.querySelector<HTMLElement>(`#${prefix}-calc-result`);
-  if (!form || !out) return;
+  if (!(form && out)) return;
   const value = (id: string) =>
     Number(root.querySelector<HTMLInputElement>(`#${prefix}-${id}`)?.value ?? Number.NaN);
   const run = () => {

@@ -4,6 +4,7 @@
 import { cleanestAndDirtiestWindows } from "../../shared/impact.js";
 import { getLanguage } from "../home/i18n.js";
 import { setupScrollReveal } from "../home/motion.js";
+import { reportError } from "../report-error.js";
 import { attachCalculator } from "../ui/calculator.js";
 import { downloadCleanWindowIcs } from "../ui/calendar.js";
 import { attachGuideNav, guideNavHtml } from "../ui/nav.js";
@@ -67,7 +68,7 @@ export async function renderTodayView(container: HTMLElement): Promise<void> {
     };
     renderContent(container, ctx);
   } catch (err: unknown) {
-    console.error("Failed to load Today view:", err);
+    reportError("Failed to load Today view:", err);
     container.innerHTML = errorHtml();
   }
 }

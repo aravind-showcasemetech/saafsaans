@@ -15,7 +15,7 @@ export function attachRefine(
   const count = container.querySelector<HTMLElement>("#refine-char-count");
   const button = container.querySelector<HTMLButtonElement>("#btn-submit-refine");
   const status = container.querySelector<HTMLElement>("#refine-status");
-  if (!input || !count || !button || !status) return;
+  if (!(input && count && button && status)) return;
 
   input.addEventListener("input", () => {
     count.textContent = t("today.charsLeft", { count: REFINE_MAX - input.value.length });

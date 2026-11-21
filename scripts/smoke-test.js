@@ -26,7 +26,7 @@ async function check(base) {
 
   const page = await fetch(`${base}/`);
   const html = await page.text();
-  if (!page.ok || !html.includes('<div id="app">'))
+  if (!(page.ok && html.includes('<div id="app">')))
     fail(`/ did not serve the app (${page.status})`);
   const script = html.match(/src="(\/assets\/index-[\w-]+\.js)"/)?.[1];
   if (!script) fail("no hashed script in index.html");

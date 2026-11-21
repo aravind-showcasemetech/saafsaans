@@ -82,7 +82,7 @@ export async function initHomePage(): Promise<void> {
   shell(sectionsHtml(model));
   const main = appRoot.querySelector<HTMLElement>("#main");
   const rail = appRoot.querySelector<HTMLElement>(".guide-rail");
-  if (!main || !rail) return;
+  if (!(main && rail)) return;
   rail.innerHTML = navFromSections(main);
   attachGuideNav(appRoot);
   attachSections(appRoot, model);

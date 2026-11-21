@@ -2,6 +2,7 @@
 // See SECURITY.md for the threat model and how each control is tested.
 
 import type { Context, MiddlewareHandler } from "hono";
+import type { AppEnv } from "./routes/common.js";
 
 export const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
@@ -92,13 +93,11 @@ export function rateLimit(
   limiter: RateLimiter,
   ipOf: (c: Context) => string,
   bucket: string,
-): MiddlewareHandler {
+): MiddlewareHandler<AppEnv> {
   return async (c, next) => {
     const retryAfter = limiter.hit(`${bucket}:${ipOf(c)}`);
-    if (retryAfter > 0) {
-      c.header("Retry-After", String(retryAfter));
-      return c.json({ error: "Too many requests", requestId: c.get("requestId" as never) }, 429);
-    }
-    await next();
+    if (retryAfter <= 0) return next();
+    c.header("Retry-After", String(retryAfter));
+    return c.json({ error: "Too many requests", requestId: c.get("requestId") }, 429);
   };
 }

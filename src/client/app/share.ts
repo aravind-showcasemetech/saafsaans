@@ -33,7 +33,7 @@ export async function renderShareView(container: HTMLElement): Promise<void> {
   const profile = loadHouseholdProfile();
   const location = loadLocation();
   const plan = loadPlan();
-  if (!profile || !location || !plan) {
+  if (!(profile && location && plan)) {
     container.innerHTML = noPlanHtml();
     return;
   }

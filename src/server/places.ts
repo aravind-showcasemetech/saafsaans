@@ -55,7 +55,7 @@ export async function fetchPlaceSuggestions(
   fetchFn: typeof fetch = fetch,
   forceReal = false,
 ): Promise<PlaceSuggestion[]> {
-  if (!forceReal && (!config.mapsLive || !apiKey)) {
+  if (!(forceReal || (config.mapsLive && apiKey))) {
     const qLower = query.toLowerCase();
     const filtered = demoSuggestions.filter((s) => s.text.toLowerCase().includes(qLower));
     return filtered.length > 0 ? filtered : demoSuggestions.slice(0, 3);
@@ -119,7 +119,7 @@ export async function fetchPlaceDetails(
   fetchFn: typeof fetch = fetch,
   forceReal = false,
 ): Promise<PlaceCoordinates> {
-  if (!forceReal && (!config.mapsLive || !apiKey)) {
+  if (!(forceReal || (config.mapsLive && apiKey))) {
     const found = demoCoordinates[placeId];
     if (found) {
       return {

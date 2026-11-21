@@ -55,29 +55,38 @@ for (const name of ["home", "today"] as const) {
     page,
   }) => {
     await openPage(page, name);
-    const problems = await page.evaluate(() => {
-      const out: string[] = [];
-      for (const svg of document.querySelectorAll<SVGElement>("svg.icon")) {
-        if (svg.getAttribute("aria-hidden") !== "true") out.push("icon without aria-hidden");
-        const holder = svg.parentElement;
-        if (!holder || (holder.textContent ?? "").trim().length === 0)
-          out.push("icon with no text beside it");
-      }
-      for (const svg of document.querySelectorAll<SVGElement>("svg:not(.icon)")) {
-        const hidden = svg.getAttribute("aria-hidden") === "true";
-        const named = svg.getAttribute("role") === "img" && svg.querySelector("title");
-        if (!hidden && !named)
-          out.push(`diagram without a text alternative: ${svg.getAttribute("class")}`);
-      }
-      for (const fig of document.querySelectorAll("figure")) {
-        if (!fig.querySelector("figcaption")?.textContent?.trim())
-          out.push("figure without a caption");
-      }
-      for (const img of document.querySelectorAll("img")) {
-        if (!img.hasAttribute("alt")) out.push("img without alt");
-      }
-      return out;
-    });
+    // Each check runs in the page and returns its own list of problems.
+    const problems = (
+      await Promise.all([
+        page.evaluate(() =>
+          [...document.querySelectorAll<SVGElement>("svg.icon")].flatMap((svg) => [
+            ...(svg.getAttribute("aria-hidden") === "true" ? [] : ["icon without aria-hidden"]),
+            ...((svg.parentElement?.textContent ?? "").trim()
+              ? []
+              : ["icon with no text beside it"]),
+          ]),
+        ),
+        page.evaluate(() =>
+          [...document.querySelectorAll<SVGElement>("svg:not(.icon)")]
+            .filter(
+              (svg) =>
+                svg.getAttribute("aria-hidden") !== "true" &&
+                !(svg.getAttribute("role") === "img" && svg.querySelector("title")),
+            )
+            .map((svg) => `diagram without a text alternative: ${svg.getAttribute("class")}`),
+        ),
+        page.evaluate(() =>
+          [...document.querySelectorAll("figure")]
+            .filter((fig) => !fig.querySelector("figcaption")?.textContent?.trim())
+            .map(() => "figure without a caption"),
+        ),
+        page.evaluate(() =>
+          [...document.querySelectorAll("img")]
+            .filter((img) => !img.hasAttribute("alt"))
+            .map(() => "img without alt"),
+        ),
+      ])
+    ).flat();
     expect(problems).toEqual([]);
   });
 

@@ -5,6 +5,7 @@
 
 import { escapeHtml } from "../../shared/escape.js";
 import { t } from "../home/i18n.js";
+import { reportError } from "../report-error.js";
 import { actionButton, guideSection } from "../ui/section.js";
 import { type DemoHouseholdItem, fetchDemoHouseholds } from "./api.js";
 import { placeLabel } from "./format.js";
@@ -73,7 +74,7 @@ export async function renderDemoSelect(container: HTMLElement): Promise<void> {
       });
     }
   } catch (err) {
-    console.error("Failed to load demo households", err);
+    reportError("Failed to load demo households", err);
     container.innerHTML = page(
       `<p class="error-text" role="alert">${escapeHtml(t("demo.error"))}</p>`,
     );

@@ -38,94 +38,141 @@ export interface RawAirQualityResponse {
   hourlyForecasts?: RawAirQualityResponse[];
 }
 
+type CpcbIndex = NonNullable<RawAirQualityResponse["indexes"]>[number];
+
+const VALID_BANDS = [
+  "Good",
+  "Satisfactory",
+  "Moderately polluted",
+  "Poor",
+  "Very Poor",
+  "Severe",
+] as const;
+
+const cpcbIndexOf = (item: RawAirQualityResponse) =>
+  (item.indexes ?? []).find((idx) => idx.code === "ind_cpcb");
+
+const concentrationOf = (item: RawAirQualityResponse, code: string) =>
+  (item.pollutants ?? []).find((p) => p.code === code)?.concentration?.value;
+
+/**
+ * The current AQI and band. Without ind_cpcb the band comes from PM2.5 and the AQI is an
+ * approximation; a category we do not recognise also falls back to the PM2.5 band.
+ */
+function currentReading(indCpcb: CpcbIndex | undefined, pm25: number) {
+  const fromPm25 = aqiBandFromPm25(pm25).band;
+  const aqi = indCpcb?.aqi;
+  if (aqi === undefined || aqi === null) {
+    return { currentAqi: Math.round(pm25 * 1.5), aqiBand: fromPm25, isApproximate: true };
+  }
+  // "Satisfactory air quality" -> "satisfactory"
+  const category = (indCpcb?.category ?? "")
+    .replace(/\s+air\s+quality$/i, "")
+    .trim()
+    .toLowerCase();
+  const aqiBand = VALID_BANDS.find((b) => b.toLowerCase() === category);
+  return aqiBand
+    ? { currentAqi: aqi, aqiBand, isApproximate: false }
+    : { currentAqi: aqi, aqiBand: fromPm25, isApproximate: true };
+}
+
+/** One forecast hour, or null when the hour has no time. */
+function normaliseForecastHour(
+  hourItem: RawAirQualityResponse,
+): NormalisedHourlyForecastItem | null {
+  if (!hourItem.dateTime) return null;
+  const pm25 = concentrationOf(hourItem, "pm25") ?? 0;
+  const aqi = cpcbIndexOf(hourItem)?.aqi;
+  const missing = aqi === undefined || aqi === null;
+  return {
+    time: hourItem.dateTime,
+    pm25,
+    aqi: missing ? Math.round(pm25 * 1.5) : aqi,
+    isApproximate: missing,
+  };
+}
+
 export function normaliseAirQuality(
   current: RawAirQualityResponse,
   forecastHours: RawAirQualityResponse[] = [],
 ): NormalisedAirData {
-  // Extract ind_cpcb or fallback to any index or PM2.5 calculation
-  const indexes = current.indexes ?? [];
-  const indCpcb = indexes.find((idx) => idx.code === "ind_cpcb");
-
-  // Extract pollutants
-  const pollutants = current.pollutants ?? [];
-  const pm25Obj = pollutants.find((p) => p.code === "pm25");
-  const pm10Obj = pollutants.find((p) => p.code === "pm10");
-
-  const pm25 = pm25Obj?.concentration?.value ?? 0;
-  const pm10 = pm10Obj?.concentration?.value;
-
-  let currentAqi = indCpcb?.aqi;
-  let isApproximate = false;
-
-  // Clean category string: e.g. "Satisfactory air quality" -> "Satisfactory"
-  let rawCategory = indCpcb?.category ?? "";
-  rawCategory = rawCategory.replace(/\s+air\s+quality$/i, "").trim();
-
-  if (currentAqi === undefined || currentAqi === null) {
-    // Missing ind_cpcb fallback: compute band from PM2.5 and mark approximate
-    const fallbackBand = aqiBandFromPm25(pm25);
-    rawCategory = fallbackBand.band;
-    currentAqi = Math.round(pm25 * 1.5); // approximate numerical AQI
-    isApproximate = true;
-  }
-
-  // Ensure category matches our AqiBandNameSchema
-  const validBands = [
-    "Good",
-    "Satisfactory",
-    "Moderately polluted",
-    "Poor",
-    "Very Poor",
-    "Severe",
-  ] as const;
-
-  let aqiBand = validBands.find((b) => b.toLowerCase() === rawCategory.toLowerCase());
-  if (!aqiBand) {
-    aqiBand = aqiBandFromPm25(pm25).band;
-    isApproximate = true;
-  }
-
-  const dominantPollutant = indCpcb?.dominantPollutant ?? "pm25";
-  const healthRecs: HealthRecommendations = current.healthRecommendations ?? {};
-
-  // Normalise hourly forecast
-  const hourlyForecast: NormalisedHourlyForecastItem[] = [];
-
-  for (const hourItem of forecastHours) {
-    const hIndexes = hourItem.indexes ?? [];
-    const hCpcb = hIndexes.find((idx) => idx.code === "ind_cpcb");
-    const hPollutants = hourItem.pollutants ?? [];
-    const hPm25Obj = hPollutants.find((p) => p.code === "pm25");
-    const hPm25 = hPm25Obj?.concentration?.value ?? 0;
-
-    let hAqi = hCpcb?.aqi;
-    let hApprox = false;
-
-    if (hAqi === undefined || hAqi === null) {
-      hAqi = Math.round(hPm25 * 1.5);
-      hApprox = true;
-    }
-
-    if (hourItem.dateTime) {
-      hourlyForecast.push({
-        time: hourItem.dateTime,
-        pm25: hPm25,
-        aqi: hAqi,
-        isApproximate: hApprox,
-      });
-    }
-  }
+  const indCpcb = cpcbIndexOf(current);
+  const pm25 = concentrationOf(current, "pm25") ?? 0;
+  const { currentAqi, aqiBand, isApproximate } = currentReading(indCpcb, pm25);
+  const hourlyForecast = forecastHours
+    .map(normaliseForecastHour)
+    .filter((h): h is NormalisedHourlyForecastItem => h !== null);
 
   return {
     currentAqi,
     aqiBand,
-    dominantPollutant,
+    dominantPollutant: indCpcb?.dominantPollutant ?? "pm25",
     pm25,
-    pm10,
-    healthRecommendations: healthRecs,
+    pm10: concentrationOf(current, "pm10"),
+    healthRecommendations: current.healthRecommendations ?? {},
     hourlyForecast,
     isApproximate,
   };
+}
+
+const MAX_FORECAST_PAGES = 10;
+
+/** POSTs to the Air Quality API with a timeout; data is null when the answer is not OK. */
+async function postAirQuality(
+  fetchFn: typeof fetch,
+  path: string,
+  apiKey: string,
+  body: Record<string, unknown>,
+): Promise<{ status: number; data: RawAirQualityResponse | null }> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  try {
+    const res = await fetchFn(`${AIR_QUALITY_BASE_URL}/${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Goog-Api-Key": apiKey },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    if (!res.ok) return { status: res.status, data: null };
+    return { status: res.status, data: (await res.json()) as RawAirQualityResponse };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/** The 48 hours from the next top of the hour (UTC) after the current reading. */
+function forecastPeriod(current: RawAirQualityResponse) {
+  const currentDt = current.dateTime ? new Date(current.dateTime) : new Date();
+  const startDt = new Date(currentDt.getTime() + 3600 * 1000);
+  startDt.setUTCMinutes(0, 0, 0);
+  const endDt = new Date(startDt.getTime() + 48 * 3600 * 1000);
+  return { startTime: startDt.toISOString(), endTime: endDt.toISOString() };
+}
+
+/** Forecast hours, following nextPageToken; stops on an error and keeps what it has. */
+async function fetchForecastHours(
+  fetchFn: typeof fetch,
+  apiKey: string,
+  baseBody: Record<string, unknown>,
+  period: { startTime: string; endTime: string },
+): Promise<RawAirQualityResponse[]> {
+  const hours: RawAirQualityResponse[] = [];
+  let pageToken: string | undefined;
+  for (let page = 0; page < MAX_FORECAST_PAGES; page++) {
+    const body = { ...baseBody, period, ...(pageToken ? { pageToken } : {}) };
+    let data: RawAirQualityResponse | null;
+    try {
+      data = (await postAirQuality(fetchFn, "forecast:lookup", apiKey, body)).data;
+    } catch {
+      break;
+    }
+    if (!data) break;
+    const pageHours = data.hourlyForecasts ?? data.hourlyForecast ?? [];
+    if (Array.isArray(pageHours)) hours.push(...pageHours);
+    pageToken = data.nextPageToken;
+    if (!pageToken || hours.length >= 48) break;
+  }
+  return hours;
 }
 
 export async function fetchAirData(
@@ -136,135 +183,30 @@ export async function fetchAirData(
   forceReal = false,
   languageCode?: string,
 ): Promise<NormalisedAirData> {
-  if (!forceReal && (!config.mapsLive || !apiKey)) {
-    // If near Dwarka / Delhi (lat > 25)
-    if (lat > 25) {
-      return dwarkaDemoAir;
-    }
-    return kukatpallyDemoAir;
+  if (!(forceReal || (config.mapsLive && apiKey))) {
+    // Saved captures: Dwarka, Delhi north of latitude 25, else Kukatpally.
+    return lat > 25 ? dwarkaDemoAir : kukatpallyDemoAir;
   }
 
-  const roundedLat = Math.round(lat * 100) / 100;
-  const roundedLng = Math.round(lng * 100) / 100;
-
-  const requestBody: Record<string, unknown> = {
-    location: {
-      latitude: roundedLat,
-      longitude: roundedLng,
-    },
+  const baseBody: Record<string, unknown> = {
+    location: { latitude: Math.round(lat * 100) / 100, longitude: Math.round(lng * 100) / 100 },
     extraComputations: [
       "LOCAL_AQI",
       "HEALTH_RECOMMENDATIONS",
       "POLLUTANT_CONCENTRATION",
       "DOMINANT_POLLUTANT_CONCENTRATION",
     ],
-    customLocalAqis: [
-      {
-        regionCode: "IN",
-        aqi: "ind_cpcb",
-      },
-    ],
+    customLocalAqis: [{ regionCode: "IN", aqi: "ind_cpcb" }],
+    ...(languageCode ? { languageCode } : {}),
   };
 
-  if (languageCode) {
-    requestBody.languageCode = languageCode;
+  const current = await postAirQuality(fetchFn, "currentConditions:lookup", apiKey, baseBody);
+  if (!current.data) {
+    throw new Error(`Air Quality API currentConditions error: ${current.status}`);
   }
-
-  // 1. Fetch current conditions
-  const currentController = new AbortController();
-  const currentTimeout = setTimeout(() => currentController.abort(), TIMEOUT_MS);
-
-  let currentResponse: RawAirQualityResponse;
-  try {
-    const res = await fetchFn(`${AIR_QUALITY_BASE_URL}/currentConditions:lookup`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Goog-Api-Key": apiKey,
-      },
-      body: JSON.stringify(requestBody),
-      signal: currentController.signal,
-    });
-    if (!res.ok) {
-      throw new Error(`Air Quality API currentConditions error: ${res.status}`);
-    }
-    currentResponse = (await res.json()) as RawAirQualityResponse;
-  } finally {
-    clearTimeout(currentTimeout);
-  }
-
-  // 2. Fetch forecast (next 48 hours; follow nextPageToken)
-  // forecast:lookup starts at next hour and supports 48 hours via period { startTime, endTime }
-  const currentDt = currentResponse.dateTime ? new Date(currentResponse.dateTime) : new Date();
-  // Next top of the hour in UTC
-  const startDt = new Date(currentDt.getTime() + 3600 * 1000);
-  startDt.setUTCMinutes(0, 0, 0);
-  const endDt = new Date(startDt.getTime() + 48 * 3600 * 1000);
-
-  const allForecastHours: RawAirQualityResponse[] = [];
-  let pageToken: string | undefined = undefined;
-  let pagesFetched = 0;
-  const MAX_PAGES = 10;
-
-  do {
-    const forecastController = new AbortController();
-    const forecastTimeout = setTimeout(() => forecastController.abort(), TIMEOUT_MS);
-
-    const forecastBody: Record<string, unknown> = {
-      location: requestBody.location,
-      extraComputations: [
-        "LOCAL_AQI",
-        "HEALTH_RECOMMENDATIONS",
-        "POLLUTANT_CONCENTRATION",
-        "DOMINANT_POLLUTANT_CONCENTRATION",
-      ],
-      customLocalAqis: requestBody.customLocalAqis,
-      period: {
-        startTime: startDt.toISOString(),
-        endTime: endDt.toISOString(),
-      },
-    };
-
-    if (languageCode) {
-      forecastBody.languageCode = languageCode;
-    }
-
-    if (pageToken) {
-      forecastBody.pageToken = pageToken;
-    }
-
-    try {
-      const res = await fetchFn(`${AIR_QUALITY_BASE_URL}/forecast:lookup`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Goog-Api-Key": apiKey,
-        },
-        body: JSON.stringify(forecastBody),
-        signal: forecastController.signal,
-      });
-
-      if (!res.ok) {
-        break; // stop on forecast error, keep whatever we got
-      }
-
-      const forecastData = (await res.json()) as RawAirQualityResponse;
-      const hours = forecastData.hourlyForecasts ?? forecastData.hourlyForecast ?? [];
-      if (Array.isArray(hours)) {
-        allForecastHours.push(...hours);
-      }
-      pageToken = forecastData.nextPageToken;
-      pagesFetched++;
-    } catch {
-      break;
-    } finally {
-      clearTimeout(forecastTimeout);
-    }
-  } while (pageToken && pagesFetched < MAX_PAGES && allForecastHours.length < 48);
-
-  return normaliseAirQuality(currentResponse, allForecastHours);
+  const hours = await fetchForecastHours(fetchFn, apiKey, baseBody, forecastPeriod(current.data));
+  return normaliseAirQuality(current.data, hours);
 }
-
 /** Air data for a cell under this config: live when Maps is live, else the saved captures. */
 export function getAirFor(cfg: Config) {
   return (lat: number, lng: number, languageCode?: string): Promise<NormalisedAirData> =>

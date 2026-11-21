@@ -109,38 +109,34 @@ export function getLanguage(): SupportedLang {
   return currentLang;
 }
 
+/** The value at a dotted key path, or undefined when any part of the path is missing. */
+function lookup(dict: unknown, parts: string[]): unknown {
+  let cur = dict;
+  for (const p of parts) {
+    if (!(cur && typeof cur === "object" && p in cur)) return undefined;
+    cur = (cur as Record<string, unknown>)[p];
+  }
+  return cur;
+}
+
+function fillParams(text: string, params: Record<string, string | number>): string {
+  let out = text;
+  for (const [paramKey, paramVal] of Object.entries(params)) {
+    out = out.replaceAll(`{${paramKey}}`, String(paramVal));
+  }
+  return out;
+}
+
 export function t(keyPath: string, params?: Record<string, string | number>): string {
   const dict = dictionaries[currentLang] ?? enDict;
   if (!dict) return keyPath;
 
   const parts = keyPath.split(".");
-  let cur: unknown = dict;
-  for (const p of parts) {
-    if (cur && typeof cur === "object" && p in cur) {
-      cur = (cur as Record<string, unknown>)[p];
-    } else {
-      // Fallback to English if missing in currentLang
-      if (currentLang !== "en" && dictionaries.en) {
-        let enCur: unknown = dictionaries.en;
-        for (const ep of parts) {
-          if (enCur && typeof enCur === "object" && ep in enCur) {
-            enCur = (enCur as Record<string, unknown>)[ep];
-          } else {
-            return keyPath;
-          }
-        }
-        cur = typeof enCur === "string" ? enCur : keyPath;
-        break;
-      }
-      return keyPath;
-    }
+  let found = lookup(dict, parts);
+  // A key missing in Hindi or Telugu falls back to English.
+  if (found === undefined && currentLang !== "en" && dictionaries.en) {
+    found = lookup(dictionaries.en, parts);
   }
-
-  let text = typeof cur === "string" ? cur : keyPath;
-  if (params) {
-    for (const [paramKey, paramVal] of Object.entries(params)) {
-      text = text.replaceAll(`{${paramKey}}`, String(paramVal));
-    }
-  }
-  return text;
+  const text = typeof found === "string" ? found : keyPath;
+  return params ? fillParams(text, params) : text;
 }

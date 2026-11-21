@@ -4,17 +4,6 @@ import { config } from "./config.js";
 const ROUTES_BASE_URL = "https://routes.googleapis.com/directions/v2:computeRoutes";
 const TIMEOUT_MS = 8000;
 
-interface CommuteRequestCoords {
-  origin: {
-    lat: number;
-    lng: number;
-  };
-  destination: {
-    lat: number;
-    lng: number;
-  };
-}
-
 interface RawComputeRoutesResponse {
   routes?: Array<{
     distanceMeters?: number;
@@ -120,7 +109,7 @@ export async function fetchCommuteRoutes(
     lng: Math.round(destination.lng * 100) / 100,
   };
 
-  if (!forceReal && (!config.mapsLive || !apiKey)) {
+  if (!(forceReal || (config.mapsLive && apiKey))) {
     // Demo fallback values: Kukatpally (17.48, 78.41) to HITEC City (17.44, 78.38) ~ 12km
     return {
       DRIVE: {

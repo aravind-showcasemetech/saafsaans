@@ -13,9 +13,8 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "json", "html"],
       include: ["src/**/*.ts"],
-      // Process entry points: server.ts is covered by the smoke test, capture-air.ts is a manual
-      // script that calls the real Air Quality API.
-      exclude: ["src/server/server.ts", "src/server/capture-air.ts"],
+      // The process entry point server.ts is covered by the smoke test.
+      exclude: ["src/server/server.ts"],
       thresholds: {
         "src/shared/**": { lines: 95 },
         "src/server/**": { lines: 85 },

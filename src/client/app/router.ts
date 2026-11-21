@@ -9,7 +9,6 @@ export type RouteHandler = (path: RoutePath, params?: URLSearchParams) => void;
 
 class HashRouter {
   private handlers: Map<RoutePath, RouteHandler> = new Map();
-  private currentPath: RoutePath = "/";
 
   constructor() {
     window.addEventListener("hashchange", () => void this.handleHashChange());
@@ -50,7 +49,6 @@ class HashRouter {
     await syncLanguageFromUrl();
     const hash = window.location.hash;
     const path = this.parseHash();
-    this.currentPath = path;
 
     const queryString = hash.includes("?") ? hash.split("?")[1] : "";
     const params = new URLSearchParams(queryString);

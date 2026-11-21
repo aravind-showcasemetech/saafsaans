@@ -5,30 +5,17 @@ import type { NormalisedAirData } from "../../shared/air-types.js";
 import { computeHouseholdDayComparison } from "../../shared/day.js";
 import { CPCB_AQI_BANDS } from "../../shared/factors.js";
 import { type PlanResponse, PlanResponseSchema } from "../../shared/plan-schema.js";
-import { HouseholdProfileSchema } from "../../shared/schemas.js";
+import { type HouseholdProfile, HouseholdProfileSchema } from "../../shared/schemas.js";
 import { getAirFor } from "../air.js";
 import { airCache, planCache } from "../cache.js";
 import type { Config } from "../config.js";
 import type { GeminiDeps } from "../gemini/client.js";
-import {
-  anonymiseMembersForGemini,
-  commuteForGemini,
-  containsDigit,
-  sanitizeModelText,
-} from "../gemini/common.js";
-import { callGeminiChoosePlan } from "../gemini/plan.js";
 import { logEvent } from "../log.js";
-import {
-  computeActionNumbers,
-  filterApplicableActions,
-  getTemplateReason,
-  getTemplateSummary,
-  rankApplicableActions,
-} from "../plan.js";
+import { computeActionNumbers, filterApplicableActions } from "../plan.js";
+import type { Lang } from "../text.js";
 import { IndiaLatSchema, IndiaLngSchema } from "./air.js";
 import { type AppEnv, hasNickname, readJson } from "./common.js";
-
-const MAX_SWAPS = 6;
+import { choosePlan, swapResponse } from "./plan-choose.js";
 
 const PlanBodySchema = z.object({
   profile: HouseholdProfileSchema,
@@ -36,9 +23,6 @@ const PlanBodySchema = z.object({
   lng: IndiaLngSchema,
   lang: z.enum(["en", "hi", "te"]).default("en"),
 });
-
-type Lang = z.infer<typeof PlanBodySchema>["lang"];
-type Chosen = { actionId: string; reason?: string };
 
 async function airFor(
   getAir: ReturnType<typeof getAirFor>,
@@ -51,6 +35,76 @@ async function airFor(
   const air = await getAir(lat, lng);
   airCache.set(key, air);
   return air;
+}
+
+/** The plan carries this cell's AQI and forecast, so the cell is part of the key. */
+function planKeyFor(parts: Record<string, unknown>): string {
+  return `plan_${crypto.createHash("sha256").update(JSON.stringify(parts)).digest("hex")}`;
+}
+
+/** Which day-model swaps are switched on, for the household totals. */
+function activeSwapFlags(active: Set<string>) {
+  return {
+    shiftOutdoorExercise: active.has("shift-outdoor-exercise"),
+    exerciseIndoors: active.has("exercise-indoors"),
+    purifierBedroom: active.has("purifier-bedroom"),
+    shutWindowsPeak: active.has("shut-windows-peak"),
+    airHouseCleanWindow: active.has("air-house-clean-window"),
+    maskOutdoors: active.has("mask-outdoors"),
+  };
+}
+
+interface BuildPlanInput {
+  gemini: GeminiDeps | null;
+  config: Config;
+  profile: HouseholdProfile;
+  airData: NormalisedAirData;
+  lang: Lang;
+  requestId: string;
+}
+
+/** The plan for one household and cell: swaps, reasons, member doses and health text. */
+async function buildPlan(input: BuildPlanInput): Promise<PlanResponse> {
+  const { gemini, config, profile, airData, lang, requestId } = input;
+  const applicable = filterApplicableActions(profile, airData);
+  const computed = new Map(
+    applicable.map((act) => [act.id, computeActionNumbers(act, profile, airData, lang)]),
+  );
+  const { chosen, summary, fromModel } = await choosePlan({
+    gemini,
+    profile,
+    applicable,
+    computed,
+    aqiBand: airData.aqiBand,
+    lang,
+    requestId,
+  });
+
+  const swaps = chosen.flatMap((pick) => {
+    const item = computed.get(pick.actionId);
+    return item ? [swapResponse(item, pick, fromModel, lang)] : [];
+  });
+
+  const day = computeHouseholdDayComparison({
+    profile,
+    hourlyForecast: airData.hourlyForecast,
+    currentPm25: airData.pm25,
+    swapsActive: activeSwapFlags(new Set(swaps.map((s) => s.id))),
+  });
+  const band = CPCB_AQI_BANDS.find((b) => b.band === airData.aqiBand) ?? CPCB_AQI_BANDS[2];
+
+  return PlanResponseSchema.parse({
+    source: config.demoMode ? "demo" : fromModel ? "gemini" : "fallback",
+    summary,
+    swaps,
+    currentAqi: airData.currentAqi,
+    aqiBand: airData.aqiBand,
+    cpcbHealthStatement: band.healthStatement,
+    googleHealthAdvice: airData.healthRecommendations ?? {},
+    memberDoses: day.memberComparisons,
+    isDemo: !config.mapsLive,
+    capturedAt: config.mapsLive ? undefined : airData.capturedAt,
+  });
 }
 
 /** POST /plan: catalogue filter, numbers from src/shared, Gemini picks and explains (or the ranker). */
@@ -81,127 +135,11 @@ export function createPlanRoute(gemini: GeminiDeps | null, config: Config): Hono
       return c.json({ error: "Failed to fetch air quality data", requestId }, 500);
     }
 
-    // The plan carries this cell's AQI and forecast, so the cell is part of the key.
-    const planKey = `plan_${crypto
-      .createHash("sha256")
-      .update(JSON.stringify({ profile, lat, lng, aqiBand: airData.aqiBand, lang }))
-      .digest("hex")}`;
+    const planKey = planKeyFor({ profile, lat, lng, aqiBand: airData.aqiBand, lang });
     const cachedPlan = planCache.get(planKey);
     if (cachedPlan) return c.json(cachedPlan);
 
-    const applicable = filterApplicableActions(profile, airData);
-    const computed = new Map(
-      applicable.map((act) => [act.id, computeActionNumbers(act, profile, airData, lang)]),
-    );
-
-    let chosen: Chosen[] = [];
-    let summary = getTemplateSummary(lang);
-    let fromModel = false;
-
-    if (gemini) {
-      const result = await callGeminiChoosePlan({
-        gemini,
-        anonymisedProfile: {
-          members: anonymiseMembersForGemini(profile.members),
-          commute: commuteForGemini(profile.commute),
-          home: profile.home,
-        },
-        applicableActions: applicable.map((a) => ({
-          id: a.id,
-          title: a.title,
-          lens: a.lens,
-          kind: a.kind,
-        })),
-        aqiBand: airData.aqiBand,
-        lang,
-      });
-      logEvent("info", "gemini_plan", {
-        requestId,
-        ok: Boolean(result.data),
-        latencyMs: result.latencyMs,
-        totalTokens: result.totalTokens,
-      });
-
-      if (result.data) {
-        // Only ids from the applicable catalogue, no repeats, at most six (AGENTS.md rule 2).
-        const seen = new Set<string>();
-        for (const swap of result.data.swaps) {
-          if (computed.has(swap.actionId) && !seen.has(swap.actionId) && seen.size < MAX_SWAPS) {
-            seen.add(swap.actionId);
-            chosen.push(swap);
-          }
-        }
-        fromModel = chosen.length > 0;
-        const modelSummary = sanitizeModelText(result.data.familySummary);
-        if (fromModel && modelSummary && !containsDigit(modelSummary)) {
-          summary = modelSummary.slice(0, 400);
-        }
-      }
-    }
-
-    if (!fromModel) {
-      chosen = rankApplicableActions(Array.from(computed.values()), profile)
-        .slice(0, MAX_SWAPS)
-        .map((item) => ({ actionId: item.id }));
-    }
-
-    const swaps = chosen.flatMap((pick) => {
-      const item = computed.get(pick.actionId);
-      if (!item) return [];
-      const modelReason = pick.reason ? sanitizeModelText(pick.reason) : "";
-      const useModel = fromModel && modelReason !== "" && !containsDigit(modelReason);
-      return [
-        {
-          id: item.id,
-          lens: item.lens,
-          kind: item.kind,
-          title: item.title,
-          savingNumber: item.savingNumber,
-          savingUnit: item.savingUnit,
-          savingRange: item.savingRange,
-          factText: item.factText,
-          isEstimate: item.isEstimate,
-          factorSections: item.factorSections,
-          purifierCadrCfm: item.purifierCadrCfm,
-          appliesToMemberIds: item.appliesToMemberIds,
-          best: item.best,
-          co2SavedKgPerDay: item.co2SavedKgPerDay,
-          co2SavedKgPerWeek: item.co2SavedKgPerWeek,
-          reason: useModel ? modelReason.slice(0, 240) : getTemplateReason(item.id, lang as Lang),
-          reasonSource: useModel ? ("gemini" as const) : ("template" as const),
-          reasonLang: lang,
-        },
-      ];
-    });
-
-    const active = new Set(swaps.map((s) => s.id));
-    const day = computeHouseholdDayComparison({
-      profile,
-      hourlyForecast: airData.hourlyForecast,
-      currentPm25: airData.pm25,
-      swapsActive: {
-        shiftOutdoorExercise: active.has("shift-outdoor-exercise"),
-        exerciseIndoors: active.has("exercise-indoors"),
-        purifierBedroom: active.has("purifier-bedroom"),
-        shutWindowsPeak: active.has("shut-windows-peak"),
-        airHouseCleanWindow: active.has("air-house-clean-window"),
-        maskOutdoors: active.has("mask-outdoors"),
-      },
-    });
-    const band = CPCB_AQI_BANDS.find((b) => b.band === airData.aqiBand) ?? CPCB_AQI_BANDS[2];
-
-    const body: PlanResponse = PlanResponseSchema.parse({
-      source: config.demoMode ? "demo" : fromModel ? "gemini" : "fallback",
-      summary,
-      swaps,
-      currentAqi: airData.currentAqi,
-      aqiBand: airData.aqiBand,
-      cpcbHealthStatement: band.healthStatement,
-      googleHealthAdvice: airData.healthRecommendations ?? {},
-      memberDoses: day.memberComparisons,
-      isDemo: !config.mapsLive,
-      capturedAt: config.mapsLive ? undefined : airData.capturedAt,
-    });
+    const body = await buildPlan({ gemini, config, profile, airData, lang, requestId });
     planCache.set(planKey, body);
     return c.json(body);
   });

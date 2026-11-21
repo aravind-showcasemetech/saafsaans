@@ -1,7 +1,9 @@
+// capture-air.ts: Saves fresh Air Quality API answers as the demo captures. A developer tool run with
+// npm run capture:air; it is not compiled into or shipped with the server.
 import fs from "node:fs";
 import path from "node:path";
-import { fetchAirData } from "./air.js";
-import { config } from "./config.js";
+import { fetchAirData } from "../src/server/air.js";
+import { config } from "../src/server/config.js";
 
 // Each capture file records when it was taken; "Sample data captured on" labels read it from there.
 function withCapturedAt<T extends object>(air: T): T & { capturedAt: string } {

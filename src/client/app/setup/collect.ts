@@ -28,44 +28,63 @@ function readNumber(
 const isProblem = (v: unknown): v is FieldProblem =>
   typeof v === "object" && v !== null && "fieldId" in v;
 
-export function collectStep(step: StepId, container: HTMLElement): FieldProblem | null {
-  const value = (id: string) => container.querySelector<HTMLInputElement>(`#${id}`)?.value ?? "";
-  const checked = (id: string) =>
-    Boolean(container.querySelector<HTMLInputElement>(`#${id}`)?.checked);
+const inputValue = (container: HTMLElement, id: string) =>
+  container.querySelector<HTMLInputElement>(`#${id}`)?.value ?? "";
+const isChecked = (container: HTMLElement, id: string) =>
+  Boolean(container.querySelector<HTMLInputElement>(`#${id}`)?.checked);
 
-  if (step === "people") {
-    collectMembers(container);
-    const bad = draft.householdMembers.findIndex(
-      (m) => m.outdoorExerciseMinutes < 0 || m.outdoorExerciseMinutes > 240,
-    );
-    return bad >= 0
-      ? { fieldId: `member-${bad}-exmin`, messageKey: "setup.errorRange", min: 0, max: 240 }
-      : null;
-  }
-  if (step === "travel") {
-    const distance = readNumber(container, "commute-dist-input", 0, 200);
-    const days = readNumber(container, "commute-days-input", 1, 7);
-    const people = readNumber(container, "commute-people-input", 1, 10);
-    for (const v of [distance, days, people]) if (isProblem(v)) return v;
-    draft.commuteMode = value("commute-mode-select") || draft.commuteMode;
-    draft.commuteDistanceKm = distance as number;
-    draft.workingDaysPerWeek = Math.round(days as number);
-    draft.peopleSharing = Math.round(people as number);
-    return null;
-  }
-  if (step === "home") {
-    const area = readNumber(container, "bedroom-sqft-input", 20, 2000);
-    const height = readNumber(container, "ceiling-height-input", 6, 25);
-    const cadr = readNumber(container, "purifier-cadr-input", 1, 2000, true);
-    for (const v of [area, height, cadr]) if (isProblem(v)) return v;
-    draft.bedroomSqFt = area as number;
-    draft.ceilingHeightFt = height as number;
-    draft.purifierCadrCfm = cadr as number | null;
-    draft.windowHabit = value("window-habit-select") || draft.windowHabit;
-    draft.cookingMethod = value("cooking-method-select") || draft.cookingMethod;
-    draft.hasPurifier = checked("check-has-purifier");
-    draft.usesIncense = checked("check-uses-incense");
-    draft.usesMosquitoCoils = checked("check-uses-coils");
-  }
+/** Step 2: the members, with exercise minutes between 0 and 240. */
+function collectPeople(container: HTMLElement): FieldProblem | null {
+  collectMembers(container);
+  const bad = draft.householdMembers.findIndex(
+    (m) => m.outdoorExerciseMinutes < 0 || m.outdoorExerciseMinutes > 240,
+  );
+  return bad >= 0
+    ? { fieldId: `member-${bad}-exmin`, messageKey: "setup.errorRange", min: 0, max: 240 }
+    : null;
+}
+
+/** Step 3: the commute mode, distance, working days and people sharing. */
+function collectTravel(container: HTMLElement): FieldProblem | null {
+  const distance = readNumber(container, "commute-dist-input", 0, 200);
+  if (isProblem(distance)) return distance;
+  const days = readNumber(container, "commute-days-input", 1, 7);
+  if (isProblem(days)) return days;
+  const people = readNumber(container, "commute-people-input", 1, 10);
+  if (isProblem(people)) return people;
+  draft.commuteMode = inputValue(container, "commute-mode-select") || draft.commuteMode;
+  draft.commuteDistanceKm = distance ?? 0;
+  draft.workingDaysPerWeek = Math.round(days ?? 0);
+  draft.peopleSharing = Math.round(people ?? 0);
   return null;
+}
+
+/** Step 4: the bedroom, the optional purifier rating and the home's habits. */
+function collectHome(container: HTMLElement): FieldProblem | null {
+  const area = readNumber(container, "bedroom-sqft-input", 20, 2000);
+  if (isProblem(area)) return area;
+  const height = readNumber(container, "ceiling-height-input", 6, 25);
+  if (isProblem(height)) return height;
+  const cadr = readNumber(container, "purifier-cadr-input", 1, 2000, true);
+  if (isProblem(cadr)) return cadr;
+  draft.bedroomSqFt = area ?? 0;
+  draft.ceilingHeightFt = height ?? 0;
+  draft.purifierCadrCfm = cadr;
+  draft.windowHabit = inputValue(container, "window-habit-select") || draft.windowHabit;
+  draft.cookingMethod = inputValue(container, "cooking-method-select") || draft.cookingMethod;
+  draft.hasPurifier = isChecked(container, "check-has-purifier");
+  draft.usesIncense = isChecked(container, "check-uses-incense");
+  draft.usesMosquitoCoils = isChecked(container, "check-uses-coils");
+  return null;
+}
+
+const COLLECTORS: Partial<Record<StepId, (container: HTMLElement) => FieldProblem | null>> = {
+  people: collectPeople,
+  travel: collectTravel,
+  home: collectHome,
+};
+
+/** Reads one step into the draft; steps without inputs to check return null. */
+export function collectStep(step: StepId, container: HTMLElement): FieldProblem | null {
+  return COLLECTORS[step]?.(container) ?? null;
 }

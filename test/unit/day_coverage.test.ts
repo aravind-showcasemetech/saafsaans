@@ -4,7 +4,6 @@ import { demoHouseholds } from "../../src/server/demo/households.js";
 import {
   computeDayModelSwapImpact,
   computeHouseholdDayComparison,
-  computeMemberDaySchedule,
   createHourlyForecastLookup,
   getIndoorPm25ForHour,
 } from "../../src/shared/day.js";
@@ -27,7 +26,7 @@ describe("src/shared/day.ts comprehensive coverage", () => {
       "retired",
     ];
 
-    const testMembers: MemberProfile[] = presets.map((preset, idx) => ({
+    const testMembers: MemberProfile[] = presets.map((preset) => ({
       id: `m-${preset}`,
       nickname: preset,
       ageBand: "31-40",

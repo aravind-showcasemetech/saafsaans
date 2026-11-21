@@ -40,9 +40,6 @@ export function recomputeHouseholdTotals(params: {
   let co2SavedKgPerDay = 0;
   let co2SavedKgPerWeek = 0;
 
-  const distance = profile.commute.distanceKm ?? 0;
-  const trips = profile.commute.tripsPerDay ?? 2;
-  const peopleSharing = profile.commute.peopleSharing ?? 1;
   const workingDays = profile.commute.workingDaysPerWeek ?? 5;
 
   const hasMetro = activeSwapIds.has("metro-not-car");

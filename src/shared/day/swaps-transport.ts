@@ -3,141 +3,143 @@ import { METRO_SAVING_FRACTION, TRANSPORT_CO2_FACTORS, type TravelMode } from ".
 import type { HouseholdProfile } from "../schemas.js";
 import type { SwapImpactResult } from "./types.js";
 
+const CAR_MODES = [
+  "petrol_car_small",
+  "petrol_car",
+  "petrol_sedan",
+  "diesel_car",
+  "diesel_sedan",
+  "cng_car",
+];
+const MOTORISED_MODES = [...CAR_MODES, "scooter", "motorcycle", "auto"];
+const TRANSPORT_SWAP_IDS = new Set([
+  "metro-not-car",
+  "bus-not-car",
+  "carpool",
+  "walk-short-trips",
+  "wfh-day",
+]);
+
+function notApplicable(swapId: string): SwapImpactResult {
+  return {
+    swapId,
+    applicable: false,
+    lens: "polluteLess",
+    kind: "computed",
+    isEstimate: false,
+    factorSections: ["9"],
+  };
+}
+
+/** The commute as the formulas need it, with the current mode's CO2 per person-km. */
+function commuteOf(profile: HouseholdProfile) {
+  const mode = profile.commute.mode as TravelMode;
+  const peopleSharing = profile.commute.peopleSharing ?? 1;
+  const oldFactor =
+    mode in TRANSPORT_CO2_FACTORS
+      ? TRANSPORT_CO2_FACTORS[mode as keyof typeof TRANSPORT_CO2_FACTORS].kgCo2PerKm
+      : 0;
+  return {
+    mode,
+    distance: profile.commute.distanceKm ?? 0,
+    trips: profile.commute.tripsPerDay ?? 2,
+    peopleSharing,
+    workingDays: profile.commute.workingDaysPerWeek ?? 5,
+    oldFactor,
+    oldCo2PerPersonKm: oldFactor / Math.max(1, peopleSharing),
+  };
+}
+
+type Commute = ReturnType<typeof commuteOf>;
+
+interface CommuteSaving {
+  savedCo2PerPersonKm: number;
+  isEstimate: boolean;
+  vehicleKmAvoidedPerDay: number;
+}
+
+/** CO2 saved per person-km for a swap on every commuting day, or null when it does not apply. */
+function commuteSaving(swapId: string, c: Commute): CommuteSaving | null {
+  const allTripsKm = c.distance * c.trips;
+  switch (swapId) {
+    case "metro-not-car":
+      // The operator's approximate claim, so an estimate.
+      return {
+        savedCo2PerPersonKm: c.oldCo2PerPersonKm * METRO_SAVING_FRACTION,
+        isEstimate: true,
+        vehicleKmAvoidedPerDay: allTripsKm,
+      };
+    case "bus-not-car":
+      return {
+        savedCo2PerPersonKm: Math.max(
+          0,
+          c.oldCo2PerPersonKm - TRANSPORT_CO2_FACTORS.bus.kgCo2PerKm,
+        ),
+        isEstimate: false,
+        vehicleKmAvoidedPerDay: allTripsKm,
+      };
+    case "carpool": {
+      if (!CAR_MODES.includes(c.mode) || c.peopleSharing >= 4) return null;
+      const carpoolPax = 3; // sharing with 2 others = 3 pax total
+      const newCo2PerPersonKm = c.oldFactor / carpoolPax;
+      return {
+        savedCo2PerPersonKm: Math.max(0, c.oldCo2PerPersonKm - newCo2PerPersonKm),
+        isEstimate: false,
+        vehicleKmAvoidedPerDay: (c.distance * c.trips * (carpoolPax - 1)) / carpoolPax,
+      };
+    }
+    case "walk-short-trips":
+      if (c.distance > 2) return null;
+      return {
+        savedCo2PerPersonKm: c.oldCo2PerPersonKm,
+        isEstimate: false,
+        vehicleKmAvoidedPerDay: allTripsKm,
+      };
+    default:
+      return null;
+  }
+}
+
+/** One work-from-home day a week avoids one day of the current commute. */
+function wfhImpact(swapId: string, c: Commute, profile: HouseholdProfile): SwapImpactResult {
+  const hasOfficeWorker = profile.members.some((m) => m.routinePreset === "office_worker");
+  if (!hasOfficeWorker) return notApplicable(swapId);
+  const dailySaved = c.distance * c.trips * c.oldCo2PerPersonKm;
+  return {
+    swapId,
+    applicable: true,
+    lens: "polluteLess",
+    kind: "computed",
+    isEstimate: false,
+    factorSections: ["9"],
+    co2SavedKgPerDay: dailySaved,
+    co2SavedKgPerWeek: dailySaved, // 1 WFH day
+    vehicleKmAvoidedPerDay: c.distance * c.trips,
+  };
+}
+
 /** The pollute less swap for this id, or null when the id is not a transport swap. */
 export function transportImpact(
   swapId: string,
   profile: HouseholdProfile,
 ): SwapImpactResult | null {
-  switch (swapId) {
-    case "metro-not-car":
-    case "bus-not-car":
-    case "carpool":
-    case "walk-short-trips":
-    case "wfh-day": {
-      const mode = profile.commute.mode as TravelMode;
-      const distance = profile.commute.distanceKm ?? 0;
-      const trips = profile.commute.tripsPerDay ?? 2;
-      const peopleSharing = profile.commute.peopleSharing ?? 1;
-      const workingDays = profile.commute.workingDaysPerWeek ?? 5;
+  if (!TRANSPORT_SWAP_IDS.has(swapId)) return null;
+  const c = commuteOf(profile);
+  if (!MOTORISED_MODES.includes(c.mode) || c.distance <= 0) return notApplicable(swapId);
+  if (swapId === "wfh-day") return wfhImpact(swapId, c, profile);
 
-      const isMotorized = [
-        "petrol_car_small",
-        "petrol_car",
-        "petrol_sedan",
-        "diesel_car",
-        "diesel_sedan",
-        "cng_car",
-        "scooter",
-        "motorcycle",
-        "auto",
-      ].includes(mode);
-
-      if (!isMotorized || distance <= 0) {
-        return {
-          swapId,
-          applicable: false,
-          lens: "polluteLess",
-          kind: "computed",
-          isEstimate: false,
-          factorSections: ["9"],
-        };
-      }
-
-      let oldFactor = 0;
-      if (mode in TRANSPORT_CO2_FACTORS) {
-        oldFactor = TRANSPORT_CO2_FACTORS[mode as keyof typeof TRANSPORT_CO2_FACTORS].kgCo2PerKm;
-      }
-      const oldCo2PerPersonKm = oldFactor / Math.max(1, peopleSharing);
-
-      let savedCo2PerPersonKm = 0;
-      let isEstimate = false;
-      let vehicleKmAvoidedPerDay = distance * trips;
-
-      if (swapId === "metro-not-car") {
-        savedCo2PerPersonKm = oldCo2PerPersonKm * METRO_SAVING_FRACTION;
-        isEstimate = true; // operator's approximate claim
-      } else if (swapId === "bus-not-car") {
-        const busPaxFactor = TRANSPORT_CO2_FACTORS.bus.kgCo2PerKm; // 0.015161
-        savedCo2PerPersonKm = Math.max(0, oldCo2PerPersonKm - busPaxFactor);
-      } else if (swapId === "carpool") {
-        const isCar = [
-          "petrol_car_small",
-          "petrol_car",
-          "petrol_sedan",
-          "diesel_car",
-          "diesel_sedan",
-          "cng_car",
-        ].includes(mode);
-        if (!isCar || peopleSharing >= 4) {
-          return {
-            swapId,
-            applicable: false,
-            lens: "polluteLess",
-            kind: "computed",
-            isEstimate: false,
-            factorSections: ["9"],
-          };
-        }
-        const carpoolPax = 3; // sharing with 2 others = 3 pax total
-        const newCo2PerPersonKm = oldFactor / carpoolPax;
-        savedCo2PerPersonKm = Math.max(0, oldCo2PerPersonKm - newCo2PerPersonKm);
-        vehicleKmAvoidedPerDay = (distance * trips * (carpoolPax - 1)) / carpoolPax;
-      } else if (swapId === "walk-short-trips") {
-        if (distance > 2) {
-          return {
-            swapId,
-            applicable: false,
-            lens: "polluteLess",
-            kind: "computed",
-            isEstimate: false,
-            factorSections: ["9"],
-          };
-        }
-        savedCo2PerPersonKm = oldCo2PerPersonKm;
-      } else if (swapId === "wfh-day") {
-        const hasOfficeWorker = profile.members.some((m) => m.routinePreset === "office_worker");
-        if (!hasOfficeWorker) {
-          return {
-            swapId,
-            applicable: false,
-            lens: "polluteLess",
-            kind: "computed",
-            isEstimate: false,
-            factorSections: ["9"],
-          };
-        }
-        // 1 day a week avoided
-        const dailySaved = distance * trips * oldCo2PerPersonKm;
-        const weeklySaved = dailySaved * 1; // 1 WFH day
-        return {
-          swapId,
-          applicable: true,
-          lens: "polluteLess",
-          kind: "computed",
-          isEstimate: false,
-          factorSections: ["9"],
-          co2SavedKgPerDay: dailySaved,
-          co2SavedKgPerWeek: weeklySaved,
-          vehicleKmAvoidedPerDay: distance * trips,
-        };
-      }
-
-      const co2SavedPerDay = distance * trips * savedCo2PerPersonKm;
-      const co2SavedPerWeek = co2SavedPerDay * workingDays;
-
-      return {
-        swapId,
-        applicable: true,
-        lens: "polluteLess",
-        kind: "computed",
-        isEstimate,
-        factorSections: ["9"],
-        co2SavedKgPerDay: co2SavedPerDay,
-        co2SavedKgPerWeek: co2SavedPerWeek,
-        vehicleKmAvoidedPerDay,
-      };
-    }
-    default:
-      return null;
-  }
+  const saving = commuteSaving(swapId, c);
+  if (!saving) return notApplicable(swapId);
+  const co2SavedPerDay = c.distance * c.trips * saving.savedCo2PerPersonKm;
+  return {
+    swapId,
+    applicable: true,
+    lens: "polluteLess",
+    kind: "computed",
+    isEstimate: saving.isEstimate,
+    factorSections: ["9"],
+    co2SavedKgPerDay: co2SavedPerDay,
+    co2SavedKgPerWeek: co2SavedPerDay * c.workingDays,
+    vehicleKmAvoidedPerDay: saving.vehicleKmAvoidedPerDay,
+  };
 }

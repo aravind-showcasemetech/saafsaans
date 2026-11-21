@@ -4,6 +4,7 @@
 import { escapeHtml } from "../../shared/escape.js";
 import { type PlaceSuggestion, fetchPlaceDetails, fetchPlaceSuggestions } from "../app/api.js";
 import { t } from "../home/i18n.js";
+import { reportError } from "../report-error.js";
 
 export interface ChosenPlace {
   name: string;
@@ -41,7 +42,7 @@ export function attachPlaceCombobox(
 ): void {
   const input = container.querySelector<HTMLInputElement>(`#${id}`);
   const listbox = container.querySelector<HTMLUListElement>(`#${id}-listbox`);
-  if (!input || !listbox) return;
+  if (!(input && listbox)) return;
   const session = `sess_${Math.random().toString(36).substring(2, 9)}`;
   let active = -1;
 
@@ -71,7 +72,7 @@ export function attachPlaceCombobox(
         lng: round(place.longitude),
       });
     } catch (err) {
-      console.error("Place details failed", err);
+      reportError("Place details failed", err);
     }
   };
 

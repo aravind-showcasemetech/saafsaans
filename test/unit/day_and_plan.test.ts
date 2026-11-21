@@ -8,19 +8,9 @@ import {
   filterApplicableActions,
   rankApplicableActions,
 } from "../../src/server/plan.js";
-import {
-  buildMemberBaselineRoutine,
-  computeHouseholdDayComparison,
-  computeMemberDaySchedule,
-  createHourlyForecastLookup,
-} from "../../src/shared/day.js";
+import { computeHouseholdDayComparison } from "../../src/shared/day.js";
 import { CPCB_AQI_BANDS } from "../../src/shared/factors.js";
-import {
-  cleanestAndDirtiestWindows,
-  indoorPm25,
-  minPurifierCadr,
-} from "../../src/shared/impact.js";
-import type { HouseholdProfile } from "../../src/shared/schemas.js";
+import { indoorPm25, minPurifierCadr } from "../../src/shared/impact.js";
 
 describe("Phase 4 Follow-up: Day Model, Precise Impact, Ranking & Sourced Text", () => {
   const reddysProfile = demoHouseholds["the-reddys"].profile;

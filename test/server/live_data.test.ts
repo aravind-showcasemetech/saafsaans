@@ -204,42 +204,19 @@ describe("Phase 3: Server clients, normaliser, cache and endpoints", () => {
 
   describe("7. Commute transit fallback", () => {
     it("falls back to DRIVE distance with fallback: 'road-distance' if TRANSIT returns no route", async () => {
+      // TRANSIT finds no route; the other modes answer with one route each.
+      const routesByMode: Record<string, unknown[]> = {
+        DRIVE: [{ distanceMeters: 14000, duration: "1800s" }],
+        TRANSIT: [],
+        TWO_WHEELER: [{ distanceMeters: 13500, duration: "1500s" }],
+        WALK: [{ distanceMeters: 13000, duration: "9000s" }],
+      };
       const mockFetch = vi.fn().mockImplementation((_url, init) => {
-        const body = JSON.parse(init.body);
-        if (body.travelMode === "DRIVE") {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({
-              routes: [{ distanceMeters: 14000, duration: "1800s" }],
-            }),
-          });
-        }
-        if (body.travelMode === "TRANSIT") {
-          // No route found
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({ routes: [] }),
-          });
-        }
-        if (body.travelMode === "TWO_WHEELER") {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({
-              routes: [{ distanceMeters: 13500, duration: "1500s" }],
-            }),
-          });
-        }
-        if (body.travelMode === "WALK") {
-          return Promise.resolve({
-            ok: true,
-            json: async () => ({
-              routes: [{ distanceMeters: 13000, duration: "9000s" }],
-            }),
-          });
-        }
-        return Promise.reject(new Error("Unknown mode"));
+        const routes = routesByMode[JSON.parse(init.body).travelMode];
+        return routes
+          ? Promise.resolve({ ok: true, json: async () => ({ routes }) })
+          : Promise.reject(new Error("Unknown mode"));
       });
-
       const routes = await fetchCommuteRoutes(
         { lat: 17.48, lng: 78.41 },
         { lat: 17.44, lng: 78.38 },

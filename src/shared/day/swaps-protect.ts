@@ -124,7 +124,7 @@ const exercisesOutdoors = (m: MemberProfile) => (m.outdoorExerciseMinutes ?? 0) 
 function shiftOutdoorExercise(ctx: ProtectContext, swapId: string): SwapImpactResult {
   // Must have someone who exercises outdoors, an exercise time, and a cleanest window.
   const include = (m: MemberProfile) => exercisesOutdoors(m) && Boolean(m.outdoorExerciseTime);
-  if (!ctx.profile.members.some(include) || !ctx.cleanest) {
+  if (!(ctx.profile.members.some(include) && ctx.cleanest)) {
     return notApplicable(swapId, false, ["2", "8"]);
   }
   const r = memberImpacts(ctx, include, { shiftOutdoorExercise: true }, { alwaysEstimate: false });
@@ -148,7 +148,7 @@ function purifierBedroom(ctx: ProtectContext, swapId: string): SwapImpactResult 
   // Needs the bedroom area and ceiling height; nothing is guessed.
   const area = ctx.profile.home.bedroomAreaSqFt;
   const height = ctx.profile.home.ceilingHeightFt;
-  if (!area || !height || area <= 0 || height <= 0) {
+  if (!(area && height && area > 0 && height > 0)) {
     return notApplicable(swapId, true, ["2", "3", "4", "5"]);
   }
   const cadrCfm = ctx.profile.home.purifierCadrCfm ?? minPurifierCadr(area, height).minCadrCfm;

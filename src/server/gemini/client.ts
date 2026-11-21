@@ -1,7 +1,7 @@
 // client.ts: The Gemini client the routes are given. Built from config in production;
 // tests pass a fake with the same generateContent shape, so no test calls the real API.
 
-import { GoogleGenAI } from "@google/genai";
+import { type GenerateContentConfig, GoogleGenAI } from "@google/genai";
 import type { Config } from "../config.js";
 
 export interface GeminiReply {
@@ -16,7 +16,7 @@ export interface GeminiReply {
 export interface GeminiRequest {
   model: string;
   contents: string;
-  config: Record<string, unknown>;
+  config: GenerateContentConfig;
 }
 
 export interface GeminiClient {
@@ -31,9 +31,13 @@ export interface GeminiDeps {
 
 /** Real client when Gemini is configured and not in demo mode; otherwise null (template text). */
 export function geminiFromConfig(cfg: Config): GeminiDeps | null {
-  if (!cfg.geminiLive || !cfg.geminiApiKey || !cfg.geminiModel) return null;
-  const client = new GoogleGenAI({ apiKey: cfg.geminiApiKey, httpOptions: { timeout: 15000 } });
-  return { client: client as unknown as GeminiClient, model: cfg.geminiModel };
+  if (!(cfg.geminiLive && cfg.geminiApiKey && cfg.geminiModel)) return null;
+  const ai = new GoogleGenAI({ apiKey: cfg.geminiApiKey, httpOptions: { timeout: 15000 } });
+  // A typed adapter: the SDK's request and reply satisfy our narrower interface without a cast.
+  const client: GeminiClient = {
+    models: { generateContent: (request) => ai.models.generateContent(request) },
+  };
+  return { client, model: cfg.geminiModel };
 }
 
 export interface GeminiUsage {

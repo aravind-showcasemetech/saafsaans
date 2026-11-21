@@ -15,7 +15,7 @@ export function attachTravel(container: HTMLElement): void {
   const mode = container.querySelector<HTMLSelectElement>("#commute-mode-select");
   const distance = container.querySelector<HTMLInputElement>("#commute-dist-input");
   const status = container.querySelector<HTMLElement>("#route-status");
-  if (!mode || !distance || !status) return;
+  if (!(mode && distance && status)) return;
 
   /** Fills the distance for the selected mode from the routes already fetched. */
   const apply = () => {

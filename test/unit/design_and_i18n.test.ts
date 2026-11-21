@@ -49,31 +49,33 @@ describe("Design enforcement: no em or en dashes", () => {
 });
 
 describe("i18n key consistency", () => {
-  function getFlattenedKeys(obj: Record<string, unknown>, prefix = ""): string[] {
-    let keys: string[] = [];
-    for (const [k, v] of Object.entries(obj)) {
+  type Dict = Record<string, unknown>;
+
+  /** Every leaf of a dictionary as [dotted key, value]. */
+  function leaves(obj: Dict, prefix = ""): Array<[string, unknown]> {
+    return Object.entries(obj).flatMap(([k, v]): Array<[string, unknown]> => {
       const fullKey = prefix ? `${prefix}.${k}` : k;
-      if (v && typeof v === "object" && !Array.isArray(v)) {
-        keys = keys.concat(getFlattenedKeys(v as Record<string, unknown>, fullKey));
-      } else {
-        keys.push(fullKey);
-      }
-    }
-    return keys;
+      return v && typeof v === "object" && !Array.isArray(v)
+        ? leaves(v as Dict, fullKey)
+        : [[fullKey, v]];
+    });
   }
 
+  /** Every string leaf as [dotted key, text]. */
+  const stringLeaves = (obj: Dict) =>
+    leaves(obj).filter((e): e is [string, string] => typeof e[1] === "string");
+
+  const readDict = (lang: string): Dict =>
+    JSON.parse(
+      fs.readFileSync(path.resolve(process.cwd(), `src/client/i18n/${lang}.json`), "utf-8"),
+    );
+
   it("ensures all i18n keys in en.json exist in hi.json and te.json", () => {
-    const enPath = path.resolve(process.cwd(), "src/client/i18n/en.json");
-    const hiPath = path.resolve(process.cwd(), "src/client/i18n/hi.json");
-    const tePath = path.resolve(process.cwd(), "src/client/i18n/te.json");
-
-    const enObj = JSON.parse(fs.readFileSync(enPath, "utf-8"));
-    const hiObj = JSON.parse(fs.readFileSync(hiPath, "utf-8"));
-    const teObj = JSON.parse(fs.readFileSync(tePath, "utf-8"));
-
-    const enKeys = getFlattenedKeys(enObj).sort();
-    const hiKeys = new Set(getFlattenedKeys(hiObj));
-    const teKeys = new Set(getFlattenedKeys(teObj));
+    const enKeys = leaves(readDict("en"))
+      .map(([k]) => k)
+      .sort();
+    const hiKeys = new Set(leaves(readDict("hi")).map(([k]) => k));
+    const teKeys = new Set(leaves(readDict("te")).map(([k]) => k));
 
     const missingInHi = enKeys.filter((k) => !hiKeys.has(k));
     const missingInTe = enKeys.filter((k) => !teKeys.has(k));
@@ -83,58 +85,20 @@ describe("i18n key consistency", () => {
   });
 
   it("verifies placeholders match across all three languages", () => {
-    const enPath = path.resolve(process.cwd(), "src/client/i18n/en.json");
-    const hiPath = path.resolve(process.cwd(), "src/client/i18n/hi.json");
-    const tePath = path.resolve(process.cwd(), "src/client/i18n/te.json");
-
-    const enObj = JSON.parse(fs.readFileSync(enPath, "utf-8"));
-    const hiObj = JSON.parse(fs.readFileSync(hiPath, "utf-8"));
-    const teObj = JSON.parse(fs.readFileSync(tePath, "utf-8"));
-
-    const placeholderRegex = /\{([a-zA-Z0-9_]+)\}/g;
-    function getPlaceholders(str: string): string[] {
-      const matches = str.match(placeholderRegex) || [];
-      return matches.sort();
-    }
-
-    function checkObjPlaceholders(
-      en: Record<string, unknown>,
-      target: Record<string, unknown>,
-      lang: string,
-      prefix = "",
-    ) {
-      for (const [k, v] of Object.entries(en)) {
-        const fullKey = prefix ? `${prefix}.${k}` : k;
-        const targetVal = target?.[k];
-        if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          checkObjPlaceholders(
-            v as Record<string, unknown>,
-            (targetVal || {}) as Record<string, unknown>,
-            lang,
-            fullKey,
-          );
-        } else if (typeof v === "string") {
-          const enPh = getPlaceholders(v);
-          const targetPh = getPlaceholders(typeof targetVal === "string" ? targetVal : "");
-          expect(targetPh, `Placeholders mismatch in ${lang}:${fullKey}`).toEqual(enPh);
-        }
+    const placeholders = (str: string) => (str.match(/\{([a-zA-Z0-9_]+)\}/g) || []).sort();
+    const en = stringLeaves(readDict("en"));
+    for (const lang of ["hi", "te"]) {
+      const target = new Map(stringLeaves(readDict(lang)));
+      for (const [key, text] of en) {
+        expect(
+          placeholders(target.get(key) ?? ""),
+          `Placeholders mismatch in ${lang}:${key}`,
+        ).toEqual(placeholders(text));
       }
     }
-
-    checkObjPlaceholders(enObj, hiObj, "hi");
-    checkObjPlaceholders(enObj, teObj, "te");
   });
 
   it("verifies script usage: every hi value contains Devanagari and every te value contains Telugu script", () => {
-    const hiPath = path.resolve(process.cwd(), "src/client/i18n/hi.json");
-    const tePath = path.resolve(process.cwd(), "src/client/i18n/te.json");
-
-    const hiObj = JSON.parse(fs.readFileSync(hiPath, "utf-8"));
-    const teObj = JSON.parse(fs.readFileSync(tePath, "utf-8"));
-
-    const devanagariRegex = /\p{Script=Devanagari}/u;
-    const teluguRegex = /\p{Script=Telugu}/u;
-
     const allowedEnglishOnlyKeys = new Set([
       "app.title",
       "app.tagline",
@@ -143,61 +107,29 @@ describe("i18n key consistency", () => {
       "facts.frying",
       "insight.sourceRef",
     ]);
-
-    function checkScript(
-      obj: Record<string, unknown>,
-      regex: RegExp,
-      langName: string,
-      prefix = "",
-    ) {
-      for (const [k, v] of Object.entries(obj)) {
-        const fullKey = prefix ? `${prefix}.${k}` : k;
-        if (allowedEnglishOnlyKeys.has(fullKey)) continue;
-
-        if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          checkScript(v as Record<string, unknown>, regex, langName, fullKey);
-        } else if (typeof v === "string") {
-          const hasScript = regex.test(v);
-          expect(hasScript, `${langName} key "${fullKey}" lacks expected script -> "${v}"`).toBe(
-            true,
-          );
-        }
+    const scripts: Array<[string, RegExp]> = [
+      ["hi", /\p{Script=Devanagari}/u],
+      ["te", /\p{Script=Telugu}/u],
+    ];
+    for (const [lang, regex] of scripts) {
+      for (const [key, text] of stringLeaves(readDict(lang))) {
+        if (allowedEnglishOnlyKeys.has(key)) continue;
+        expect(
+          regex.test(text),
+          `${lang}.json key "${key}" lacks expected script -> "${text}"`,
+        ).toBe(true);
       }
     }
-
-    checkScript(hiObj, devanagariRegex, "hi.json");
-    checkScript(teObj, teluguRegex, "te.json");
   });
 
   it("fails if any i18n string outside facts and sources contains a digit", () => {
-    const langs = ["en", "hi", "te"];
-    const violations: string[] = [];
-
-    function checkDigits(obj: Record<string, unknown>, lang: string, prefix = "") {
-      for (const [k, v] of Object.entries(obj)) {
-        const fullKey = prefix ? `${prefix}.${k}` : k;
-        if (
-          fullKey.startsWith("facts.") ||
-          fullKey.startsWith("sources.") ||
-          fullKey.endsWith(".sourceRef")
-        ) {
-          continue;
-        }
-        if (v && typeof v === "object" && !Array.isArray(v)) {
-          checkDigits(v as Record<string, unknown>, lang, fullKey);
-        } else if (typeof v === "string") {
-          if (/\p{Nd}/u.test(v)) {
-            violations.push(`${lang}:${fullKey} contains digit -> "${v}"`);
-          }
-        }
-      }
-    }
-
-    for (const lang of langs) {
-      const filePath = path.resolve(process.cwd(), `src/client/i18n/${lang}.json`);
-      const dict = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-      checkDigits(dict, lang);
-    }
+    const exempt = (key: string) =>
+      key.startsWith("facts.") || key.startsWith("sources.") || key.endsWith(".sourceRef");
+    const violations = ["en", "hi", "te"].flatMap((lang) =>
+      stringLeaves(readDict(lang))
+        .filter(([key, text]) => !exempt(key) && /\p{Nd}/u.test(text))
+        .map(([key, text]) => `${lang}:${key} contains digit -> "${text}"`),
+    );
 
     expect(
       violations,

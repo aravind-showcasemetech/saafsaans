@@ -28,6 +28,57 @@ export interface ComputedSwapItem {
   best?: { memberId: string; doseCutPercentage: number };
 }
 
+type DayImpact = ReturnType<typeof computeDayModelSwapImpact>;
+
+/** The headline unit for Protect swaps whose headline is the largest dose cut. */
+const PROTECT_SAVING_UNITS: Readonly<Record<string, string>> = {
+  "purifier-bedroom": "% dose cut for people sleeping in bedroom",
+  "shift-outdoor-exercise": "% dose cut from moving exercise to cleanest window",
+  "exercise-indoors": "% dose cut from exercising indoors",
+  "shut-windows-peak": "% dose cut from keeping windows shut in peak hours",
+  "air-house-clean-window": "% dose cut from ventilating in cleanest window",
+};
+
+/** Who a Protect swap helps, the best cut, and its headline number or mask range. */
+function addProtectNumbers(base: ComputedSwapItem, impact: DayImpact): void {
+  const members = impact.memberImpacts ?? [];
+  if (members.length === 0) return;
+  base.appliesToMemberIds = members.map((m) => m.memberId);
+  base.appliesToMemberRefs = members.map((m) => m.memberRef);
+  base.maxDoseCutPercentage = impact.maxDoseCutPercentage;
+  const best = [...members].sort((a, b) => b.doseCutPercentage - a.doseCutPercentage)[0];
+  base.best = { memberId: best.memberId, doseCutPercentage: best.doseCutPercentage };
+  base.maxCigarettesAvoided = impact.maxCigarettesAvoided;
+
+  const unit = PROTECT_SAVING_UNITS[base.id];
+  if (unit) {
+    base.savingNumber = impact.maxDoseCutPercentage;
+    base.savingUnit = unit;
+  }
+  if (base.id === "purifier-bedroom") base.purifierCadrCfm = impact.purifierCadrCfm;
+  if (base.id === "mask-outdoors" && impact.maskRange) {
+    base.savingRange = {
+      min: impact.maskRange.minPercent,
+      max: impact.maskRange.maxPercent,
+      unit: impact.maskRange.unit,
+    };
+  }
+}
+
+/** CO2 saved: a week for a work-from-home day, else a day. */
+function addPolluteLessNumbers(base: ComputedSwapItem, impact: DayImpact): void {
+  base.co2SavedKgPerDay = impact.co2SavedKgPerDay;
+  if (base.id === "wfh-day" && impact.co2SavedKgPerWeek !== undefined) {
+    base.savingNumber = impact.co2SavedKgPerWeek;
+    base.savingUnit = "kg CO2 saved per week";
+    base.co2SavedKgPerWeek = impact.co2SavedKgPerWeek;
+  } else if (impact.co2SavedKgPerDay !== undefined) {
+    base.savingNumber = impact.co2SavedKgPerDay;
+    base.savingUnit = "kg CO2 saved per day";
+    base.co2SavedKgPerWeek = impact.co2SavedKgPerWeek;
+  }
+}
+
 export function computeActionNumbers(
   action: ActionDefinition,
   profile: HouseholdProfile,
@@ -56,54 +107,7 @@ export function computeActionNumbers(
     base.factText = serverText(impact.factTextKey, lang);
   }
 
-  if (action.lens === "protect") {
-    if (impact.memberImpacts && impact.memberImpacts.length > 0) {
-      base.appliesToMemberIds = impact.memberImpacts.map((m) => m.memberId);
-      base.appliesToMemberRefs = impact.memberImpacts.map((m) => m.memberRef);
-      base.maxDoseCutPercentage = impact.maxDoseCutPercentage;
-      const best = [...impact.memberImpacts].sort(
-        (a, b) => b.doseCutPercentage - a.doseCutPercentage,
-      )[0];
-      base.best = { memberId: best.memberId, doseCutPercentage: best.doseCutPercentage };
-      base.maxCigarettesAvoided = impact.maxCigarettesAvoided;
-
-      if (action.id === "purifier-bedroom") {
-        // Headline numbers: dose cut and cigarettes avoided
-        base.savingNumber = impact.maxDoseCutPercentage;
-        base.savingUnit = "% dose cut for people sleeping in bedroom";
-        base.purifierCadrCfm = impact.purifierCadrCfm;
-      } else if (action.id === "mask-outdoors" && impact.maskRange) {
-        base.savingRange = {
-          min: impact.maskRange.minPercent,
-          max: impact.maskRange.maxPercent,
-          unit: impact.maskRange.unit,
-        };
-      } else if (action.id === "shift-outdoor-exercise") {
-        base.savingNumber = impact.maxDoseCutPercentage;
-        base.savingUnit = "% dose cut from moving exercise to cleanest window";
-      } else if (action.id === "exercise-indoors") {
-        base.savingNumber = impact.maxDoseCutPercentage;
-        base.savingUnit = "% dose cut from exercising indoors";
-      } else if (action.id === "shut-windows-peak") {
-        base.savingNumber = impact.maxDoseCutPercentage;
-        base.savingUnit = "% dose cut from keeping windows shut in peak hours";
-      } else if (action.id === "air-house-clean-window") {
-        base.savingNumber = impact.maxDoseCutPercentage;
-        base.savingUnit = "% dose cut from ventilating in cleanest window";
-      }
-    }
-  } else if (action.lens === "polluteLess") {
-    base.co2SavedKgPerDay = impact.co2SavedKgPerDay;
-    if (action.id === "wfh-day" && impact.co2SavedKgPerWeek !== undefined) {
-      base.savingNumber = impact.co2SavedKgPerWeek;
-      base.savingUnit = "kg CO2 saved per week";
-      base.co2SavedKgPerWeek = impact.co2SavedKgPerWeek;
-    } else if (impact.co2SavedKgPerDay !== undefined) {
-      base.savingNumber = impact.co2SavedKgPerDay;
-      base.savingUnit = "kg CO2 saved per day";
-      base.co2SavedKgPerWeek = impact.co2SavedKgPerWeek;
-    }
-  }
-
+  if (action.lens === "protect") addProtectNumbers(base, impact);
+  else addPolluteLessNumbers(base, impact);
   return base;
 }

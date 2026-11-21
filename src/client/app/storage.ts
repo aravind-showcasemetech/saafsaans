@@ -1,7 +1,8 @@
-// storage.ts: Safe localStorage wrapper with try/catch.
-// Keeps nicknames in the browser so they never leave client storage.
+// storage.ts: Safe localStorage wrapper. Reads and writes go through two helpers that catch
+// errors (private windows, full or blocked storage). Nicknames stay in the browser.
 
 import type { HouseholdProfile } from "../../shared/schemas.js";
+import { reportError } from "../report-error.js";
 import type { PlanResponse } from "./api.js";
 
 const PROFILE_KEY = "saafsaans_profile";
@@ -16,94 +17,64 @@ export interface StoredLocation {
   lng: number;
 }
 
-export function saveHouseholdProfile(profile: HouseholdProfile): void {
+/** The parsed value stored under key, or null when it is missing or cannot be read. */
+function readStored<T>(key: string): T | null {
   try {
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : null;
   } catch (err) {
-    console.error("Failed to save profile to localStorage", err);
+    reportError(`Failed to read ${key} from localStorage`, err);
+    return null;
   }
+}
+
+/** Stores value under key as JSON; a failure is reported and otherwise ignored. */
+function writeStored(key: string, value: unknown): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (err) {
+    reportError(`Failed to save ${key} to localStorage`, err);
+  }
+}
+
+export function saveHouseholdProfile(profile: HouseholdProfile): void {
+  writeStored(PROFILE_KEY, profile);
 }
 
 export function loadHouseholdProfile(): HouseholdProfile | null {
-  try {
-    const raw = localStorage.getItem(PROFILE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch (err) {
-    console.error("Failed to load profile from localStorage", err);
-    return null;
-  }
+  return readStored<HouseholdProfile>(PROFILE_KEY);
 }
 
 export function saveLocation(location: StoredLocation): void {
-  try {
-    localStorage.setItem(LOCATION_KEY, JSON.stringify(location));
-  } catch (err) {
-    console.error("Failed to save location to localStorage", err);
-  }
+  writeStored(LOCATION_KEY, location);
 }
 
 export function loadLocation(): StoredLocation | null {
-  try {
-    const raw = localStorage.getItem(LOCATION_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch (err) {
-    console.error("Failed to load location from localStorage", err);
-    return null;
-  }
+  return readStored<StoredLocation>(LOCATION_KEY);
 }
 
 export function saveNicknames(nicknames: Record<string, string>): void {
-  try {
-    localStorage.setItem(NICKNAMES_KEY, JSON.stringify(nicknames));
-  } catch (err) {
-    console.error("Failed to save nicknames to localStorage", err);
-  }
+  writeStored(NICKNAMES_KEY, nicknames);
 }
 
 export function loadNicknames(): Record<string, string> {
-  try {
-    const raw = localStorage.getItem(NICKNAMES_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch (err) {
-    console.error("Failed to load nicknames from localStorage", err);
-    return {};
-  }
+  return readStored<Record<string, string>>(NICKNAMES_KEY) ?? {};
 }
 
 export function savePlan(plan: PlanResponse): void {
-  try {
-    localStorage.setItem(PLAN_KEY, JSON.stringify(plan));
-  } catch (err) {
-    console.error("Failed to save plan to localStorage", err);
-  }
+  writeStored(PLAN_KEY, plan);
 }
 
 export function loadPlan(): PlanResponse | null {
-  try {
-    const raw = localStorage.getItem(PLAN_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch (err) {
-    console.error("Failed to load plan from localStorage", err);
-    return null;
-  }
+  return readStored<PlanResponse>(PLAN_KEY);
 }
 
 export function saveToggledSwaps(swapIds: string[]): void {
-  try {
-    localStorage.setItem(TOGGLES_KEY, JSON.stringify(swapIds));
-  } catch (err) {
-    console.error("Failed to save toggles to localStorage", err);
-  }
+  writeStored(TOGGLES_KEY, swapIds);
 }
 
 export function loadToggledSwaps(): string[] | null {
-  try {
-    const raw = localStorage.getItem(TOGGLES_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch (err) {
-    console.error("Failed to load toggles from localStorage", err);
-    return null;
-  }
+  return readStored<string[]>(TOGGLES_KEY);
 }
 
 /** Forgets the toggles, so a newly opened household starts with every swap on. */
@@ -111,6 +82,6 @@ export function clearToggledSwaps(): void {
   try {
     localStorage.removeItem(TOGGLES_KEY);
   } catch (err) {
-    console.error("Failed to clear toggles in localStorage", err);
+    reportError("Failed to clear toggles in localStorage", err);
   }
 }

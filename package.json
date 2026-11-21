@@ -11,8 +11,11 @@
     "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && vite build && tsc -p tsconfig.server.json",
     "start": "node dist/server/server/server.js",
     "smoke": "node scripts/smoke-test.js",
-    "capture:air": "tsx --env-file=.env src/server/capture-air.ts",
+    "capture:air": "tsx --env-file=.env scripts/capture-air.ts",
     "test": "vitest run",
+    "test:e2e": "playwright test",
+    "lint": "biome check .",
+    "typecheck": "tsc --noEmit",
     "check": "biome check . && tsc --noEmit && vitest run --coverage"
   },
   "dependencies": {
